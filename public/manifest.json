@@ -1,0 +1,14 @@
+{
+  "name": "English Learn - 英語学習アプリ",
+  "short_name": "English Learn",
+  "description": "TOEIC満点を目指す英語学習アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#4f46e5",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-800 antialiased;
+    @apply bg-gray-50 text-gray-800 antialiased dark:bg-gray-900 dark:text-gray-200;
     font-family: 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
   }
 }
