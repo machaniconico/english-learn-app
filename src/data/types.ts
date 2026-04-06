@@ -141,3 +141,41 @@ export interface ReorderSet {
   level: 'beginner' | 'intermediate' | 'advanced';
   questions: ReorderQuestion[];
 }
+
+export interface Part1Question {
+  id: string;
+  scenario: string; // description of the scene in Japanese (replaces a photo)
+  scenarioEn: string; // scene description in English (for context)
+  options: [string, string, string, string]; // 4 English descriptions read aloud
+  correctIndex: number; // 0-3
+  explanation: string; // Japanese explanation of why the answer is correct
+}
+
+export interface Part1Set {
+  id: string;
+  title: string;
+  titleJa: string;
+  description: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  questions: Part1Question[];
+}
+
+export interface Part2Question {
+  id: string;
+  question: string; // the question read aloud
+  questionJa: string; // Japanese translation of the question
+  responses: [string, string, string]; // 3 response options (read aloud)
+  responsesJa: [string, string, string]; // Japanese translations
+  correctIndex: number; // 0-2
+  explanation: string; // Japanese explanation
+  questionType: string; // e.g., "Where", "When", "Who", "How", "Yes/No", "Choice", "Statement"
+}
+
+export interface Part2Set {
+  id: string;
+  title: string;
+  titleJa: string;
+  description: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  questions: Part2Question[];
+}

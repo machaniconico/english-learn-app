@@ -20,6 +20,8 @@ const MatchingGamePage = lazy(() => import('./pages/MatchingGamePage'))
 const ReorderPage = lazy(() => import('./pages/ReorderPage'))
 const BookmarksPage = lazy(() => import('./pages/BookmarksPage'))
 const DailyChallengePage = lazy(() => import('./pages/DailyChallengePage'))
+const Part1Page = lazy(() => import('./pages/Part1Page'))
+const Part2Page = lazy(() => import('./pages/Part2Page'))
 
 function Loading() {
   return (
@@ -51,6 +53,10 @@ export default function App() {
           <Route path="/matching/:sectionId/:categoryId" element={<MatchingGamePage />} />
           <Route path="/reorder" element={<ReorderPage />} />
           <Route path="/reorder/:setId" element={<ReorderPage />} />
+          <Route path="/part1-listening" element={<Part1Page />} />
+          <Route path="/part1-listening/:setId" element={<Part1Page />} />
+          <Route path="/part2-listening" element={<Part2Page />} />
+          <Route path="/part2-listening/:setId" element={<Part2Page />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
           <Route path="/daily" element={<DailyChallengePage />} />
           <Route path="/section/:sectionId" element={<CategoryList />} />

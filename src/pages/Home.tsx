@@ -212,25 +212,64 @@ export default function Home() {
           </span>
         </Link>
 
-        <Link
-          to="/dictation"
-          className="group flex items-center gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-        >
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-2xl shadow-sm shrink-0">
-            🎧
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
-              ディクテーション
+        {/* Listening Practice Section */}
+        <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-xl shadow-sm shrink-0">
+              {'\u{1F3A7}'}
+            </div>
+            <h2 className="text-lg font-bold text-gray-900">
+              {'\u30EA\u30B9\u30CB\u30F3\u30B0\u7DF4\u7FD2'}
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
-              英語を聞いて書き取るリスニング練習
-            </p>
           </div>
-          <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors shrink-0">
-            挑戦する &rarr;
-          </span>
-        </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link
+              to="/part1-listening"
+              className="group flex items-center gap-3 rounded-xl border border-white bg-white p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+            >
+              <span className="text-2xl shrink-0">{'\u{1F5BC}'}</span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-gray-900 group-hover:text-cyan-700 transition-colors">
+                  Part 1 {'\u5199\u771F\u63CF\u5199'}
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {'\u5834\u9762\u3092\u805E\u3044\u3066\u9078\u3076'}
+                </p>
+              </div>
+              <span className="text-xs text-cyan-500 group-hover:text-cyan-700 shrink-0">&rarr;</span>
+            </Link>
+            <Link
+              to="/part2-listening"
+              className="group flex items-center gap-3 rounded-xl border border-white bg-white p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+            >
+              <span className="text-2xl shrink-0">{'\u{1F3A4}'}</span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-gray-900 group-hover:text-cyan-700 transition-colors">
+                  Part 2 {'\u5FDC\u7B54\u554F\u984C'}
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {'\u8CEA\u554F\u306B\u6700\u9069\u306A\u5FDC\u7B54\u3092\u9078\u3076'}
+                </p>
+              </div>
+              <span className="text-xs text-cyan-500 group-hover:text-cyan-700 shrink-0">&rarr;</span>
+            </Link>
+            <Link
+              to="/dictation"
+              className="group flex items-center gap-3 rounded-xl border border-white bg-white p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+            >
+              <span className="text-2xl shrink-0">{'\u{270D}'}</span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-gray-900 group-hover:text-cyan-700 transition-colors">
+                  {'\u30C7\u30A3\u30AF\u30C6\u30FC\u30B7\u30E7\u30F3'}
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {'\u805E\u3044\u3066\u66F8\u304D\u53D6\u308B\u7DF4\u7FD2'}
+                </p>
+              </div>
+              <span className="text-xs text-cyan-500 group-hover:text-cyan-700 shrink-0">&rarr;</span>
+            </Link>
+          </div>
+        </div>
 
         <Link
           to="/matching"
