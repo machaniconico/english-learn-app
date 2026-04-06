@@ -22,10 +22,13 @@ const BookmarksPage = lazy(() => import('./pages/BookmarksPage'))
 const DailyChallengePage = lazy(() => import('./pages/DailyChallengePage'))
 const Part1Page = lazy(() => import('./pages/Part1Page'))
 const Part2Page = lazy(() => import('./pages/Part2Page'))
+const Part3Page = lazy(() => import('./pages/Part3Page'))
+const Part4Page = lazy(() => import('./pages/Part4Page'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const WeakPointsPage = lazy(() => import('./pages/WeakPointsPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const SRSPage = lazy(() => import('./pages/SRSPage'))
+const WeeklyReport = lazy(() => import('./pages/WeeklyReport'))
 
 function Loading() {
   return (
@@ -61,10 +64,13 @@ export default function App() {
           <Route path="/part1-listening/:setId" element={<Part1Page />} />
           <Route path="/part2-listening" element={<Part2Page />} />
           <Route path="/part2-listening/:setId" element={<Part2Page />} />
+          <Route path="/part3-listening" element={<Part3Page />} />
+          <Route path="/part4-listening" element={<Part4Page />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/weak-points" element={<WeakPointsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/srs" element={<SRSPage />} />
+          <Route path="/weekly-report" element={<WeeklyReport />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
           <Route path="/daily" element={<DailyChallengePage />} />
           <Route path="/section/:sectionId" element={<CategoryList />} />

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useAnalytics, type LearningEvent, type Stats } from '../hooks/useAnalytics';
+import { useAccuracy } from '../hooks/useAccuracy';
 
 // --- Helpers ---
 
@@ -16,6 +17,23 @@ const CATEGORY_LABELS: Record<string, string> = {
   vocabulary: '語彙',
   grammar: '文法',
   toeic: 'TOEIC',
+};
+
+const QUIZ_TYPE_LABELS: Record<string, string> = {
+  'fill-in-blank': '穴埋め',
+  'error-correction': '誤り訂正',
+  'part1': 'Part 1',
+  'part2': 'Part 2',
+  'dictation': 'ディクテーション',
+  'reorder': '語順',
+  'listening-quiz': 'リスニング',
+  'reading': '読解',
+};
+
+const LEVEL_LABELS: Record<string, string> = {
+  beginner: '初級',
+  intermediate: '中級',
+  advanced: '上級',
 };
 
 const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
@@ -501,6 +519,267 @@ function Recommendations({ events, stats }: { events: LearningEvent[]; stats: St
   );
 }
 
+function AccuracyAnalysis() {
+  const { getOverallAccuracy, getAccuracyByType, getAccuracyByLevel, getRecentTrend, getWeakestTypes } = useAccuracy();
+
+  const overall = useMemo(() => getOverallAccuracy(), [getOverallAccuracy]);
+  const byType = useMemo(() => getAccuracyByType(), [getAccuracyByType]);
+  const byLevel = useMemo(() => getAccuracyByLevel(), [getAccuracyByLevel]);
+  const weakest = useMemo(() => getWeakestTypes(), [getWeakestTypes]);
+
+  const trendData = useMemo(() => {
+    const types = byType.map((t) => t.type);
+    const trends: Record<string, number[]> = {};
+    for (const type of types) {
+      trends[type] = getRecentTrend(type, 10);
+    }
+    return trends;
+  }, [byType, getRecentTrend]);
+
+  function getAccuracyColor(accuracy: number): string {
+    if (accuracy >= 80) return 'bg-green-500 dark:bg-green-400';
+    if (accuracy >= 60) return 'bg-amber-500 dark:bg-amber-400';
+    return 'bg-red-500 dark:bg-red-400';
+  }
+
+  function getAccuracyTextColor(accuracy: number): string {
+    if (accuracy >= 80) return 'text-green-600 dark:text-green-400';
+    if (accuracy >= 60) return 'text-amber-600 dark:text-amber-400';
+    return 'text-red-600 dark:text-red-400';
+  }
+
+  // Circular gauge parameters
+  const gaugeRadius = 54;
+  const gaugeCircumference = 2 * Math.PI * gaugeRadius;
+  const gaugeOffset = gaugeCircumference - (overall / 100) * gaugeCircumference;
+
+  const hasData = byType.length > 0;
+
+  if (!hasData) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          正答率分析
+        </h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
+          まだクイズの正答率データがありません
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Overall Accuracy Gauge + Accuracy by Type */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Overall Accuracy Gauge */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            総合正答率
+          </h3>
+          <div className="flex flex-col items-center">
+            <div className="relative w-36 h-36">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128">
+                <circle
+                  cx="64"
+                  cy="64"
+                  r={gaugeRadius}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="10"
+                  className="text-gray-200 dark:text-gray-700"
+                />
+                <circle
+                  cx="64"
+                  cy="64"
+                  r={gaugeRadius}
+                  fill="none"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={gaugeCircumference}
+                  strokeDashoffset={gaugeOffset}
+                  className={getAccuracyTextColor(overall)}
+                  stroke="currentColor"
+                  style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-3xl font-bold ${getAccuracyTextColor(overall)}`}>
+                  {overall}%
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">正答率</span>
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
+              全{byType.reduce((sum, t) => sum + t.attempts, 0)}回の挑戦
+            </p>
+          </div>
+        </div>
+
+        {/* Accuracy by Type */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            問題タイプ別正答率
+          </h3>
+          <div className="space-y-3">
+            {byType
+              .sort((a, b) => b.accuracy - a.accuracy)
+              .map((item) => (
+                <div key={item.type}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      {QUIZ_TYPE_LABELS[item.type] ?? item.type}
+                    </span>
+                    <span className={`font-bold ${getAccuracyTextColor(item.accuracy)}`}>
+                      {item.accuracy}%
+                      <span className="text-gray-400 dark:text-gray-500 font-normal ml-1">
+                        ({item.attempts}回)
+                      </span>
+                    </span>
+                  </div>
+                  <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${getAccuracyColor(item.accuracy)} transition-all duration-500`}
+                      style={{ width: `${item.accuracy}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Accuracy by Level + Trend */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Accuracy by Level */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            レベル別正答率
+          </h3>
+          {byLevel.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
+              レベル別データがありません
+            </p>
+          ) : (
+            <div className="flex items-end gap-3 sm:gap-4 h-44 px-2">
+              {byLevel
+                .sort((a, b) => {
+                  const order = ['beginner', 'intermediate', 'advanced'];
+                  return order.indexOf(a.level) - order.indexOf(b.level);
+                })
+                .map((item) => {
+                  const height = Math.max(8, item.accuracy);
+                  return (
+                    <div key={item.level} className="flex-1 flex flex-col items-center gap-1">
+                      <span className={`text-sm font-bold ${getAccuracyTextColor(item.accuracy)}`}>
+                        {item.accuracy}%
+                      </span>
+                      <div className="w-full flex justify-center">
+                        <div
+                          className={`w-full max-w-16 rounded-t-lg ${getAccuracyColor(item.accuracy)} transition-all duration-500`}
+                          style={{ height: `${height}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">
+                        {LEVEL_LABELS[item.level] ?? item.level}
+                      </span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {item.attempts}回
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+
+        {/* Trend Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            正答率推移（直近10回）
+          </h3>
+          <div className="space-y-3">
+            {Object.entries(trendData)
+              .filter(([, scores]) => scores.length >= 2)
+              .map(([type, scores]) => (
+                <div key={type}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {QUIZ_TYPE_LABELS[type] ?? type}
+                    </span>
+                    {scores.length >= 2 && (
+                      <span
+                        className={`text-xs font-bold ${
+                          scores[scores.length - 1] >= scores[0]
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
+                        }`}
+                      >
+                        {scores[scores.length - 1] >= scores[0] ? '\u2191' : '\u2193'}
+                        {Math.abs(scores[scores.length - 1] - scores[0])}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-end gap-0.5 h-8">
+                    {scores.map((score, i) => {
+                      const height = Math.max(8, (score / 100) * 100);
+                      return (
+                        <div
+                          key={i}
+                          className="flex-1 group relative"
+                        >
+                          <div
+                            className={`w-full rounded-t-sm ${getAccuracyColor(score)} transition-all`}
+                            style={{ height: `${height}%` }}
+                          />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-gray-900 dark:bg-gray-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            {score}%
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            {Object.entries(trendData).filter(([, scores]) => scores.length >= 2).length === 0 && (
+              <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-6">
+                推移を表示するにはタイプごとに2回以上の挑戦が必要です
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Weak Area Callout */}
+      {weakest.length > 0 && (
+        <div className="bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-900/20 dark:to-amber-900/20 rounded-xl p-4 sm:p-6 border border-red-200 dark:border-red-800/50">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+              <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-900 dark:text-white">
+                苦手分野
+              </h4>
+              <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                <span className="font-semibold text-red-600 dark:text-red-400">
+                  {weakest.map((t) => QUIZ_TYPE_LABELS[t] ?? t).join('、')}
+                </span>
+                の正答率が低いです。集中的に練習して改善しましょう。
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                苦手なタイプを繰り返し練習することで、効率的にスコアアップできます。
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- Main Page ---
 
 export default function AnalyticsPage() {
@@ -550,6 +829,9 @@ export default function AnalyticsPage() {
         <ActivityCalendar events={allEvents} />
         <ScoreTrend events={events} />
       </div>
+
+      {/* Accuracy Analysis */}
+      <AccuracyAnalysis />
 
       {/* Category & weekly comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

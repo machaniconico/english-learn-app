@@ -179,3 +179,36 @@ export interface Part2Set {
   level: 'beginner' | 'intermediate' | 'advanced';
   questions: Part2Question[];
 }
+
+export interface ConversationLine {
+  speaker: string; // e.g., "Man", "Woman", "Speaker 1"
+  text: string;
+}
+
+export interface Part3Question {
+  id: string;
+  conversation: ConversationLine[];
+  questions: {
+    question: string;
+    questionJa: string;
+    options: [string, string, string, string];
+    correctIndex: number;
+    explanation: string;
+  }[];
+  level: 'beginner' | 'intermediate' | 'advanced';
+}
+
+export interface Part4Question {
+  id: string;
+  type: string; // "announcement", "voicemail", "introduction", "advertisement", "news"
+  typeJa: string;
+  talk: string; // the full monologue text
+  questions: {
+    question: string;
+    questionJa: string;
+    options: [string, string, string, string];
+    correctIndex: number;
+    explanation: string;
+  }[];
+  level: 'beginner' | 'intermediate' | 'advanced';
+}

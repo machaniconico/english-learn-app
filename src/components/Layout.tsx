@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { useStudyTimer } from '../hooks/useStudyTimer';
 
 function Breadcrumbs() {
   const location = useLocation();
@@ -52,9 +53,16 @@ const bottomNavItems = [
   { to: '/progress', label: '進捗', icon: '📊' },
 ];
 
+function formatTimer(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 export default function Layout() {
   const location = useLocation();
   const { isDark, toggle } = useDarkMode();
+  const { isTracking, currentDuration, stopTimer } = useStudyTimer();
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -77,6 +85,21 @@ export default function Layout() {
             </div>
           </Link>
           <div className="flex items-center gap-2">
+            {/* Study timer indicator */}
+            {isTracking && (
+              <button
+                onClick={stopTimer}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors text-sm font-mono"
+                aria-label="学習タイマーを停止"
+                title="クリックで停止"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="tabular-nums">{formatTimer(currentDuration)}</span>
+              </button>
+            )}
             {/* Dark mode toggle */}
             <button
               onClick={toggle}

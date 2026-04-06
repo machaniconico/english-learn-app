@@ -253,7 +253,7 @@ export default function Home() {
               {'\u30EA\u30B9\u30CB\u30F3\u30B0\u7DF4\u7FD2'}
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Link
               to="/part1-listening"
               className="group flex items-center gap-3 rounded-xl border border-white dark:border-gray-700 bg-white dark:bg-gray-800 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
@@ -280,6 +280,36 @@ export default function Home() {
                 </h3>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                   {'\u8CEA\u554F\u306B\u6700\u9069\u306A\u5FDC\u7B54\u3092\u9078\u3076'}
+                </p>
+              </div>
+              <span className="text-xs text-cyan-500 group-hover:text-cyan-700 dark:text-cyan-400 dark:group-hover:text-cyan-300 shrink-0">&rarr;</span>
+            </Link>
+            <Link
+              to="/part3-listening"
+              className="group flex items-center gap-3 rounded-xl border border-white dark:border-gray-700 bg-white dark:bg-gray-800 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+            >
+              <span className="text-2xl shrink-0">{'\u{1F5E3}'}</span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">
+                  Part 3 会話問題
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                  会話を聞いて質問に答える
+                </p>
+              </div>
+              <span className="text-xs text-cyan-500 group-hover:text-cyan-700 dark:text-cyan-400 dark:group-hover:text-cyan-300 shrink-0">&rarr;</span>
+            </Link>
+            <Link
+              to="/part4-listening"
+              className="group flex items-center gap-3 rounded-xl border border-white dark:border-gray-700 bg-white dark:bg-gray-800 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+            >
+              <span className="text-2xl shrink-0">{'\u{1F399}'}</span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">
+                  Part 4 説明文問題
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                  トークを聞いて質問に答える
                 </p>
               </div>
               <span className="text-xs text-cyan-500 group-hover:text-cyan-700 dark:text-cyan-400 dark:group-hover:text-cyan-300 shrink-0">&rarr;</span>
