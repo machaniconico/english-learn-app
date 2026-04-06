@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Suspense } from 'react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useStudyTimer } from '../hooks/useStudyTimer';
 
@@ -197,7 +198,9 @@ export default function Layout() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 pb-24 md:pb-8">
         <Breadcrumbs />
-        <Outlet />
+        <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
