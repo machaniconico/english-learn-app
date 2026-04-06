@@ -59,12 +59,32 @@ export default function Layout() {
               <p className="text-xs text-gray-400 -mt-0.5">英語学習</p>
             </div>
           </Link>
-          <Link
-            to="/"
-            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors hidden sm:block"
-          >
-            Home
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              to="/dictionary"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+            >
+              <span>📖</span> 辞書
+            </Link>
+            <Link
+              to="/reading-practice"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+            >
+              <span>📄</span> 読解
+            </Link>
+            <Link
+              to="/progress"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+            >
+              <span>📊</span> 進捗
+            </Link>
+            <Link
+              to="/"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors hidden sm:block"
+            >
+              Home
+            </Link>
+          </div>
         </div>
       </header>
 

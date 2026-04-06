@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { sections } from '../data/sections';
+import { useProgress } from '../hooks/useProgress';
+import { useEffect } from 'react';
 
 const sectionMeta: Record<string, { icon: string; color: string; gradient: string }> = {
   phrases: {
@@ -28,9 +30,78 @@ function countLessons(categories: { lessons: unknown[] }[]): number {
   return categories.reduce((sum, cat) => sum + cat.lessons.length, 0);
 }
 
+function countTotalItems(): number {
+  let total = 0;
+  for (const section of sections) {
+    for (const category of section.categories) {
+      for (const lesson of category.lessons) {
+        total += lesson.items.length;
+      }
+    }
+  }
+  return total;
+}
+
 export default function Home() {
+  const { progress, getOverallStats, updateStreak } = useProgress();
+
+  useEffect(() => {
+    updateStreak();
+  }, [updateStreak]);
+
+  const stats = getOverallStats();
+  const totalAvailable = countTotalItems();
+  const hasProgress = stats.totalItems > 0 || progress.streak > 0;
+  const completionPct =
+    totalAvailable > 0 ? Math.round((stats.totalItems / totalAvailable) * 100) : 0;
+
   return (
     <div>
+      {/* Progress Summary (only shown if there is progress) */}
+      {hasProgress && (
+        <Link
+          to="/progress"
+          className="group mb-6 flex items-center gap-4 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        >
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <span className="text-2xl">{progress.streak > 0 ? '\u{1F525}' : '\u{1F4CA}'}</span>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-gray-800">
+                {progress.streak > 0
+                  ? `${progress.streak}日連続学習中！`
+                  : '学習を続けよう！'}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                達成率 {completionPct}% / {stats.totalItems} アイテム学習済み
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 flex items-center gap-2">
+            <div className="w-12 h-12 relative">
+              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="20" fill="none" stroke="#e0e7ff" strokeWidth="4" />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="20"
+                  fill="none"
+                  stroke="#6366f1"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(completionPct / 100) * 125.6} 125.6`}
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-indigo-700">
+                {completionPct}%
+              </span>
+            </div>
+            <span className="text-xs font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors hidden sm:block">
+              詳細 &rarr;
+            </span>
+          </div>
+        </Link>
+      )}
+
       {/* Hero Section */}
       <section className="text-center py-10 sm:py-16">
         <p className="text-5xl sm:text-6xl mb-4">📖</p>
@@ -45,6 +116,29 @@ export default function Home() {
           <br className="hidden sm:inline" />
           ステップバイステップで英語力を伸ばそう。
         </p>
+      </section>
+
+      {/* Quick Links */}
+      <section className="mb-8">
+        <Link
+          to="/toeic-practice"
+          className="group flex items-center gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-2xl shadow-sm shrink-0">
+            📝
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+              TOEIC模試
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Part 5形式の空所補充問題で実力チェック
+            </p>
+          </div>
+          <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors shrink-0">
+            挑戦する &rarr;
+          </span>
+        </Link>
       </section>
 
       {/* Section Cards */}

@@ -1,5 +1,8 @@
 import type { Section } from "./types";
 import { phraseCategories } from "./phrases";
+import { grammarCategories } from "./grammar";
+import { vocabularyCategories } from "./vocabulary";
+import { toeicCategories } from "./toeic";
 
 export const sections: Section[] = [
   {
@@ -18,7 +21,7 @@ export const sections: Section[] = [
     description: "Build your English vocabulary by topic",
     icon: "📝",
     color: "emerald",
-    categories: [],
+    categories: vocabularyCategories,
   },
   {
     id: "grammar",
@@ -27,7 +30,7 @@ export const sections: Section[] = [
     description: "Learn English grammar rules and patterns",
     icon: "📖",
     color: "amber",
-    categories: [],
+    categories: grammarCategories,
   },
   {
     id: "toeic",
@@ -36,6 +39,6 @@ export const sections: Section[] = [
     description: "Practice for the TOEIC test with targeted exercises",
     icon: "🎯",
     color: "rose",
-    categories: [],
+    categories: toeicCategories,
   },
 ];
