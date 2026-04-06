@@ -11,6 +11,7 @@ const FlashcardPage = lazy(() => import('./pages/FlashcardPage'))
 const QuizPage = lazy(() => import('./pages/QuizPage'))
 const FillInBlankPage = lazy(() => import('./pages/FillInBlankPage'))
 const ReadingPracticePage = lazy(() => import('./pages/ReadingPracticePage'))
+const ErrorCorrectionPage = lazy(() => import('./pages/ErrorCorrectionPage'))
 const ProgressPage = lazy(() => import('./pages/ProgressPage'))
 const StudyGuide = lazy(() => import('./pages/StudyGuide'))
 
@@ -33,6 +34,8 @@ export default function App() {
           <Route path="/toeic-practice/:setId" element={<FillInBlankPage />} />
           <Route path="/reading-practice" element={<ReadingPracticePage />} />
           <Route path="/reading-practice/:passageId" element={<ReadingPracticePage />} />
+          <Route path="/error-correction" element={<ErrorCorrectionPage />} />
+          <Route path="/error-correction/:setId" element={<ErrorCorrectionPage />} />
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/study-guide" element={<StudyGuide />} />
           <Route path="/section/:sectionId" element={<CategoryList />} />

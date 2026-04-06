@@ -119,7 +119,7 @@ export default function Home() {
       </section>
 
       {/* Quick Links */}
-      <section className="mb-8">
+      <section className="mb-8 space-y-3">
         <Link
           to="/toeic-practice"
           className="group flex items-center gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
@@ -133,6 +133,26 @@ export default function Home() {
             </h2>
             <p className="text-sm text-gray-500 mt-0.5">
               Part 5形式の空所補充問題で実力チェック
+            </p>
+          </div>
+          <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors shrink-0">
+            挑戦する &rarr;
+          </span>
+        </Link>
+
+        <Link
+          to="/error-correction"
+          className="group flex items-center gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-2xl shadow-sm shrink-0">
+            🔍
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+              誤り訂正
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              文中の文法エラーを見つけて訂正する練習
             </p>
           </div>
           <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors shrink-0">

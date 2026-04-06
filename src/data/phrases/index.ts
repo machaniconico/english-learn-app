@@ -5,6 +5,9 @@ import { travel } from "./travel";
 import { business } from "./business";
 import { restaurant } from "./restaurant";
 import { shopping } from "./shopping";
+import { phone } from "./phone";
+import { presentations } from "./presentations";
+import { negotiations } from "./negotiations";
 
 export const phraseCategories: Category[] = [
   greetings,
@@ -13,4 +16,7 @@ export const phraseCategories: Category[] = [
   business,
   restaurant,
   shopping,
+  phone,
+  presentations,
+  negotiations,
 ];

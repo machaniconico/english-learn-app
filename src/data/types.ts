@@ -71,6 +71,24 @@ export interface FillInBlankSet {
   questions: FillInBlankQuestion[];
 }
 
+export interface ErrorCorrectionQuestion {
+  id: string;
+  sentence: string; // sentence with one error, parts marked as (A), (B), (C), (D)
+  segments: [string, string, string, string]; // the 4 underlined segments
+  errorIndex: number; // 0-3, which segment has the error
+  correction: string; // what it should be
+  explanation: string; // Japanese explanation
+}
+
+export interface ErrorCorrectionSet {
+  id: string;
+  title: string;
+  titleJa: string;
+  description: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  questions: ErrorCorrectionQuestion[];
+}
+
 export interface ReadingQuestion {
   id: string;
   question: string;
