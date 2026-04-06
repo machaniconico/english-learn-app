@@ -73,6 +73,12 @@ export default function Layout() {
               <span>📄</span> 読解
             </Link>
             <Link
+              to="/study-guide"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+            >
+              <span>{'\u{1F5FA}\u{FE0F}'}</span> ロードマップ
+            </Link>
+            <Link
               to="/progress"
               className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
             >

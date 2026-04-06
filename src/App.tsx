@@ -12,6 +12,7 @@ const QuizPage = lazy(() => import('./pages/QuizPage'))
 const FillInBlankPage = lazy(() => import('./pages/FillInBlankPage'))
 const ReadingPracticePage = lazy(() => import('./pages/ReadingPracticePage'))
 const ProgressPage = lazy(() => import('./pages/ProgressPage'))
+const StudyGuide = lazy(() => import('./pages/StudyGuide'))
 
 function Loading() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/reading-practice" element={<ReadingPracticePage />} />
           <Route path="/reading-practice/:passageId" element={<ReadingPracticePage />} />
           <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/study-guide" element={<StudyGuide />} />
           <Route path="/section/:sectionId" element={<CategoryList />} />
           <Route path="/section/:sectionId/:categoryId" element={<LessonList />} />
           <Route path="/section/:sectionId/:categoryId/:lessonId" element={<LessonPage />} />

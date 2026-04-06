@@ -2,6 +2,7 @@ import type { Section } from "./types";
 import { phraseCategories } from "./phrases";
 import { grammarCategories } from "./grammar";
 import { vocabularyCategories } from "./vocabulary";
+import { idiomCategories } from "./idioms";
 import { toeicCategories } from "./toeic";
 
 export const sections: Section[] = [
@@ -22,6 +23,15 @@ export const sections: Section[] = [
     icon: "📝",
     color: "emerald",
     categories: vocabularyCategories,
+  },
+  {
+    id: "idioms",
+    title: "Idioms & Collocations",
+    titleJa: "慣用句・コロケーション",
+    description: "Master natural English expressions and word combinations",
+    icon: "💡",
+    color: "amber",
+    categories: idiomCategories,
   },
   {
     id: "grammar",
