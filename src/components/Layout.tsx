@@ -139,6 +139,12 @@ export default function Layout() {
               <span>{'\u{1F3C6}'}</span> スコア
             </Link>
             <Link
+              to="/analytics"
+              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
+            >
+              <span>{'\u{1F4C8}'}</span> 分析
+            </Link>
+            <Link
               to="/bookmarks"
               className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
             >

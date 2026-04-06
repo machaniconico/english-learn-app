@@ -24,6 +24,7 @@ const Part1Page = lazy(() => import('./pages/Part1Page'))
 const Part2Page = lazy(() => import('./pages/Part2Page'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const WeakPointsPage = lazy(() => import('./pages/WeakPointsPage'))
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 
 function Loading() {
   return (
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/part2-listening/:setId" element={<Part2Page />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/weak-points" element={<WeakPointsPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
           <Route path="/daily" element={<DailyChallengePage />} />
           <Route path="/section/:sectionId" element={<CategoryList />} />
