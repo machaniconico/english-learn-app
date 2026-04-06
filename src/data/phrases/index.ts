@@ -8,6 +8,9 @@ import { shopping } from "./shopping";
 import { phone } from "./phone";
 import { presentations } from "./presentations";
 import { negotiations } from "./negotiations";
+import { healthcare } from "./healthcare";
+import { directions } from "./directions";
+import { feelings } from "./feelings";
 
 export const phraseCategories: Category[] = [
   greetings,
@@ -19,4 +22,7 @@ export const phraseCategories: Category[] = [
   phone,
   presentations,
   negotiations,
+  healthcare,
+  directions,
+  feelings,
 ];

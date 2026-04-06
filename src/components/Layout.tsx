@@ -47,7 +47,7 @@ const bottomNavItems = [
   { to: '/', label: 'ホーム', icon: '🏠' },
   { to: '/dictionary', label: '辞書', icon: '📖' },
   { to: '/toeic-practice', label: '練習', icon: '🎯' },
-  { to: '/study-guide', label: 'ロードマップ', icon: '🗺️' },
+  { to: '/bookmarks', label: 'ブックマーク', icon: '⭐' },
   { to: '/progress', label: '進捗', icon: '📊' },
 ];
 
@@ -98,6 +98,12 @@ export default function Layout() {
               className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
             >
               <span>{'\u{1F3C6}'}</span> スコア
+            </Link>
+            <Link
+              to="/bookmarks"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+            >
+              <span>{'\u2B50'}</span> ブックマーク
             </Link>
             <Link
               to="/progress"

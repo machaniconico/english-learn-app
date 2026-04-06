@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { sections } from '../data/sections';
 import { useProgress } from '../hooks/useProgress';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const sectionMeta: Record<string, { icon: string; color: string; gradient: string }> = {
   phrases: {
@@ -55,8 +55,60 @@ export default function Home() {
   const completionPct =
     totalAvailable > 0 ? Math.round((stats.totalItems / totalAvailable) * 100) : 0;
 
+  // Daily challenge status
+  const [dailyCompleted, setDailyCompleted] = useState(0);
+  useEffect(() => {
+    try {
+      const d = new Date();
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const raw = localStorage.getItem(`daily-challenge-${dateKey}`);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.completed && Array.isArray(data.completed)) {
+          setDailyCompleted(data.completed.filter(Boolean).length);
+        }
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   return (
     <div>
+      {/* Daily Challenge Card */}
+      <Link
+        to="/daily"
+        className="group mb-6 flex items-center gap-4 rounded-2xl border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+      >
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 text-2xl shadow-sm shrink-0">
+          {'\u{1F31F}'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-lg font-bold text-gray-900 group-hover:text-orange-700 transition-colors">
+            今日のチャレンジ
+          </h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {dailyCompleted === 5
+              ? '全チャレンジ完了！素晴らしい！'
+              : dailyCompleted > 0
+                ? `${dailyCompleted}/5 完了 - 続きに挑戦しよう！`
+                : '5つのミニチャレンジに挑戦しよう！'}
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-2">
+          {dailyCompleted === 5 ? (
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white text-sm font-bold">
+              {'\u2713'}
+            </span>
+          ) : (
+            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold">
+              {dailyCompleted}/5
+            </span>
+          )}
+          <span className="text-sm font-medium text-orange-500 group-hover:text-orange-700 transition-colors hidden sm:block">
+            挑戦する &rarr;
+          </span>
+        </div>
+      </Link>
+
       {/* Progress Summary (only shown if there is progress) */}
       {hasProgress && (
         <Link

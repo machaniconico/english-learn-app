@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { sections } from '../data/sections';
 import AudioButton from '../components/AudioButton';
+import BookmarkButton from '../components/BookmarkButton';
 
 export default function LessonPage() {
   const { sectionId, categoryId, lessonId } = useParams<{
@@ -100,8 +101,15 @@ export default function LessonPage() {
                   </p>
                 </div>
               </div>
-              <div className="shrink-0" onClick={() => markListened(item.id)}>
-                <AudioButton text={item.english} size="md" />
+              <div className="flex items-center gap-1.5 shrink-0">
+                <BookmarkButton
+                  item={item}
+                  source={`${sectionId}/${categoryId}/${lessonId}`}
+                  size="md"
+                />
+                <div onClick={() => markListened(item.id)}>
+                  <AudioButton text={item.english} size="md" />
+                </div>
               </div>
             </div>
 
