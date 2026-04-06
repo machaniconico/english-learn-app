@@ -108,3 +108,20 @@ export interface ReadingPassage {
   questions: ReadingQuestion[];
   level: 'beginner' | 'intermediate' | 'advanced';
 }
+
+export interface DictationItem {
+  id: string;
+  sentence: string; // the sentence to dictate
+  japanese: string; // Japanese translation (shown after answering)
+  hint?: string; // optional hint shown before attempt
+  level: 'beginner' | 'intermediate' | 'advanced';
+}
+
+export interface DictationSet {
+  id: string;
+  title: string;
+  titleJa: string;
+  description: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  items: DictationItem[];
+}

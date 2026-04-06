@@ -12,8 +12,10 @@ const QuizPage = lazy(() => import('./pages/QuizPage'))
 const FillInBlankPage = lazy(() => import('./pages/FillInBlankPage'))
 const ReadingPracticePage = lazy(() => import('./pages/ReadingPracticePage'))
 const ErrorCorrectionPage = lazy(() => import('./pages/ErrorCorrectionPage'))
+const DictationPage = lazy(() => import('./pages/DictationPage'))
 const ProgressPage = lazy(() => import('./pages/ProgressPage'))
 const StudyGuide = lazy(() => import('./pages/StudyGuide'))
+const ScoreEstimator = lazy(() => import('./pages/ScoreEstimator'))
 
 function Loading() {
   return (
@@ -36,8 +38,11 @@ export default function App() {
           <Route path="/reading-practice/:passageId" element={<ReadingPracticePage />} />
           <Route path="/error-correction" element={<ErrorCorrectionPage />} />
           <Route path="/error-correction/:setId" element={<ErrorCorrectionPage />} />
+          <Route path="/dictation" element={<DictationPage />} />
+          <Route path="/dictation/:setId" element={<DictationPage />} />
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/study-guide" element={<StudyGuide />} />
+          <Route path="/score" element={<ScoreEstimator />} />
           <Route path="/section/:sectionId" element={<CategoryList />} />
           <Route path="/section/:sectionId/:categoryId" element={<LessonList />} />
           <Route path="/section/:sectionId/:categoryId/:lessonId" element={<LessonPage />} />
