@@ -7,6 +7,8 @@ import { tenses } from "./tenses";
 import { partsOfSpeech } from "./parts-of-speech";
 import { sentencePatterns } from "./sentence-patterns";
 import { toeicGrammar } from "./toeic-grammar";
+import { advancedStructures } from "./advanced-structures";
+import { advancedNuance } from "./advanced-nuance";
 
 export const grammarCategories: Category[] = [
   beginnerBasics,
@@ -17,4 +19,6 @@ export const grammarCategories: Category[] = [
   partsOfSpeech,
   sentencePatterns,
   toeicGrammar,
+  advancedStructures,
+  advancedNuance,
 ];
