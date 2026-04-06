@@ -16,6 +16,8 @@ const DictationPage = lazy(() => import('./pages/DictationPage'))
 const ProgressPage = lazy(() => import('./pages/ProgressPage'))
 const StudyGuide = lazy(() => import('./pages/StudyGuide'))
 const ScoreEstimator = lazy(() => import('./pages/ScoreEstimator'))
+const MatchingGamePage = lazy(() => import('./pages/MatchingGamePage'))
+const ReorderPage = lazy(() => import('./pages/ReorderPage'))
 
 function Loading() {
   return (
@@ -43,6 +45,10 @@ export default function App() {
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/study-guide" element={<StudyGuide />} />
           <Route path="/score" element={<ScoreEstimator />} />
+          <Route path="/matching" element={<MatchingGamePage />} />
+          <Route path="/matching/:sectionId/:categoryId" element={<MatchingGamePage />} />
+          <Route path="/reorder" element={<ReorderPage />} />
+          <Route path="/reorder/:setId" element={<ReorderPage />} />
           <Route path="/section/:sectionId" element={<CategoryList />} />
           <Route path="/section/:sectionId/:categoryId" element={<LessonList />} />
           <Route path="/section/:sectionId/:categoryId/:lessonId" element={<LessonPage />} />

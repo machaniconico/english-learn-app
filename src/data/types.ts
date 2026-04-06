@@ -125,3 +125,19 @@ export interface DictationSet {
   level: 'beginner' | 'intermediate' | 'advanced';
   items: DictationItem[];
 }
+
+export interface ReorderQuestion {
+  id: string;
+  words: string[]; // words in correct order
+  japanese: string; // Japanese translation (hint)
+  level: 'beginner' | 'intermediate' | 'advanced';
+}
+
+export interface ReorderSet {
+  id: string;
+  title: string;
+  titleJa: string;
+  description: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  questions: ReorderQuestion[];
+}

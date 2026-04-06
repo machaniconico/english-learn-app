@@ -179,6 +179,46 @@ export default function Home() {
             挑戦する &rarr;
           </span>
         </Link>
+
+        <Link
+          to="/matching"
+          className="group flex items-center gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-2xl shadow-sm shrink-0">
+            🎮
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+              マッチングゲーム
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              英語と日本語のペアをマッチさせよう
+            </p>
+          </div>
+          <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors shrink-0">
+            遊ぶ &rarr;
+          </span>
+        </Link>
+
+        <Link
+          to="/reorder"
+          className="group flex items-center gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-2xl shadow-sm shrink-0">
+            {'\u{1F500}'}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+              語順クイズ
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              英単語を正しい語順に並べ替える練習
+            </p>
+          </div>
+          <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors shrink-0">
+            挑戦する &rarr;
+          </span>
+        </Link>
       </section>
 
       {/* Section Cards */}

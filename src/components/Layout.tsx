@@ -43,7 +43,22 @@ function Breadcrumbs() {
   );
 }
 
+const bottomNavItems = [
+  { to: '/', label: 'ホーム', icon: '🏠' },
+  { to: '/dictionary', label: '辞書', icon: '📖' },
+  { to: '/toeic-practice', label: '練習', icon: '🎯' },
+  { to: '/study-guide', label: 'ロードマップ', icon: '🗺️' },
+  { to: '/progress', label: '進捗', icon: '📊' },
+];
+
 export default function Layout() {
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
@@ -59,7 +74,7 @@ export default function Layout() {
               <p className="text-xs text-gray-400 -mt-0.5">英語学習</p>
             </div>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4">
             <Link
               to="/dictionary"
               className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
@@ -92,7 +107,7 @@ export default function Layout() {
             </Link>
             <Link
               to="/"
-              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors hidden sm:block"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
               Home
             </Link>
@@ -100,7 +115,7 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 pb-24 md:pb-8">
         <Breadcrumbs />
         <Outlet />
       </main>
@@ -110,6 +125,35 @@ export default function Layout() {
           <p>&copy; {new Date().getFullYear()} English Learn. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Mobile bottom navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 md:hidden">
+        <div className="flex items-center justify-around px-2 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
+          {bottomNavItems.map((item) => {
+            const active = isActive(item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex flex-col items-center justify-center min-w-0 flex-1 py-1 transition-colors ${
+                  active
+                    ? 'text-indigo-600'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <span className="text-xl leading-none">{item.icon}</span>
+                <span
+                  className={`text-[10px] mt-0.5 truncate ${
+                    active ? 'font-bold' : 'font-medium'
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
