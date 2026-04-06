@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useProgress } from '../hooks/useProgress';
 import { sections } from '../data/sections';
 import { useEffect, useMemo } from 'react';
+import ShareButton from '../components/ShareButton';
 
 function getMotivationalMessage(percentage: number): string {
   if (percentage === 0) return '今日から始めよう！最初の一歩を踏み出そう。';
@@ -96,6 +97,12 @@ export default function ProgressPage() {
     <div className="pb-10">
       {/* Header */}
       <div className="text-center mb-8">
+        <div className="flex justify-end mb-2">
+          <ShareButton
+            score={completionPercentage}
+            text={`English Learnで英語学習中！全体達成率${completionPercentage}%、${stats.totalItems}アイテム学習済み！`}
+          />
+        </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
           学習の進捗
         </h1>

@@ -25,6 +25,7 @@ const Part2Page = lazy(() => import('./pages/Part2Page'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const WeakPointsPage = lazy(() => import('./pages/WeakPointsPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
+const SRSPage = lazy(() => import('./pages/SRSPage'))
 
 function Loading() {
   return (
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/weak-points" element={<WeakPointsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/srs" element={<SRSPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
           <Route path="/daily" element={<DailyChallengePage />} />
           <Route path="/section/:sectionId" element={<CategoryList />} />

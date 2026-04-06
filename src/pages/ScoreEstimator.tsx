@@ -4,6 +4,7 @@ import { useProgress } from '../hooks/useProgress';
 import { fillInBlankSets } from '../data/toeic/fill-in-blank';
 import { readingPassages } from '../data/toeic/reading-passages';
 import { sections } from '../data/sections';
+import ShareButton from '../components/ShareButton';
 
 // --- Types ---
 
@@ -562,9 +563,13 @@ export default function ScoreEstimator() {
         <p className="text-lg font-bold text-gray-800 mb-1">
           推定スコア: {estimate.low} - {estimate.high}
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 mb-4">
           {getMotivationalMessage(estimate.score)}
         </p>
+        <ShareButton
+          score={estimate.score}
+          text={`English LearnでTOEICスコア予測！推定スコア${estimate.score}点（${getScoreLevel(estimate.score)}）を達成！`}
+        />
       </div>
 
       {/* Breakdown Section */}

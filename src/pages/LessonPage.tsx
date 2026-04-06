@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { sections } from '../data/sections';
 import AudioButton from '../components/AudioButton';
 import BookmarkButton from '../components/BookmarkButton';
+import SRSButton from '../components/SRSButton';
 
 export default function LessonPage() {
   const { sectionId, categoryId, lessonId } = useParams<{
@@ -102,6 +103,11 @@ export default function LessonPage() {
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
+                <SRSButton
+                  item={item}
+                  source={`${sectionId}/${categoryId}/${lessonId}`}
+                  size="md"
+                />
                 <BookmarkButton
                   item={item}
                   source={`${sectionId}/${categoryId}/${lessonId}`}
