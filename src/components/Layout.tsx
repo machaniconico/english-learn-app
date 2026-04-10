@@ -1,7 +1,17 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Suspense } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useStudyTimer } from '../hooks/useStudyTimer';
+import {
+  Home,
+  BookOpen,
+  Target,
+  Bookmark,
+  BarChart3,
+  Search,
+  BookMarked,
+  ChevronDown,
+} from 'lucide-react';
 
 function Breadcrumbs() {
   const location = useLocation();
@@ -47,17 +57,67 @@ function Breadcrumbs() {
 }
 
 const bottomNavItems = [
-  { to: '/', label: 'ホーム', icon: '🏠' },
-  { to: '/dictionary', label: '辞書', icon: '📖' },
-  { to: '/toeic-practice', label: '練習', icon: '🎯' },
-  { to: '/bookmarks', label: 'ブックマーク', icon: '⭐' },
-  { to: '/progress', label: '進捗', icon: '📊' },
+  { to: '/', label: 'ホーム', icon: Home },
+  { to: '/dictionary', label: '辞書', icon: BookOpen },
+  { to: '/toeic-practice', label: '練習', icon: Target },
+  { to: '/bookmarks', label: 'ブックマーク', icon: Bookmark },
+  { to: '/progress', label: '進捗', icon: BarChart3 },
 ];
 
 function formatTimer(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function MoreDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const moreLinks = [
+    { to: '/reading-practice', label: '読解' },
+    { to: '/study-guide', label: 'ロードマップ' },
+    { to: '/score', label: 'スコア' },
+    { to: '/analytics', label: '分析' },
+    { to: '/srs', label: 'SRS' },
+    { to: '/', label: 'Home' },
+  ];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
+      >
+        その他
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-40 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[oklch(18%_0.01_270)] shadow-lg py-1 z-50">
+          {moreLinks.map((link) => (
+            <Link
+              key={link.to + link.label}
+              to={link.to}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function Layout() {
@@ -71,13 +131,11 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[oklch(13%_0.01_270)]">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[oklch(18%_0.01_270/0.8)] backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
-            <span className="text-2xl sm:text-3xl" role="img" aria-label="book">
-              📖
-            </span>
+            <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
             <div>
               <h1 className="text-lg sm:text-xl font-bold text-indigo-700 dark:text-indigo-400 group-hover:text-indigo-900 dark:group-hover:text-indigo-300 transition-colors">
                 English Learn
@@ -123,75 +181,47 @@ export default function Layout() {
               className="md:hidden flex items-center justify-center w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors"
               aria-label="検索"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="w-5 h-5" />
             </Link>
           </div>
+          {/* H4: Simplified desktop header — 5 key links + More dropdown */}
           <div className="hidden md:flex items-center gap-4">
             <Link
               to="/search"
               className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="w-4 h-4" />
               検索
             </Link>
             <Link
               to="/dictionary"
               className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
             >
-              <span>📖</span> 辞書
+              <BookOpen className="w-4 h-4" />
+              辞書
             </Link>
             <Link
-              to="/reading-practice"
+              to="/toeic-practice"
               className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
             >
-              <span>📄</span> 読解
-            </Link>
-            <Link
-              to="/study-guide"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
-              <span>{'\u{1F5FA}\u{FE0F}'}</span> ロードマップ
-            </Link>
-            <Link
-              to="/score"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
-              <span>{'\u{1F3C6}'}</span> スコア
-            </Link>
-            <Link
-              to="/analytics"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
-              <span>{'\u{1F4C8}'}</span> 分析
-            </Link>
-            <Link
-              to="/srs"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
-              <span>{'\uD83E\uDDE0'}</span> SRS
+              <Target className="w-4 h-4" />
+              練習
             </Link>
             <Link
               to="/bookmarks"
               className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
             >
-              <span>{'\u2B50'}</span> ブックマーク
+              <BookMarked className="w-4 h-4" />
+              ブックマーク
             </Link>
             <Link
               to="/progress"
               className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
             >
-              <span>📊</span> 進捗
+              <BarChart3 className="w-4 h-4" />
+              進捗
             </Link>
-            <Link
-              to="/"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors"
-            >
-              Home
-            </Link>
+            <MoreDropdown />
           </div>
         </div>
       </header>
@@ -203,30 +233,31 @@ export default function Layout() {
         </Suspense>
       </main>
 
-      <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[oklch(18%_0.01_270)]">
         <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6 text-center text-sm text-gray-400 dark:text-gray-500">
           <p>&copy; {new Date().getFullYear()} English Learn. All rights reserved.</p>
         </div>
       </footer>
 
-      {/* Mobile bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:hidden">
+      {/* Mobile bottom navigation — C2: increased touch targets */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[oklch(18%_0.01_270)] border-t border-gray-200 dark:border-gray-700 md:hidden">
         <div className="flex items-center justify-around px-2 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
           {bottomNavItems.map((item) => {
             const active = isActive(item.to);
+            const Icon = item.icon;
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center justify-center min-w-0 flex-1 py-1 transition-colors ${
+                className={`flex flex-col items-center justify-center min-w-0 flex-1 py-2.5 min-h-[48px] transition-colors ${
                   active
                     ? 'text-indigo-600 dark:text-indigo-400'
                     : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                 }`}
               >
-                <span className="text-xl leading-none">{item.icon}</span>
+                <Icon className="w-6 h-6" />
                 <span
-                  className={`text-[10px] mt-0.5 truncate ${
+                  className={`text-xs mt-0.5 truncate ${
                     active ? 'font-bold' : 'font-medium'
                   }`}
                 >

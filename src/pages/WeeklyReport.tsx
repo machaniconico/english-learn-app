@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useStudyTimer } from '../hooks/useStudyTimer';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useUserLevel, LEVEL_INFO, CEFR_ORDER } from '../hooks/useUserLevel';
+import { useAccuracy } from '../hooks/useAccuracy';
 
 type Period = 'this-week' | 'last-week' | 'this-month' | 'last-month';
 
@@ -122,8 +124,9 @@ function getPreviousPeriodRange(period: Period): { start: Date; end: Date } {
 export default function WeeklyReport() {
   const [period, setPeriod] = useState<Period>('this-week');
   const { getSessions, getStreak } = useStudyTimer();
-
   const { getEventsForPeriod } = useAnalytics();
+  const { level: userLevel, hasDiagnosed, checkLevelUp } = useUserLevel();
+  const { getOverallAccuracy } = useAccuracy();
 
   const range = useMemo(() => getPeriodRange(period), [period]);
   const prevRange = useMemo(() => getPreviousPeriodRange(period), [period]);
@@ -452,6 +455,112 @@ export default function WeeklyReport() {
           ))}
         </ul>
       </div>
+
+      {/* Level Progress */}
+      {hasDiagnosed && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            レベル進捗
+          </h2>
+
+          {/* Current Level */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br from-${LEVEL_INFO[userLevel].color}-500 to-${LEVEL_INFO[userLevel].color}-600 flex items-center justify-center shadow-sm`}>
+              <span className="text-xl font-black text-white">{userLevel}</span>
+            </div>
+            <div>
+              <div className="font-bold text-gray-900 dark:text-white">
+                {LEVEL_INFO[userLevel].label} - {LEVEL_INFO[userLevel].labelJa}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                TOEIC {LEVEL_INFO[userLevel].toeicMin}〜{LEVEL_INFO[userLevel].toeicMax}
+              </div>
+            </div>
+          </div>
+
+          {/* Level Map */}
+          <div className="flex items-center justify-between mb-4">
+            {CEFR_ORDER.map((lvl, i) => {
+              const isCurrent = lvl === userLevel;
+              const isPassed = CEFR_ORDER.indexOf(lvl) <= CEFR_ORDER.indexOf(userLevel);
+              return (
+                <div key={lvl} className="flex items-center">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                        isCurrent
+                          ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300 dark:ring-indigo-700'
+                          : isPassed
+                            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                      }`}
+                    >
+                      {lvl}
+                    </div>
+                  </div>
+                  {i < CEFR_ORDER.length - 1 && (
+                    <div
+                      className={`w-4 sm:w-8 h-0.5 mx-0.5 ${
+                        isPassed && CEFR_ORDER.indexOf(lvl) < CEFR_ORDER.indexOf(userLevel)
+                          ? 'bg-emerald-300 dark:bg-emerald-700'
+                          : 'bg-gray-200 dark:bg-gray-700'
+                      }`}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Level-Up Suggestion */}
+          {(() => {
+            const accuracy = getOverallAccuracy();
+            const nextLevel = checkLevelUp(accuracy);
+            if (nextLevel) {
+              return (
+                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">🎉</span>
+                    <span className="font-bold text-amber-700 dark:text-amber-300">レベルアップのチャンス！</span>
+                  </div>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    正答率{accuracy}%を達成しました。レベル診断テストを再受験して <strong>{nextLevel}</strong> にレベルアップしませんか？
+                  </p>
+                  <Link
+                    to="/level-test"
+                    className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors"
+                  >
+                    診断テストを受ける &rarr;
+                  </Link>
+                </div>
+              );
+            }
+            // Show encouragement if not ready for level up
+            const currentIdx = CEFR_ORDER.indexOf(userLevel);
+            if (currentIdx < CEFR_ORDER.length - 1) {
+              return (
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {accuracy > 0
+                      ? `現在の正答率: ${accuracy}% — 85%以上でレベルアップを提案します`
+                      : '問題を解いて正答率を上げていきましょう！'}
+                  </p>
+                </div>
+              );
+            }
+            return (
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
+                <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
+                  最高レベルに到達しています！素晴らしい！
+                </p>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Quick actions */}
       <div className="flex flex-col sm:flex-row gap-3 pb-6">
