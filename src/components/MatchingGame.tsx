@@ -69,7 +69,6 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
   const [moves, setMoves] = useState(0);
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [completed, setCompleted] = useState(false);
   const [showMismatch, setShowMismatch] = useState(false);
   const [justMatched, setJustMatched] = useState<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -81,9 +80,12 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
     return selected;
   }, [items.length]);
 
-  // Timer
+  // Derived completion state: true once every card is matched.
+  const completed = cards.length > 0 && cards.every((c) => c.matched);
+
+  // Timer (stops once the game is completed)
   useEffect(() => {
-    if (isRunning) {
+    if (isRunning && !completed) {
       timerRef.current = setInterval(() => {
         setTime((t) => t + 1);
       }, 1000);
@@ -91,15 +93,7 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRunning]);
-
-  // Check completion
-  useEffect(() => {
-    if (cards.length > 0 && cards.every((c) => c.matched)) {
-      setIsRunning(false);
-      setCompleted(true);
-    }
-  }, [cards]);
+  }, [isRunning, completed]);
 
   const handleCardClick = useCallback(
     (cardId: string) => {
@@ -155,7 +149,6 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
     setMoves(0);
     setTime(0);
     setIsRunning(false);
-    setCompleted(false);
     setShowMismatch(false);
     setJustMatched([]);
     focusIndex.current = 0;

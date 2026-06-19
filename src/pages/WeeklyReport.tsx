@@ -258,16 +258,6 @@ export default function WeeklyReport() {
 
   const maxMinutes = Math.max(...reportData.dailyData.map((d) => d.minutes), 1);
 
-  function ComparisonArrow({ current, previous }: { current: number; previous: number }) {
-    if (previous === 0 && current === 0) return <span className="text-gray-400 text-xs">--</span>;
-    if (previous === 0) return <span className="text-emerald-500 text-xs font-medium flex items-center gap-0.5"><ArrowUp /> 新規</span>;
-    const diff = current - previous;
-    const pct = Math.round((Math.abs(diff) / previous) * 100);
-    if (diff > 0) return <span className="text-emerald-500 text-xs font-medium flex items-center gap-0.5"><ArrowUp /> {pct}%</span>;
-    if (diff < 0) return <span className="text-red-500 text-xs font-medium flex items-center gap-0.5"><ArrowDown /> {pct}%</span>;
-    return <span className="text-gray-400 text-xs">±0%</span>;
-  }
-
   return (
     <div className="space-y-6">
       {/* Back link */}
@@ -582,6 +572,16 @@ export default function WeeklyReport() {
 }
 
 // --- Sub-components ---
+
+function ComparisonArrow({ current, previous }: { current: number; previous: number }) {
+  if (previous === 0 && current === 0) return <span className="text-gray-400 text-xs">--</span>;
+  if (previous === 0) return <span className="text-emerald-500 text-xs font-medium flex items-center gap-0.5"><ArrowUp /> 新規</span>;
+  const diff = current - previous;
+  const pct = Math.round((Math.abs(diff) / previous) * 100);
+  if (diff > 0) return <span className="text-emerald-500 text-xs font-medium flex items-center gap-0.5"><ArrowUp /> {pct}%</span>;
+  if (diff < 0) return <span className="text-red-500 text-xs font-medium flex items-center gap-0.5"><ArrowDown /> {pct}%</span>;
+  return <span className="text-gray-400 text-xs">±0%</span>;
+}
 
 function StatCard({
   label,

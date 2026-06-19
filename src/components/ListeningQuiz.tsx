@@ -31,21 +31,6 @@ function pickDistractors(items: PhraseItem[], correctId: string, count: number):
   return shuffled.slice(0, count).map((item) => item.japanese);
 }
 
-function buildQuestion(items: PhraseItem[], questionIndex: number): Omit<QuizState, 'selectedIndex' | 'answered' | 'results'> {
-  const shuffled = shuffleArray(items);
-  const correctItem = shuffled[questionIndex % shuffled.length];
-  const distractors = pickDistractors(items, correctItem.id, 3);
-  const allOptions = shuffleArray([correctItem.japanese, ...distractors]);
-  const correctOptionIndex = allOptions.indexOf(correctItem.japanese);
-
-  return {
-    questionIndex,
-    correctItem,
-    options: allOptions,
-    correctOptionIndex,
-  };
-}
-
 const TOTAL_QUESTIONS = 10;
 
 export default function ListeningQuiz({ items }: ListeningQuizProps) {
@@ -59,28 +44,21 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
   const questionPool = useMemo(() => shuffleArray(items).slice(0, totalQuestions), [items, totalQuestions]);
 
   const [state, setState] = useState<QuizState>(() => {
-    const q = buildQuestion(items, 0);
+    const firstItem = questionPool[0];
+    const options = shuffleArray([
+      firstItem.japanese,
+      ...pickDistractors(items, firstItem.id, 3),
+    ]);
     return {
-      ...q,
-      correctItem: questionPool[0],
-      options: shuffleArray([
-        questionPool[0].japanese,
-        ...pickDistractors(items, questionPool[0].id, 3),
-      ]),
-      correctOptionIndex: 0,
+      questionIndex: 0,
+      correctItem: firstItem,
+      options,
+      correctOptionIndex: options.indexOf(firstItem.japanese),
       selectedIndex: null,
       answered: false,
       results: [],
     };
   });
-
-  // Recalculate correct option index after shuffle
-  useEffect(() => {
-    setState((prev) => ({
-      ...prev,
-      correctOptionIndex: prev.options.indexOf(prev.correctItem.japanese),
-    }));
-  }, []);
 
   const [finished, setFinished] = useState(false);
 

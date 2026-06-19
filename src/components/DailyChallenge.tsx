@@ -214,14 +214,14 @@ export default function DailyChallenge() {
     saveState(today, state);
   }, [today, state]);
 
-  // Show celebration when all completed
+  // Auto-dismiss the celebration 3s after it is shown.
+  // (setState here runs in a timeout callback, not synchronously during the
+  // effect, so it does not trip react-hooks/set-state-in-effect.)
   useEffect(() => {
-    if (allCompleted) {
-      setShowCelebration(true);
-      const timer = setTimeout(() => setShowCelebration(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [allCompleted]);
+    if (!showCelebration) return;
+    const timer = setTimeout(() => setShowCelebration(false), 3000);
+    return () => clearTimeout(timer);
+  }, [showCelebration]);
 
   // Countdown timer
   useEffect(() => {
@@ -243,12 +243,19 @@ export default function DailyChallenge() {
   }, [allCompleted]);
 
   const markCompleted = useCallback((index: number) => {
+    let justCompletedAll = false;
     setState(prev => {
       if (prev.completed[index]) return prev;
       const newCompleted = [...prev.completed];
       newCompleted[index] = true;
+      // Detect the transition into "all completed" (pure check, no side effect).
+      justCompletedAll = newCompleted.every(Boolean);
       return { completed: newCompleted };
     });
+    // Trigger the celebration from the completion event, not from an effect.
+    if (justCompletedAll) {
+      setShowCelebration(true);
+    }
   }, []);
 
   const toggleExpand = (index: number) => {

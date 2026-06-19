@@ -34,8 +34,8 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
 
   const currentQuestion = questions[currentIndex];
 
-  // Initialize pool with shuffled words when question changes
-  const initQuestion = useCallback((idx: number) => {
+  // Build a shuffled pool whose order differs from the correct order.
+  const buildPool = useCallback((idx: number) => {
     const q = questions[idx];
     let shuffled = shuffleArray(q.words);
     // Ensure shuffled order differs from correct order
@@ -44,17 +44,32 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
       shuffled = shuffleArray(q.words);
       attempts++;
     }
-    setPool(shuffled);
+    return shuffled;
+  }, [questions]);
+
+  // Reset interactive state when the question changes, derived during render
+  // (React's "adjusting state when a prop changes" pattern) instead of via an
+  // effect + setState, which keeps the reset synchronous and reshuffle-free.
+  const [initializedIndex, setInitializedIndex] = useState(-1);
+  if (initializedIndex !== currentIndex) {
+    setInitializedIndex(currentIndex);
+    setPool(buildPool(currentIndex));
     setAnswer([]);
     setChecked(false);
     setIsCorrect(false);
     setShaking(false);
     setHintUsed(false);
-  }, [questions]);
+  }
 
-  useEffect(() => {
-    initQuestion(currentIndex);
-  }, [currentIndex, initQuestion]);
+  // Re-initialize the current question (used by the retry button).
+  const initQuestion = useCallback((idx: number) => {
+    setPool(buildPool(idx));
+    setAnswer([]);
+    setChecked(false);
+    setIsCorrect(false);
+    setShaking(false);
+    setHintUsed(false);
+  }, [buildPool]);
 
   const handlePickWord = useCallback((index: number) => {
     if (checked) return;

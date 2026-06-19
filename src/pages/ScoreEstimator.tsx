@@ -370,7 +370,7 @@ export default function ScoreEstimator() {
   }, [progress.lessons]);
 
   // Calculate estimated TOEIC score
-  const estimate = useMemo((): ScoreEstimate => {
+  const estimate = useMemo((): Omit<ScoreEstimate, 'timestamp'> => {
     let score = 200; // TOEIC minimum base
 
     // Fill-in-blank contribution
@@ -403,7 +403,7 @@ export default function ScoreEstimator() {
     const high = clamp(score + 50, 10, 990);
     score = clamp(score, 10, 990);
 
-    return { score, low, high, timestamp: Date.now() };
+    return { score, low, high };
   }, [fillInBreakdown, readingBreakdown, stats.totalItems]);
 
   // Save estimate to history on mount (once per page visit, throttled to 1 per hour)
@@ -413,8 +413,12 @@ export default function ScoreEstimator() {
     const lastEntry = existing[existing.length - 1];
     const oneHour = 60 * 60 * 1000;
     if (lastEntry && Date.now() - lastEntry.timestamp < oneHour) return;
-    const updated = [...existing, estimate].slice(-MAX_HISTORY);
+    const updated = [...existing, { ...estimate, timestamp: Date.now() }].slice(-MAX_HISTORY);
     saveHistory(updated);
+    // Persist to localStorage (external system) and reflect the saved entry into
+    // state. Throttled to once per hour per visit via the guard above, so this runs
+    // at most once and cannot cause cascading renders.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHistory(updated);
   }, [hasData, estimate]);
 

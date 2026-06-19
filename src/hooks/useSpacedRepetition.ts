@@ -48,6 +48,49 @@ function saveCards(cards: SRSCard[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
 }
 
+/**
+ * Pure SM-2 scheduling update. Given a card, a review quality (0-5), and
+ * today's date string, returns the updated card with new interval, easeFactor,
+ * repetitions, nextReview (today + interval days) and lastReview (today).
+ * This is a drop-in for the inline logic previously in reviewCard.
+ */
+export function scheduleSRSCard(
+  card: SRSCard,
+  quality: 0 | 1 | 2 | 3 | 4 | 5,
+  today: string,
+): SRSCard {
+  let { interval, easeFactor, repetitions } = card;
+
+  if (quality < 3) {
+    // Failed: reset
+    repetitions = 0;
+    interval = 1;
+  } else {
+    // Passed
+    if (repetitions === 0) {
+      interval = 1;
+    } else if (repetitions === 1) {
+      interval = 6;
+    } else {
+      interval = Math.round(interval * easeFactor);
+    }
+    easeFactor = Math.max(
+      1.3,
+      easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)),
+    );
+    repetitions++;
+  }
+
+  return {
+    ...card,
+    interval,
+    easeFactor,
+    repetitions,
+    nextReview: addDays(today, interval),
+    lastReview: today,
+  };
+}
+
 export function useSpacedRepetition() {
   const [cards, setCards] = useState<SRSCard[]>(loadCards);
 
@@ -86,40 +129,10 @@ export function useSpacedRepetition() {
   const reviewCard = useCallback(
     (id: string, quality: 0 | 1 | 2 | 3 | 4 | 5) => {
       setCards((prev) => {
+        const today = todayStr();
         const next = prev.map((card) => {
           if (card.id !== id) return card;
-
-          const today = todayStr();
-          let { interval, easeFactor, repetitions } = card;
-
-          if (quality < 3) {
-            // Failed: reset
-            repetitions = 0;
-            interval = 1;
-          } else {
-            // Passed
-            if (repetitions === 0) {
-              interval = 1;
-            } else if (repetitions === 1) {
-              interval = 6;
-            } else {
-              interval = Math.round(interval * easeFactor);
-            }
-            easeFactor = Math.max(
-              1.3,
-              easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)),
-            );
-            repetitions++;
-          }
-
-          return {
-            ...card,
-            interval,
-            easeFactor,
-            repetitions,
-            nextReview: addDays(today, interval),
-            lastReview: today,
-          };
+          return scheduleSRSCard(card, quality, today);
         });
         saveCards(next);
         return next;

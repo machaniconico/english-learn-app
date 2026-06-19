@@ -97,9 +97,8 @@ export default function Home() {
   const completionPct =
     totalAvailable > 0 ? Math.round((stats.totalItems / totalAvailable) * 100) : 0;
 
-  // Daily challenge status
-  const [dailyCompleted, setDailyCompleted] = useState(0);
-  useEffect(() => {
+  // Daily challenge status — read once on mount from localStorage via lazy initializer
+  const [dailyCompleted] = useState(() => {
     try {
       const d = new Date();
       const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -107,11 +106,12 @@ export default function Home() {
       if (raw) {
         const data = JSON.parse(raw);
         if (data.completed && Array.isArray(data.completed)) {
-          setDailyCompleted(data.completed.filter(Boolean).length);
+          return data.completed.filter(Boolean).length;
         }
       }
     } catch { /* ignore */ }
-  }, []);
+    return 0;
+  });
 
   return (
     <div>
