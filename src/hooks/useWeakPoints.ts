@@ -12,7 +12,65 @@ export interface WeakPoint {
 }
 
 const STORAGE_KEY = 'english-learn-weak-points';
-const MAX_ITEMS = 100;
+export const MAX_ITEMS = 100;
+
+/**
+ * Pure upsert + cap logic for weak points.
+ * Drop-in for addWeakPoint's setState updater body. `now` is the timestamp
+ * to use instead of calling Date.now() inside the updater.
+ */
+export function upsertWeakPoint(
+  prev: WeakPoint[],
+  wp: Omit<WeakPoint, 'timestamp' | 'reviewCount' | 'lastCorrect'>,
+  now: number,
+): WeakPoint[] {
+  // If this question already exists, update it instead of duplicating
+  const existingIdx = prev.findIndex((p) => p.id === wp.id);
+  let next: WeakPoint[];
+  if (existingIdx >= 0) {
+    next = [...prev];
+    next[existingIdx] = {
+      ...next[existingIdx],
+      wrongAnswer: wp.wrongAnswer,
+      correctAnswer: wp.correctAnswer,
+      question: wp.question,
+      timestamp: now,
+      lastCorrect: false,
+    };
+  } else {
+    const newItem: WeakPoint = {
+      ...wp,
+      timestamp: now,
+      reviewCount: 0,
+      lastCorrect: false,
+    };
+    next = [newItem, ...prev];
+  }
+
+  // Keep only last MAX_ITEMS (remove oldest when exceeding)
+  if (next.length > MAX_ITEMS) {
+    next.sort((a, b) => b.timestamp - a.timestamp);
+    next = next.slice(0, MAX_ITEMS);
+  }
+
+  return next;
+}
+
+/**
+ * Pure markReviewed logic. Drop-in for markReviewed's setState updater body.
+ */
+export function markReviewedIn(
+  prev: WeakPoint[],
+  id: string,
+  correct: boolean,
+  now: number,
+): WeakPoint[] {
+  return prev.map((wp) =>
+    wp.id === id
+      ? { ...wp, reviewCount: wp.reviewCount + 1, lastCorrect: correct, timestamp: now }
+      : wp,
+  );
+}
 
 function loadWeakPoints(): WeakPoint[] {
   try {
@@ -49,35 +107,7 @@ export function useWeakPoints() {
   const addWeakPoint = useCallback(
     (wp: Omit<WeakPoint, 'timestamp' | 'reviewCount' | 'lastCorrect'>) => {
       setWeakPoints((prev) => {
-        // If this question already exists, update it instead of duplicating
-        const existingIdx = prev.findIndex((p) => p.id === wp.id);
-        let next: WeakPoint[];
-        if (existingIdx >= 0) {
-          next = [...prev];
-          next[existingIdx] = {
-            ...next[existingIdx],
-            wrongAnswer: wp.wrongAnswer,
-            correctAnswer: wp.correctAnswer,
-            question: wp.question,
-            timestamp: Date.now(),
-            lastCorrect: false,
-          };
-        } else {
-          const newItem: WeakPoint = {
-            ...wp,
-            timestamp: Date.now(),
-            reviewCount: 0,
-            lastCorrect: false,
-          };
-          next = [newItem, ...prev];
-        }
-
-        // Keep only last MAX_ITEMS (remove oldest when exceeding)
-        if (next.length > MAX_ITEMS) {
-          next.sort((a, b) => b.timestamp - a.timestamp);
-          next = next.slice(0, MAX_ITEMS);
-        }
-
+        const next = upsertWeakPoint(prev, wp, Date.now());
         saveWeakPoints(next);
         return next;
       });
@@ -87,11 +117,7 @@ export function useWeakPoints() {
 
   const markReviewed = useCallback((id: string, correct: boolean) => {
     setWeakPoints((prev) => {
-      const next = prev.map((wp) =>
-        wp.id === id
-          ? { ...wp, reviewCount: wp.reviewCount + 1, lastCorrect: correct, timestamp: Date.now() }
-          : wp,
-      );
+      const next = markReviewedIn(prev, id, correct, Date.now());
       saveWeakPoints(next);
       return next;
     });
