@@ -4,25 +4,7 @@ import { useStudyTimer } from '../hooks/useStudyTimer';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useUserLevel, LEVEL_INFO, CEFR_ORDER } from '../hooks/useUserLevel';
 import { useAccuracy } from '../hooks/useAccuracy';
-
-type Period = 'this-week' | 'last-week' | 'this-month' | 'last-month';
-
-const DAY_LABELS = ['月', '火', '水', '木', '金', '土', '日'];
-
-function formatMinutes(minutes: number): string {
-  if (minutes < 60) return `${minutes}分`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h}時間${m}分` : `${h}時間`;
-}
-
-function getDateString(ts: number): string {
-  const d = new Date(ts);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+import { buildReportData, formatMinutes, type Period } from './weeklyReportData';
 
 function getMondayOfWeek(date: Date): Date {
   const d = new Date(date);
@@ -131,130 +113,19 @@ export default function WeeklyReport() {
   const range = useMemo(() => getPeriodRange(period), [period]);
   const prevRange = useMemo(() => getPreviousPeriodRange(period), [period]);
 
-  const reportData = useMemo(() => {
-    const startTs = range.start.getTime();
-    const endTs = range.end.getTime() + 24 * 60 * 60 * 1000; // end of day
-    const prevStartTs = prevRange.start.getTime();
-    const prevEndTs = prevRange.end.getTime() + 24 * 60 * 60 * 1000;
-
-    // Study time
-    const sessions = getSessions(90).filter(
-      (s) => s.startTime >= startTs && s.startTime < endTs,
-    );
-    const prevSessions = getSessions(180).filter(
-      (s) => s.startTime >= prevStartTs && s.startTime < prevEndTs,
-    );
-
-    const totalMinutes = sessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
-    const prevTotalMinutes = prevSessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
-
-    // Active days
-    const activeDays = new Set(sessions.map((s) => s.date)).size;
-    const prevActiveDays = new Set(prevSessions.map((s) => s.date)).size;
-
-    // Daily breakdown for chart
-    const dailyData: { date: string; minutes: number; dayLabel: string }[] = [];
-    if (period === 'this-week' || period === 'last-week') {
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(range.start);
-        d.setDate(d.getDate() + i);
-        const dateStr = getDateString(d.getTime());
-        const dayMinutes = sessions
-          .filter((s) => s.date === dateStr)
-          .reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
-        dailyData.push({
-          date: dateStr,
-          minutes: dayMinutes,
-          dayLabel: DAY_LABELS[i],
-        });
-      }
-    } else {
-      // Monthly: group by date
-      for (let i = 0; i < range.days; i++) {
-        const d = new Date(range.start);
-        d.setDate(d.getDate() + i);
-        const dateStr = getDateString(d.getTime());
-        const dayMinutes = sessions
-          .filter((s) => s.date === dateStr)
-          .reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
-        dailyData.push({
-          date: dateStr,
-          minutes: dayMinutes,
-          dayLabel: `${d.getDate()}`,
-        });
-      }
-    }
-
-    // Analytics stats
-    const allEvents = getEventsForPeriod(90);
-    const periodEvents = allEvents.filter(
-      (e) => e.timestamp >= startTs && e.timestamp < endTs,
-    );
-    const prevEvents = allEvents.filter(
-      (e) => e.timestamp >= prevStartTs && e.timestamp < prevEndTs,
-    );
-
-    const completedItems = periodEvents.length;
-    const prevCompletedItems = prevEvents.length;
-
-    const scores = periodEvents.filter((e) => e.score !== undefined).map((e) => e.score!);
-    const avgScore = scores.length > 0
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      : 0;
-    const prevScores = prevEvents.filter((e) => e.score !== undefined).map((e) => e.score!);
-    const prevAvgScore = prevScores.length > 0
-      ? Math.round(prevScores.reduce((a, b) => a + b, 0) / prevScores.length)
-      : 0;
-
-    // Achievements
-    const achievements: string[] = [];
-    if (totalMinutes >= 60) achievements.push(`${formatMinutes(totalMinutes)}学習達成`);
-    if (activeDays >= 5) achievements.push(`${activeDays}日間連続で学習`);
-    if (completedItems >= 10) achievements.push(`${completedItems}件のアクティビティを完了`);
-    if (avgScore >= 80) achievements.push(`平均スコア${avgScore}%を達成`);
-    const quizEvents = periodEvents.filter((e) => e.type === 'quiz_complete');
-    if (quizEvents.length >= 5) achievements.push(`${quizEvents.length}回のクイズに挑戦`);
-    if (achievements.length === 0 && totalMinutes > 0) {
-      achievements.push('学習を開始しました');
-    }
-
-    // Streaks
-    const streak = getStreak();
-
-    // Suggested goals
-    const goals: string[] = [];
-    if (totalMinutes < 30) {
-      goals.push('来週は合計30分以上の学習を目指しましょう');
-    } else if (totalMinutes < 120) {
-      goals.push('来週は合計2時間の学習を目指しましょう');
-    } else {
-      goals.push('この調子を維持しましょう');
-    }
-    if (activeDays < 5) {
-      goals.push(`毎日少しずつ学習して、${activeDays + 2}日以上の学習日数を目指しましょう`);
-    }
-    if (avgScore > 0 && avgScore < 80) {
-      goals.push('復習を重ねて平均スコア80%以上を目指しましょう');
-    }
-    if (completedItems < 5) {
-      goals.push('レッスンやクイズにもっと取り組んでみましょう');
-    }
-
-    return {
-      totalMinutes,
-      prevTotalMinutes,
-      activeDays,
-      prevActiveDays,
-      completedItems,
-      prevCompletedItems,
-      avgScore,
-      prevAvgScore,
-      dailyData,
-      achievements,
-      streak,
-      goals,
-    };
-  }, [range, prevRange, period, getSessions, getEventsForPeriod, getStreak]);
+  const reportData = useMemo(
+    () =>
+      buildReportData({
+        sessions90: getSessions(90),
+        sessions180: getSessions(180),
+        allEvents: getEventsForPeriod(90),
+        streak: getStreak(),
+        range,
+        prevRange,
+        period,
+      }),
+    [range, prevRange, period, getSessions, getEventsForPeriod, getStreak],
+  );
 
   const maxMinutes = Math.max(...reportData.dailyData.map((d) => d.minutes), 1);
 
