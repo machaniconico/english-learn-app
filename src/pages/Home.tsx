@@ -32,6 +32,7 @@ import {
   Medal,
   Keyboard,
   Layers,
+  Download,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -103,7 +104,7 @@ export default function Home() {
     try {
       const d = new Date();
       const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const raw = localStorage.getItem(`daily-challenge-${dateKey}`);
+      const raw = localStorage.getItem(`english-learn-daily-challenge-${dateKey}`);
       if (raw) {
         const data = JSON.parse(raw);
         if (data.completed && Array.isArray(data.completed)) {
@@ -625,6 +626,27 @@ export default function Home() {
             </div>
             <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-300 transition-colors shrink-0">
               作る &rarr;
+            </span>
+          </Link>
+
+          {/* バックアップ — stone */}
+          <Link
+            to="/backup"
+            className="group flex items-center gap-4 rounded-2xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-stone-500 to-stone-700 shadow-sm shrink-0">
+              <Download className="w-6 h-6 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-stone-700 dark:group-hover:text-stone-300 transition-colors">
+                バックアップ
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                学習データを保存・復元する
+              </p>
+            </div>
+            <span className="text-sm font-medium text-stone-500 group-hover:text-stone-700 dark:text-stone-400 dark:group-hover:text-stone-300 transition-colors shrink-0">
+              管理する &rarr;
             </span>
           </Link>
         </div>

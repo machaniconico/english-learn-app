@@ -51,7 +51,7 @@ function getIdiomItems(): PhraseItem[] {
 
 // --- localStorage helpers ---
 function getStorageKey(date: string) {
-  return `daily-challenge-${date}`;
+  return `english-learn-daily-challenge-${date}`;
 }
 
 interface DailyChallengeState {

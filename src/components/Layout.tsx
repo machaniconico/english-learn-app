@@ -91,6 +91,7 @@ function MoreDropdown() {
     { to: '/score', label: 'スコア' },
     { to: '/analytics', label: '分析' },
     { to: '/srs', label: 'SRS' },
+    { to: '/backup', label: 'バックアップ' },
     { to: '/', label: 'Home' },
   ];
 
