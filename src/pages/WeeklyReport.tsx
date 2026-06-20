@@ -287,6 +287,7 @@ export default function WeeklyReport() {
           <button
             key={item.key}
             onClick={() => setPeriod(item.key)}
+            aria-pressed={period === item.key}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               period === item.key
                 ? 'bg-indigo-600 text-white shadow-sm'

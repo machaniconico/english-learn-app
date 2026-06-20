@@ -235,7 +235,7 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
       <div className="w-full max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 sm:p-10">
           {/* Score */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8" role="status">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Results / 結果</h2>
 
             <div className="inline-flex items-baseline gap-1 my-4">
@@ -476,6 +476,18 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
                 type="button"
                 onClick={() => handleSelect(index)}
                 disabled={state.answered}
+                aria-label={
+                  state.answered
+                    ? `選択肢 ${OPTION_LABELS[index]}: ${option}${
+                        index === currentQuestion.correctIndex
+                          ? '（正解）'
+                          : index === state.selectedIndex
+                            ? '（不正解）'
+                            : ''
+                      }`
+                    : `選択肢 ${OPTION_LABELS[index]}`
+                }
+                aria-pressed={index === state.selectedIndex}
                 className={`
                   flex-1 px-5 py-4 rounded-xl border-2 text-left font-medium
                   transition-all duration-200
@@ -518,6 +530,8 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
       {state.answered && (
         <div className="space-y-4">
           <div
+            role="status"
+            aria-live="polite"
             className={`rounded-xl border p-4 ${
               state.selectedIndex === currentQuestion.correctIndex
                 ? 'bg-green-50 border-green-200'

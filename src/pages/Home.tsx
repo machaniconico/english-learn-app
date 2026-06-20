@@ -117,9 +117,9 @@ export default function Home() {
             <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
               レベル診断テスト
-            </h2>
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               あなたの英語力を測定して、最適なスタート地点を見つけよう
             </p>
@@ -137,9 +137,9 @@ export default function Home() {
             <span className="text-lg font-black text-white">{userLevel}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-base font-bold text-gray-900 dark:text-gray-100">
               {levelInfo.label} - {levelInfo.labelJa}
-            </h2>
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               TOEIC {levelInfo.toeicMin}〜{levelInfo.toeicMax} / {levelInfo.description}
             </p>
@@ -168,7 +168,7 @@ export default function Home() {
           >
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">苦手分野をトレーニング</h2>
+              <p className="text-base font-bold text-gray-900 dark:text-gray-100">苦手分野をトレーニング</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {recommendations.map((rec) => (
@@ -195,9 +195,9 @@ export default function Home() {
           <Sparkles className="w-6 h-6 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors">
+          <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors">
             今日のチャレンジ
-          </h2>
+          </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             {dailyCompleted === 5
               ? '全チャレンジ完了！素晴らしい！'
@@ -233,9 +233,9 @@ export default function Home() {
             <Dumbbell className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors">
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors">
               弱点克服
-            </h2>
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {weakPoints.length}件の弱点を復習しよう
             </p>

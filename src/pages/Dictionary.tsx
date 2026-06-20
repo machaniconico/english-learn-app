@@ -145,6 +145,7 @@ export default function Dictionary() {
           type="text"
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+          aria-label="英単語を検索"
           placeholder="英語または日本語で検索..."
           className="w-full pl-12 pr-4 py-3.5 text-lg rounded-xl border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow placeholder:text-gray-400"
         />
@@ -169,6 +170,7 @@ export default function Dictionary() {
             onClick={() =>
               handleLetterChange(selectedLetter === letter ? null : letter)
             }
+            aria-pressed={selectedLetter === letter}
             className={`w-8 h-8 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
               selectedLetter === letter
                 ? 'bg-indigo-600 text-white shadow-md'
@@ -197,6 +199,7 @@ export default function Dictionary() {
               key={cat}
               type="button"
               onClick={() => handleCategoryChange(cat)}
+              aria-pressed={selectedCategory === cat}
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
                 selectedCategory === cat
                   ? 'bg-indigo-600 text-white shadow-md'
@@ -216,6 +219,7 @@ export default function Dictionary() {
             key={label}
             type="button"
             onClick={() => handleLevelChange(label)}
+            aria-pressed={selectedLevel === label}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
               selectedLevel === label
                 ? 'bg-indigo-600 text-white shadow-md'
@@ -228,7 +232,7 @@ export default function Dictionary() {
       </div>
 
       {/* Results Count */}
-      <p className="text-sm text-gray-500 mb-4 font-medium">
+      <p className="text-sm text-gray-500 mb-4 font-medium" role="status" aria-live="polite">
         {filteredEntries.length} 件の結果
         {selectedLetter && (
           <span className="ml-2 text-indigo-600">
@@ -318,8 +322,8 @@ export default function Dictionary() {
         </div>
       ) : (
         /* Empty State */
-        <div className="text-center py-16">
-          <p className="text-5xl mb-4">🔍</p>
+        <div className="text-center py-16" role="status" aria-live="polite">
+          <p className="text-5xl mb-4" aria-hidden="true">🔍</p>
           <p className="text-lg font-medium text-gray-700">
             検索結果がありません
           </p>

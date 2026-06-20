@@ -127,9 +127,11 @@ export default function LessonPage() {
                   source={`${sectionId}/${categoryId}/${lessonId}`}
                   size="md"
                 />
-                <div onClick={() => markListened(item.id)}>
-                  <AudioButton text={item.english} size="md" />
-                </div>
+                <AudioButton
+                  text={item.english}
+                  size="md"
+                  onPlayed={() => markListened(item.id)}
+                />
               </div>
             </div>
 

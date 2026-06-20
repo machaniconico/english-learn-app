@@ -303,6 +303,7 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
                 type="button"
                 onClick={() => handleRemoveWord(i)}
                 disabled={checked}
+                aria-label={`${word} を削除`}
                 className={`
                   px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border
                   ${checked && isCorrect
@@ -310,13 +311,18 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
                     : checked && !isCorrect
                       ? 'bg-red-100 border-red-300 text-red-800 cursor-default'
                       : 'bg-white border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600 cursor-pointer active:scale-95'}
-                  focus:outline-none
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1
                 `}
               >
                 {word}
               </button>
             ))}
           </div>
+          <p aria-live="polite" className="sr-only">
+            {answer.length > 0
+              ? `現在の回答: ${answer.join(' ')}`
+              : 'まだワードが選ばれていません'}
+          </p>
         </div>
 
         {/* Word pool */}
@@ -332,12 +338,13 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
                   type="button"
                   onClick={() => handlePickWord(i)}
                   disabled={checked}
+                  aria-label={`${word} を追加`}
                   className={`
                     px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border
                     ${checked
                       ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-default'
                       : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-400 cursor-pointer active:scale-95 shadow-sm'}
-                    focus:outline-none
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1
                   `}
                 >
                   {word}
@@ -388,6 +395,8 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
         {/* Result feedback */}
         {checked && (
           <div
+            role="status"
+            aria-live="assertive"
             className={`rounded-xl border p-4 mb-4 ${
               isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
             }`}

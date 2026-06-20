@@ -120,9 +120,15 @@ export default function Flashcard({ items }: FlashcardProps) {
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') toggleFlip();
+          // Only flip when the card itself is focused — not when a nested
+          // control (e.g. the audio button) receives Enter/Space.
+          if (e.target !== e.currentTarget) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleFlip();
+          }
         }}
-        aria-label={flipped ? 'Showing answer, click to see question' : 'Showing question, click to see answer'}
+        aria-label={flipped ? '答えを表示中。クリックで問題に戻る' : '問題を表示中。クリックで答えを見る'}
       >
         <div
           className="relative w-full transition-transform duration-500"
@@ -146,7 +152,7 @@ export default function Flashcard({ items }: FlashcardProps) {
               <AudioButton text={current.english} size="lg" />
             </div>
             {current.example && (
-              <p className="text-sm text-gray-400 text-center italic mt-2">
+              <p className="text-sm text-gray-600 text-center italic mt-2">
                 {current.example}
               </p>
             )}

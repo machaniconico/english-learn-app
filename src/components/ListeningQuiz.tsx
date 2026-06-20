@@ -149,7 +149,12 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Quiz Complete!</h2>
           <p className="text-gray-500 mb-6">クイズ完了</p>
 
-          <div className="inline-flex items-baseline gap-1 mb-6">
+          <div
+            role="status"
+            aria-live="polite"
+            aria-label={`スコア ${score} / ${totalQuestions} (${percentage}% 正解)`}
+            className="inline-flex items-baseline gap-1 mb-6"
+          >
             <span className="text-5xl font-bold text-indigo-600">{score}</span>
             <span className="text-2xl text-gray-400">/ {totalQuestions}</span>
           </div>
@@ -173,6 +178,8 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
             {state.results.map((correct, i) => (
               <div
                 key={i}
+                role="img"
+                aria-label={correct ? '正解' : '不正解'}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   correct
                     ? 'bg-green-100 text-green-700'
@@ -267,6 +274,7 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
             <button
               key={index}
               type="button"
+              aria-pressed={index === state.selectedIndex}
               onClick={() => handleSelect(index)}
               disabled={state.answered}
               className={`
@@ -307,6 +315,8 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
       {state.answered && (
         <div className="text-center">
           <p
+            role="status"
+            aria-live="assertive"
             className={`text-lg font-bold mb-4 ${
               state.selectedIndex === state.correctOptionIndex
                 ? 'text-green-600'

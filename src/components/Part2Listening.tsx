@@ -115,7 +115,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Results</h2>
           <p className="text-gray-500 mb-6">Part 2 {'\u7D50\u679C'}</p>
 
-          <div className="inline-flex items-baseline gap-1 mb-6">
+          <div role="status" className="inline-flex items-baseline gap-1 mb-6">
             <span className="text-5xl font-bold text-indigo-600">{correctCount}</span>
             <span className="text-2xl text-gray-400">/ {questions.length}</span>
           </div>
@@ -221,6 +221,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
           <select
             value={rate}
             onChange={(e) => setRate(Number(e.target.value))}
+            aria-label="再生速度"
             className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-300"
           >
             <option value={0.6}>0.6x</option>
@@ -321,7 +322,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
                 type="button"
                 onClick={() => playResponse(index)}
                 disabled={speaking}
-                className="w-10 shrink-0 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-sm hover:bg-indigo-50 hover:border-indigo-200 transition-colors cursor-pointer focus:outline-none"
+                className="w-10 shrink-0 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-sm hover:bg-indigo-50 hover:border-indigo-200 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
                 aria-label={`Play response ${LABELS[index]}`}
               >
                 {'\u{1F50A}'}
@@ -331,6 +332,8 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
                 type="button"
                 onClick={() => handleSelect(index)}
                 disabled={answered}
+                aria-label={`応答 ${LABELS[index]}`}
+                aria-pressed={index === selectedIndex}
                 className={`flex-1 px-5 py-4 rounded-xl border-2 text-left font-medium transition-all duration-200 ${
                   answered ? 'cursor-default' : 'cursor-pointer active:scale-[0.98]'
                 } focus:outline-none focus:ring-2 focus:ring-indigo-300 ${optionStyle}`}
@@ -379,6 +382,8 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
       {answered && (
         <div className="text-center">
           <div
+            role="status"
+            aria-live="polite"
             className={`rounded-xl p-4 mb-4 ${
               selectedIndex === current.correctIndex
                 ? 'bg-green-50 border border-green-200'
