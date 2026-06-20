@@ -38,6 +38,7 @@ const CustomDecksPage = lazy(() => import('./pages/CustomDecksPage'))
 const CustomDeckEditPage = lazy(() => import('./pages/CustomDeckEditPage'))
 const CustomDeckStudyPage = lazy(() => import('./pages/CustomDeckStudyPage'))
 const BackupPage = lazy(() => import('./pages/BackupPage'))
+const StudyPlanPage = lazy(() => import('./pages/StudyPlanPage'))
 
 export default function App() {
   return (
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="/backup" element={<BackupPage />} />
         <Route path="/daily" element={<DailyChallengePage />} />
         <Route path="/review" element={<DailyReviewPage />} />
+        <Route path="/plan" element={<StudyPlanPage />} />
         <Route path="/section/:sectionId" element={<CategoryList />} />
         <Route path="/section/:sectionId/:categoryId" element={<LessonList />} />
         <Route path="/section/:sectionId/:categoryId/:lessonId" element={<LessonPage />} />
