@@ -6,6 +6,8 @@ import react from '@vitejs/plugin-react'
 // here (excluded from tsconfig typechecking) avoids that build-time type clash.
 export default defineConfig({
   plugins: [react()],
+  // Ensure JSX in test files uses the automatic runtime (no `import React`).
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'happy-dom',
     globals: true,
