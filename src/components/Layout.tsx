@@ -3,6 +3,7 @@ import { Suspense, useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useStudyTimer } from '../hooks/useStudyTimer';
+import CommandPalette from './CommandPalette';
 import {
   Home,
   BookOpen,
@@ -12,6 +13,7 @@ import {
   Search,
   BookMarked,
   ChevronDown,
+  Command,
 } from 'lucide-react';
 
 const navLinkColorClass =
@@ -148,6 +150,21 @@ export default function Layout() {
   const location = useLocation();
   const { isDark, toggle } = useDarkMode();
   const { isTracking, currentDuration, stopTimer } = useStudyTimer();
+  // コマンドパレットの開閉状態。
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // グローバルショートカット: ⌘K / Ctrl+K でパレットをトグルする。
+  // functional updater を使うので依存配列は空でよい(stale closure を避けられる)。
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -156,6 +173,8 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[oklch(13%_0.01_270)]">
+      {/* コマンドパレット(⌘K / Ctrl+K)。open=false のとき何も描画しない。 */}
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:bg-white focus:text-indigo-700 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow"
@@ -204,6 +223,15 @@ export default function Layout() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
+            </button>
+            {/* コマンドパレットを開くボタン(検索アイコン近く・既存ボタンスタイル準拠) */}
+            <button
+              onClick={() => setPaletteOpen(true)}
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+              aria-label="コマンドパレットを開く (Ctrl+K)"
+              title="コマンドパレット (Ctrl+K)"
+            >
+              <Command className="w-5 h-5" />
             </button>
             {/* Mobile search icon */}
             <Link
