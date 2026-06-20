@@ -29,6 +29,7 @@ import {
   TrendingUp,
   GraduationCap,
   RotateCcw,
+  Medal,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -559,6 +560,27 @@ export default function Home() {
             </div>
             <span className="text-sm font-medium text-sky-500 group-hover:text-sky-700 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors shrink-0">
               話す &rarr;
+            </span>
+          </Link>
+
+          {/* 達成バッジ — yellow */}
+          <Link
+            to="/achievements"
+            className="group flex items-center gap-4 rounded-2xl border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 shadow-sm shrink-0">
+              <Medal className="w-6 h-6 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors">
+                達成バッジ・目標
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                学習の積み重ねと今日の目標をチェック
+              </p>
+            </div>
+            <span className="text-sm font-medium text-yellow-600 group-hover:text-yellow-700 dark:text-yellow-400 dark:group-hover:text-yellow-300 transition-colors shrink-0">
+              見る &rarr;
             </span>
           </Link>
         </div>
