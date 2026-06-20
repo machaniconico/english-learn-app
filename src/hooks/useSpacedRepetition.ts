@@ -23,15 +23,27 @@ export interface SRSStats {
 
 const STORAGE_KEY = 'english-learn-srs';
 
-function todayStr(): string {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
+// ローカル暦日 (YYYY-MM-DD) を返すヘルパー。
+// new Date().toISOString() は UTC 暦日を返すため、JST (UTC+9) のように
+// UTC より東のタイムゾーンでは 00:00-09:00 の間に「前日」スタンプになり、
+// SRS スケジュールが最大 1 日ずれる原因になる。
+// タイムゾーンオフセットを打ち消してローカル暦日を取得する。
+function toLocalDateStr(d: Date): string {
+  const off = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - off).toISOString().slice(0, 10);
 }
 
+function todayStr(): string {
+  return toLocalDateStr(new Date());
+}
+
+// 入力 dateStr は 'T00:00:00' でローカル深夜としてパースし、ローカル日付で
+// 日数加算した上で、出力も toLocalDateStr でローカル暦日に揃える。
+// これにより todayStr() と addDays() が「その日」の定義で一致する。
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + 'T00:00:00');
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return toLocalDateStr(d);
 }
 
 function loadCards(): SRSCard[] {
