@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface SpeechRecognitionEvent {
   results: SpeechRecognitionResultList;
@@ -69,6 +69,14 @@ export function useSpeechRecognition() {
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
     setListening(false);
+  }, []);
+
+  // Stop an in-flight recognition if the component unmounts (e.g. route change)
+  // so the microphone is not left active.
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
   }, []);
 
   return { startListening, stopListening, listening, transcript, supported };
