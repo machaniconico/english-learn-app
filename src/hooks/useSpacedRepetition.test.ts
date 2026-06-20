@@ -1,5 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { scheduleSRSCard, type SRSCard } from './useSpacedRepetition';
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { scheduleSRSCard, useSpacedRepetition, type SRSCard } from './useSpacedRepetition';
 
 const TODAY = '2026-06-19';
 
@@ -20,10 +22,14 @@ function makeCard(overrides: Partial<SRSCard> = {}): SRSCard {
 }
 
 // Helper mirroring addDays for assertions (independent of implementation).
+// ローカル暦日規約 (実装の toLocalDateStr と同じ) で文字列を組み立てる。
+// 旧実装が toISOString().slice(0,10) (UTC 暦日) を使っていた頃はこのヘルパーも
+// 同じ UTC 規約だったが、修正に合わせてローカル暦日規約に揃え直した。
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + 'T00:00:00');
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  const off = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - off).toISOString().slice(0, 10);
 }
 
 describe('scheduleSRSCard (SM-2)', () => {
@@ -178,5 +184,134 @@ describe('scheduleSRSCard (SM-2)', () => {
       expect(result.pronunciation).toBe(card.pronunciation);
       expect(result.source).toBe(card.source);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression: タイムゾーン由来の UTC/ローカル暦日ずれ (US-002)
+// ---------------------------------------------------------------------------
+// 旧実装では todayStr()/addDays() が toISOString().slice(0,10) (UTC 暦日) を
+// 返していたため、JST (UTC+9) ユーザーが 00:00-09:00 にレビュー/カード追加を
+// 行うと lastReview/nextReview が前日スタンプになり、SRS スケジュールが最大
+// 1 日ずれるバグがあった。修正後はローカル暦日を返すことを検証する。
+// todayStr() は非 export なので addCard が nextReview に stamp する today を
+// 経由して観測し、addDays() は scheduleSRSCard の nextReview 経由で観測する。
+describe('timezone correctness (US-002)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('todayStr() はローカル暦日を返す (UTC ではない): UTC+9 の早朝に前日ずれしない', () => {
+    // JST は UTC+9 → getTimezoneOffset() は -540 を返す
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(-540);
+    // 2026-06-21 02:00 JST == 2026-06-20 17:00 UTC (UTC 暦日だと前日)
+    vi.setSystemTime(new Date('2026-06-20T17:00:00Z'));
+
+    const { result } = renderHook(() => useSpacedRepetition());
+    act(() => {
+      result.current.addCard({
+        id: 'tz1',
+        english: 'hello',
+        japanese: 'こんにちは',
+        pronunciation: 'həˈloʊ',
+        source: 'test',
+      });
+    });
+
+    // addCard は nextReview に todayStr() を stamp する。
+    // 旧実装なら UTC 暦日 '2026-06-20' になるが、修正後はローカル暦日 '2026-06-21'。
+    expect(result.current.cards[0].nextReview).toBe('2026-06-21');
+  });
+
+  it('JST 09:00 直前 (08:59 JST) でも同じローカル日付が stamp される', () => {
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(-540);
+    // 2026-06-21 08:59 JST == 2026-06-20 23:59 UTC (まだ UTC 暦日だと前日)
+    vi.setSystemTime(new Date('2026-06-20T23:59:00Z'));
+
+    const { result } = renderHook(() => useSpacedRepetition());
+    act(() => {
+      result.current.addCard({
+        id: 'tz2',
+        english: 'morning',
+        japanese: '朝',
+        pronunciation: 'ˈmɔːrnɪŋ',
+        source: 'test',
+      });
+    });
+
+    expect(result.current.cards[0].nextReview).toBe('2026-06-21');
+  });
+
+  it('addDays() は todayStr() と同じローカル暦日規約で日付を進める (JST)', () => {
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(-540);
+
+    // today='2026-06-21' で interval=6 のカードを first-pass した想定。
+    // scheduleSRSCard は first-pass (reps 0) で interval=1, 次に second-pass
+    // (reps 1) で interval=6 を設定する。reps=1 のカードで quality>=3 を
+    // 渡すと nextReview は addDays(today, 6) になる。
+    const card = makeCard({ repetitions: 1, interval: 1 });
+    const result = scheduleSRSCard(card, 5, '2026-06-21');
+
+    // 旧実装の addDays は JST で addDays('2026-06-21', 6) → '2026-06-26'
+    // (UTC 暦日) を返してしまい 1 日短く評価されていた。修正後はローカル暦日
+    // で '2026-06-27' になる。
+    expect(result.nextReview).toBe('2026-06-27');
+    expect(result.nextReview).toBe(addDays('2026-06-21', 6));
+  });
+
+  it('getDueCards の比較がローカル暦日で一貫する: JST 早朝に前日カードが due にならない', () => {
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(-540);
+    vi.setSystemTime(new Date('2026-06-20T17:00:00Z')); // 2026-06-21 02:00 JST
+
+    // nextReview が '2026-06-21' (ローカル今日) のカードは due。
+    // nextReview が '2026-06-22' (ローカル明日) のカードは due ではない。
+    const dueCard: SRSCard = {
+      id: 'due',
+      english: 'due',
+      japanese: '今日',
+      pronunciation: '',
+      source: 'test',
+      interval: 1,
+      easeFactor: 2.5,
+      repetitions: 1,
+      nextReview: '2026-06-21',
+      lastReview: '2026-06-20',
+    };
+    const notDueCard: SRSCard = {
+      ...dueCard,
+      id: 'not-due',
+      nextReview: '2026-06-22',
+    };
+    localStorage.setItem('english-learn-srs', JSON.stringify([dueCard, notDueCard]));
+
+    const { result } = renderHook(() => useSpacedRepetition());
+    const due = result.current.getDueCards();
+    expect(due.map((c) => c.id)).toEqual(['due']);
+  });
+
+  it('UTC-5 (ニューヨーク EST) の夜でもローカル暦日に stamp される', () => {
+    // EST は UTC-5 → getTimezoneOffset() は 300 を返す
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(300);
+    // 2026-06-21 22:00 EST == 2026-06-22 03:00 UTC (UTC 暦日だと翌日)
+    vi.setSystemTime(new Date('2026-06-22T03:00:00Z'));
+
+    const { result } = renderHook(() => useSpacedRepetition());
+    act(() => {
+      result.current.addCard({
+        id: 'tz3',
+        english: 'night',
+        japanese: '夜',
+        pronunciation: 'naɪt',
+        source: 'test',
+      });
+    });
+
+    // ローカル暦日 '2026-06-21' (UTC 暦日 '2026-06-22' ではない)
+    expect(result.current.cards[0].nextReview).toBe('2026-06-21');
   });
 });

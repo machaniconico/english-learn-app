@@ -627,4 +627,112 @@ describe('useStudyTimer', () => {
       expect(result.current.getSessions(30)).toHaveLength(2);
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Regression: バグA — 非アクティブ自動停止が学習記録を破棄しない
+  // -------------------------------------------------------------------------
+
+  describe('regression: inactivity auto-stop does not silently discard sessions (bug A)', () => {
+    it('records the session (not discards it) when inactivity fires after real activity', () => {
+      const { result } = renderHook(() => useStudyTimer());
+
+      act(() => {
+        result.current.startTimer('reading');
+      });
+
+      // 実際に少し学習が進む(タイマー稼働)。
+      act(() => {
+        vi.advanceTimersByTime(60_000); // 60秒経過
+      });
+
+      // ユーザー操作で lastInteraction が更新される(非アクティブタイマー再アーム)。
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
+      });
+
+      // ここから30分以上、操作なしで放置 → 非アクティブ自動停止が発火。
+      act(() => {
+        vi.advanceTimersByTime(INACTIVITY_MS + 5_000);
+      });
+
+      // セッションは破棄されず記録されているはず。
+      expect(result.current.isTracking).toBe(false);
+      const sessions = result.current.getSessions(30);
+      expect(sessions).toHaveLength(1);
+      expect(sessions[0].activity).toBe('reading');
+      // duration は 60秒前後(lastInteraction - currentStart)以上で、0ではない。
+      expect(sessions[0].duration).toBeGreaterThanOrEqual(60);
+
+      const stored = getStoredState();
+      expect(stored!.sessions).toHaveLength(1);
+      expect(stored!.currentStart).toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Regression: バグA — 操作イベントで lastInteraction が更新される
+  // -------------------------------------------------------------------------
+
+  describe('regression: activity events update lastInteraction (bug A)', () => {
+    it('keydown while tracking advances lastInteraction in the shared store', () => {
+      const { result } = renderHook(() => useStudyTimer());
+
+      act(() => {
+        result.current.startTimer('vocabulary');
+      });
+
+      const before = getStoredState()!.lastInteraction;
+      expect(before).not.toBeNull();
+
+      // スロットル(最大30秒に1回)を確実に超えるよう時間を進めてから操作。
+      act(() => {
+        vi.advanceTimersByTime(31_000);
+      });
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'b' }));
+      });
+
+      const after = getStoredState()!.lastInteraction;
+      expect(after).not.toBeNull();
+      expect(after!).toBeGreaterThan(before!);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Regression: バグB — 複数インスタンス間で状態が即時同期される
+  // -------------------------------------------------------------------------
+
+  describe('regression: state is shared across hook instances (bug B)', () => {
+    it("one instance's startTimer/stopTimer is immediately reflected in another", () => {
+      const a = renderHook(() => useStudyTimer());
+      const b = renderHook(() => useStudyTimer());
+
+      // 初期状態は両方とも未トラッキング。
+      expect(a.result.current.isTracking).toBe(false);
+      expect(b.result.current.isTracking).toBe(false);
+
+      // インスタンス A で開始 → B 側にも即時反映される。
+      act(() => {
+        a.result.current.startTimer('lesson');
+      });
+      expect(a.result.current.isTracking).toBe(true);
+      expect(b.result.current.isTracking).toBe(true);
+
+      act(() => {
+        vi.advanceTimersByTime(5_000);
+      });
+
+      // インスタンス B で停止 → A 側にも即時反映される。
+      act(() => {
+        b.result.current.stopTimer();
+      });
+      expect(b.result.current.isTracking).toBe(false);
+      expect(a.result.current.isTracking).toBe(false);
+
+      // セッションは1件だけ(二重記録されない)。
+      const stored = getStoredState();
+      expect(stored!.sessions).toHaveLength(1);
+      expect(stored!.sessions[0].activity).toBe('lesson');
+    });
+  });
 });
