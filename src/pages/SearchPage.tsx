@@ -4,23 +4,10 @@ import { sections } from '../data/sections';
 import { dictionary } from '../data/dictionary';
 import AudioButton from '../components/AudioButton';
 import type { DictionaryEntry } from '../data/types';
+import { groupResults } from './searchIndex';
+import type { SearchResult, GroupKey } from './searchIndex';
 
 // --- Types ---
-
-interface SearchResult {
-  id: string;
-  english: string;
-  japanese: string;
-  pronunciation?: string;
-  example?: string;
-  exampleJa?: string;
-  partOfSpeech?: string;
-  breadcrumb: string;
-  link: string;
-  group: GroupKey;
-}
-
-type GroupKey = 'phrases' | 'vocabulary' | 'grammar' | 'idioms' | 'toeic' | 'dictionary';
 
 const GROUP_LABELS: Record<GroupKey, string> = {
   phrases: 'フレーズ',
@@ -113,17 +100,6 @@ function highlightMatch(text: string, query: string): React.ReactNode {
   );
 }
 
-function matchesQuery(item: SearchResult, query: string): boolean {
-  const q = query.toLowerCase();
-  return (
-    item.english.toLowerCase().includes(q) ||
-    item.japanese.includes(q) ||
-    (item.pronunciation?.toLowerCase().includes(q) ?? false) ||
-    (item.example?.toLowerCase().includes(q) ?? false) ||
-    (item.exampleJa?.includes(q) ?? false)
-  );
-}
-
 // --- Component ---
 
 export default function SearchPage() {
@@ -147,25 +123,7 @@ export default function SearchPage() {
 
   // Filter + search
   const grouped = useMemo(() => {
-    const result: Record<GroupKey, SearchResult[]> = {
-      phrases: [],
-      vocabulary: [],
-      grammar: [],
-      idioms: [],
-      toeic: [],
-      dictionary: [],
-    };
-
-    if (!debouncedQuery.trim()) return result;
-
-    for (const item of allItems) {
-      if (!activeFilters.has(item.group)) continue;
-      if (matchesQuery(item, debouncedQuery)) {
-        result[item.group].push(item);
-      }
-    }
-
-    return result;
+    return groupResults(allItems, debouncedQuery, activeFilters);
   }, [debouncedQuery, activeFilters, allItems]);
 
   const totalResults = useMemo(() => {

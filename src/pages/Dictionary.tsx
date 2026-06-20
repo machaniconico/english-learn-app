@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { dictionary } from '../data/dictionary';
 import type { DictionaryEntry } from '../data/types';
+import { filterDictionary } from './dictionaryFilter';
 import AudioButton from '../components/AudioButton';
 
 const ITEMS_PER_PAGE = 20;
@@ -77,38 +78,17 @@ export default function Dictionary() {
 
   // Filter entries
   const filteredEntries = useMemo(() => {
-    const query = debouncedQuery.toLowerCase().trim();
-
-    return dictionary.filter((entry: DictionaryEntry) => {
-      // Search filter
-      if (
-        query &&
-        !entry.english.toLowerCase().includes(query) &&
-        !entry.japanese.includes(query)
-      ) {
-        return false;
-      }
-
-      // Category filter
-      if (selectedCategory !== 'すべて' && entry.category !== selectedCategory) {
-        return false;
-      }
-
-      // Level filter
-      if (selectedLevel === '初級' && entry.level !== 'beginner') return false;
-      if (selectedLevel === '中級' && entry.level !== 'intermediate')
-        return false;
-
-      // Alphabet filter
-      if (
-        selectedLetter &&
-        !entry.english.toUpperCase().startsWith(selectedLetter)
-      ) {
-        return false;
-      }
-
-      return true;
+    const base = filterDictionary(dictionary, {
+      query: debouncedQuery,
+      category: selectedCategory,
+      level: selectedLevel,
     });
+
+    // Alphabet filter
+    if (!selectedLetter) return base;
+    return base.filter((entry: DictionaryEntry) =>
+      entry.english.toUpperCase().startsWith(selectedLetter),
+    );
   }, [debouncedQuery, selectedCategory, selectedLevel, selectedLetter]);
 
   const visibleEntries = filteredEntries.slice(0, visibleCount);
