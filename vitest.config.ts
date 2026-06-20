@@ -13,5 +13,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // The suite has grown large; a few tests dynamically import the full content
+    // data set or run axe over big DOMs, which can exceed the 5s default under
+    // parallel load. Give them headroom so they don't flake on slow/busy machines.
+    testTimeout: 30000,
+    hookTimeout: 30000,
   },
 })
