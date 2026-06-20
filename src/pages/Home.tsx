@@ -26,6 +26,7 @@ import {
   Flame,
   TrendingUp,
   GraduationCap,
+  Keyboard,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -502,6 +503,27 @@ export default function Home() {
             </div>
             <span className="text-sm font-medium text-amber-500 group-hover:text-amber-700 dark:text-amber-400 dark:group-hover:text-amber-300 transition-colors shrink-0">
               挑戦する &rarr;
+            </span>
+          </Link>
+
+          {/* タイピング練習 — slate */}
+          <Link
+            to="/typing"
+            className="group flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-slate-500 to-slate-700 shadow-sm shrink-0">
+              <Keyboard className="w-6 h-6 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                タイピング練習
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                日本語を見て英語を正しくタイプ
+              </p>
+            </div>
+            <span className="text-sm font-medium text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300 transition-colors shrink-0">
+              入力する &rarr;
             </span>
           </Link>
         </div>

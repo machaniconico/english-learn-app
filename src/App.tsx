@@ -30,6 +30,7 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const SRSPage = lazy(() => import('./pages/SRSPage'))
 const WeeklyReport = lazy(() => import('./pages/WeeklyReport'))
 const LevelTestPage = lazy(() => import('./pages/LevelTestPage'))
+const TypingPracticePage = lazy(() => import('./pages/TypingPracticePage'))
 
 export default function App() {
   return (
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="/srs" element={<SRSPage />} />
         <Route path="/weekly-report" element={<WeeklyReport />} />
         <Route path="/level-test" element={<LevelTestPage />} />
+        <Route path="/typing" element={<TypingPracticePage />} />
         <Route path="/bookmarks" element={<BookmarksPage />} />
         <Route path="/daily" element={<DailyChallengePage />} />
         <Route path="/section/:sectionId" element={<CategoryList />} />
