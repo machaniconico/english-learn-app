@@ -33,6 +33,7 @@ import {
   Keyboard,
   Layers,
   Download,
+  ListChecks,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -163,6 +164,28 @@ export default function Home() {
           </Link>
         </div>
       )}
+
+      {/* Study Plan CTA — primary feature entry */}
+      <Link
+        to="/plan"
+        className="animate-fade-in-up group mb-6 flex items-center gap-4 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        style={{ '--stagger': '15ms' } as React.CSSProperties}
+      >
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm shrink-0">
+          <ListChecks className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+            今日の学習プラン
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            今日やるべきことを優先順位付きで確認しよう
+          </p>
+        </div>
+        <span className="text-sm font-medium text-emerald-600 group-hover:text-emerald-800 dark:text-emerald-400 dark:group-hover:text-emerald-300 transition-colors shrink-0">
+          確認する &rarr;
+        </span>
+      </Link>
 
       {/* Recommended Practice based on weak points */}
       {(() => {
