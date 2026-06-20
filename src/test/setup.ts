@@ -49,3 +49,37 @@ if (typeof window !== 'undefined') {
     value: speechSynthesisMock,
   });
 }
+
+// --- Browser API shims jsdom lacks (needed to render some pages in tests) ---
+if (typeof window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }),
+    });
+  }
+  if (!window.scrollTo) {
+    Object.defineProperty(window, 'scrollTo', { configurable: true, value: vi.fn() });
+  }
+}
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+  class MockIntersectionObserver {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+    takeRecords = vi.fn(() => []);
+    root = null;
+    rootMargin = '';
+    thresholds = [];
+  }
+  vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
+}
