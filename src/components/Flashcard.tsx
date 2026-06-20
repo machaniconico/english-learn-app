@@ -55,7 +55,8 @@ export default function Flashcard({ items }: FlashcardProps) {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const t = e.target;
+      if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) return;
       switch (e.key) {
         case 'ArrowRight':
           goNext();
@@ -64,6 +65,9 @@ export default function Flashcard({ items }: FlashcardProps) {
           goPrev();
           break;
         case ' ':
+          // Let a focused button handle its own Space activation (otherwise the
+          // flip/nav buttons would also trigger this global flip — double toggle).
+          if (t instanceof HTMLButtonElement) return;
           e.preventDefault();
           toggleFlip();
           break;
@@ -112,23 +116,15 @@ export default function Flashcard({ items }: FlashcardProps) {
         />
       </div>
 
-      {/* Card */}
+      {/* Card — a visual surface. Clicking it flips (mouse convenience); the
+          accessible flip control is the dedicated button below, and global
+          keyboard shortcuts (space / arrows) also work. The card is NOT a
+          role="button" because it contains a focusable control (the audio
+          button), which would be invalid nested-interactive content. */}
       <div
         className="relative w-full cursor-pointer"
         style={{ perspective: '1000px' }}
         onClick={toggleFlip}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          // Only flip when the card itself is focused — not when a nested
-          // control (e.g. the audio button) receives Enter/Space.
-          if (e.target !== e.currentTarget) return;
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            toggleFlip();
-          }
-        }}
-        aria-label={flipped ? '答えを表示中。クリックで問題に戻る' : '問題を表示中。クリックで答えを見る'}
       >
         <div
           className="relative w-full transition-transform duration-500"
@@ -188,6 +184,18 @@ export default function Flashcard({ items }: FlashcardProps) {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Flip control — the accessible, keyboard-focusable way to flip the card */}
+      <div className="mt-4 flex justify-center">
+        <button
+          type="button"
+          onClick={toggleFlip}
+          aria-pressed={flipped}
+          className="px-5 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 font-medium shadow-sm hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-300"
+        >
+          {flipped ? '問題に戻る' : '答えを見る'}
+        </button>
       </div>
 
       {/* Navigation */}
