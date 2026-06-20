@@ -212,3 +212,12 @@ export interface Part4Question {
   }[];
   level: 'beginner' | 'intermediate' | 'advanced';
 }
+
+export interface CustomDeck {
+  id: string;
+  name: string;
+  description?: string;
+  items: PhraseItem[];
+  createdAt: number;
+  updatedAt: number;
+}
