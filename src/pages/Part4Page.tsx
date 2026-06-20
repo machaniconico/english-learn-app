@@ -163,7 +163,7 @@ export default function Part4Page() {
 
       {/* Level filter */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <span className="text-xs text-gray-400 font-medium">Filter:</span>
+        <span className="text-xs text-gray-600 font-medium">Filter:</span>
         {(['all', 'beginner', 'intermediate', 'advanced'] as LevelFilter[]).map((level) => (
           <button
             key={level}

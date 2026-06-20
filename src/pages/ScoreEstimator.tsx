@@ -616,7 +616,7 @@ export default function ScoreEstimator() {
               style={{ width: `${vocabProgress.percentage}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-1.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
             {vocabProgress.completed} / {vocabProgress.total} アイテム完了 ({vocabProgress.percentage}%)
           </p>
         </div>
@@ -640,7 +640,7 @@ export default function ScoreEstimator() {
               style={{ width: `${grammarProgress.percentage}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-1.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
             {grammarProgress.completed} / {grammarProgress.total} アイテム完了 ({grammarProgress.percentage}%)
           </p>
         </div>

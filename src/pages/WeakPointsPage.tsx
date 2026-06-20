@@ -307,7 +307,7 @@ export default function WeakPointsPage() {
                 <div className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100">
                   <span className="text-xs mt-0.5 shrink-0">{'\u{274C}'}</span>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-medium text-red-400 mb-0.5">
+                    <p className="text-[10px] font-medium text-red-500 dark:text-red-400 mb-0.5">
                       {'\u3042\u306A\u305F\u306E\u56DE\u7B54'}
                     </p>
                     <p className="text-sm text-red-700 break-words">{wp.wrongAnswer}</p>

@@ -113,7 +113,7 @@ export default function BackupPage() {
     <div className="pb-10">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
           バックアップ / 復元
         </h1>
         <p className="mt-1 text-gray-500 dark:text-gray-400 text-sm">

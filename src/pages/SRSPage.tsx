@@ -273,7 +273,7 @@ export default function SRSPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                       {card.japanese}
                     </p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
                       <span>間隔: {card.interval}日</span>
                       <span>反復: {card.repetitions}回</span>
                       <span>

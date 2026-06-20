@@ -199,7 +199,7 @@ export default function LevelTestPage() {
 
         {/* Question */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-          <div className="mb-1 text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             {currentQuestion.type === 'vocabulary'
               ? '語彙'
               : currentQuestion.type === 'grammar'

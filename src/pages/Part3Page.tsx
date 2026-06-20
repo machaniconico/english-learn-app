@@ -125,7 +125,7 @@ export default function Part3Page() {
 
       {/* Level filter */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <span className="text-xs text-gray-400 font-medium">Filter:</span>
+        <span className="text-xs text-gray-600 font-medium">Filter:</span>
         {(['all', 'beginner', 'intermediate', 'advanced'] as LevelFilter[]).map((level) => (
           <button
             key={level}
@@ -177,7 +177,7 @@ export default function Part3Page() {
               </h2>
 
               {/* Preview */}
-              <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-2">
+              <p className="mt-2 text-sm text-gray-600 leading-relaxed line-clamp-2">
                 {firstLine.speaker}: &ldquo;{firstLine.text.slice(0, 60)}...&rdquo;
               </p>
 

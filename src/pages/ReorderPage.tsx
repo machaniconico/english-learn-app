@@ -149,7 +149,7 @@ export default function ReorderPage() {
                 <span className="text-xs font-medium text-gray-400">
                   {set.questions.length} 問
                 </span>
-                <span className="text-xs font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors">
+                <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors">
                   開始する &rarr;
                 </span>
               </div>

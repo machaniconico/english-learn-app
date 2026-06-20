@@ -105,7 +105,7 @@ export default function Dictionary() {
       {/* Header */}
       <section className="text-center py-8 sm:py-12">
         <p className="text-5xl sm:text-6xl mb-4">📖</p>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
           英和辞書
         </h1>
         <p className="mt-2 text-lg text-indigo-600 font-medium">
@@ -251,7 +251,7 @@ export default function Dictionary() {
 
               {/* Japanese + Pronunciation */}
               <p className="mt-2 text-lg text-gray-800">{entry.japanese}</p>
-              <p className="text-sm text-gray-400 mt-0.5">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                 {entry.pronunciation}
               </p>
 

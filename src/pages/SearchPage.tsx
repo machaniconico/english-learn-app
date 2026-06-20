@@ -255,7 +255,7 @@ export default function SearchPage() {
         <div className="text-center py-16">
           <div className="text-5xl mb-4">🔍</div>
           <p className="text-gray-500 text-lg">検索キーワードを入力してください</p>
-          <p className="text-gray-400 text-sm mt-2">
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
             フレーズ、単語、文法、慣用句、TOEIC、辞書を横断検索できます
           </p>
         </div>
@@ -269,7 +269,7 @@ export default function SearchPage() {
               「<span className="font-semibold text-indigo-600">{debouncedQuery}</span>
               」に一致する結果がありません
             </p>
-            <p className="text-gray-400 text-sm mt-2">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
               別のキーワードや、フィルターの設定を確認してみてください
             </p>
           </div>
@@ -331,7 +331,7 @@ export default function SearchPage() {
                               {highlightMatch(item.japanese, debouncedQuery)}
                             </p>
                             {item.pronunciation && (
-                              <p className="text-xs text-gray-400 mt-0.5">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                 {highlightMatch(item.pronunciation, debouncedQuery)}
                               </p>
                             )}

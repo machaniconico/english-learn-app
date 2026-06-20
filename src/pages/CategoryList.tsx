@@ -235,7 +235,7 @@ export default function CategoryList() {
                           style={{ width: `${completionPct}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums w-12 text-right">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums w-12 text-right">
                         {completionPct > 0 ? `${completionPct}%` : `${category.lessons.length} レッスン`}
                       </span>
                     </div>

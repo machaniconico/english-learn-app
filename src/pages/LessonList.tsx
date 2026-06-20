@@ -75,10 +75,10 @@ export default function LessonList() {
                   </h2>
                 </div>
                 <p className="text-sm text-gray-500 ml-8">{lesson.titleJa}</p>
-                <p className="mt-2 text-sm text-gray-600 ml-8">
+                <p className="mt-2 text-sm text-gray-700 ml-8">
                   {lesson.description}
                 </p>
-                <p className="mt-2 text-xs text-gray-400 ml-8">
+                <p className="mt-2 text-xs text-gray-500 ml-8">
                   {lesson.items.length} フレーズ
                 </p>
               </div>
