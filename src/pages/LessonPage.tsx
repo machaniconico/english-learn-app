@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { sections } from '../data/sections';
 import AudioButton from '../components/AudioButton';
 import BookmarkButton from '../components/BookmarkButton';
 import SRSButton from '../components/SRSButton';
+import ContentLoading from '../components/ContentLoading';
 import { useStudyTimer } from '../hooks/useStudyTimer';
+import { useSection } from '../hooks/useSection';
 
 export default function LessonPage() {
   const { sectionId, categoryId, lessonId } = useParams<{
@@ -13,10 +14,7 @@ export default function LessonPage() {
     lessonId: string;
   }>();
 
-  const section = sections.find((s) => s.id === sectionId);
-  const category = section?.categories.find((c) => c.id === categoryId);
-  const lesson = category?.lessons.find((l) => l.id === lessonId);
-
+  const section = useSection(sectionId);
   const [listenedIds, setListenedIds] = useState<Set<string>>(new Set());
   const { startTimer, stopTimer } = useStudyTimer();
 
@@ -26,6 +24,13 @@ export default function LessonPage() {
       stopTimer();
     };
   }, [startTimer, stopTimer]);
+
+  if (section === undefined) {
+    return <ContentLoading />;
+  }
+
+  const category = section?.categories.find((c) => c.id === categoryId);
+  const lesson = category?.lessons.find((l) => l.id === lessonId);
 
   if (!section || !category || !lesson) {
     return (
@@ -122,9 +127,11 @@ export default function LessonPage() {
                   source={`${sectionId}/${categoryId}/${lessonId}`}
                   size="md"
                 />
-                <div onClick={() => markListened(item.id)}>
-                  <AudioButton text={item.english} size="md" />
-                </div>
+                <AudioButton
+                  text={item.english}
+                  size="md"
+                  onPlayed={() => markListened(item.id)}
+                />
               </div>
             </div>
 

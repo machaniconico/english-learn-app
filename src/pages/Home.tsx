@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { sections } from '../data/sections';
+import { sectionsMeta } from '../data/sectionsMeta';
 import { useProgress } from '../hooks/useProgress';
 import { useWeakPoints } from '../hooks/useWeakPoints';
 import { useUserLevel } from '../hooks/useUserLevel';
@@ -52,21 +52,8 @@ const sectionMeta: Record<string, { icon: LucideIcon; color: string; gradient: s
   },
 };
 
-function countLessons(categories: { lessons: unknown[] }[]): number {
-  return categories.reduce((sum, cat) => sum + cat.lessons.length, 0);
-}
-
-function countTotalItems(): number {
-  let total = 0;
-  for (const section of sections) {
-    for (const category of section.categories) {
-      for (const lesson of category.lessons) {
-        total += lesson.items.length;
-      }
-    }
-  }
-  return total;
-}
+/** Total learnable items across all sections (from precomputed metadata). */
+const TOTAL_ITEMS = sectionsMeta.reduce((sum, s) => sum + s.itemCount, 0);
 
 /** Map weak point type to a recommended practice path */
 function getWeakPointRecommendation(type: string): { label: string; path: string } | null {
@@ -91,15 +78,18 @@ export default function Home() {
     updateStreak();
   }, [updateStreak]);
 
+  // Section sizes come from precomputed metadata (sectionsMeta), so the heavy
+  // ~321kB content chunk never loads on Home — it is fetched only when the user
+  // navigates into a section. A drift-guard test keeps these counts in sync.
+  const totalAvailable = TOTAL_ITEMS;
+
   const stats = getOverallStats();
-  const totalAvailable = countTotalItems();
   const hasProgress = stats.totalItems > 0 || progress.streak > 0;
   const completionPct =
     totalAvailable > 0 ? Math.round((stats.totalItems / totalAvailable) * 100) : 0;
 
-  // Daily challenge status
-  const [dailyCompleted, setDailyCompleted] = useState(0);
-  useEffect(() => {
+  // Daily challenge status — read once on mount from localStorage via lazy initializer
+  const [dailyCompleted] = useState(() => {
     try {
       const d = new Date();
       const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -107,11 +97,12 @@ export default function Home() {
       if (raw) {
         const data = JSON.parse(raw);
         if (data.completed && Array.isArray(data.completed)) {
-          setDailyCompleted(data.completed.filter(Boolean).length);
+          return data.completed.filter(Boolean).length;
         }
       }
     } catch { /* ignore */ }
-  }, []);
+    return 0;
+  });
 
   return (
     <div>
@@ -126,9 +117,9 @@ export default function Home() {
             <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
               レベル診断テスト
-            </h2>
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               あなたの英語力を測定して、最適なスタート地点を見つけよう
             </p>
@@ -146,9 +137,9 @@ export default function Home() {
             <span className="text-lg font-black text-white">{userLevel}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-base font-bold text-gray-900 dark:text-gray-100">
               {levelInfo.label} - {levelInfo.labelJa}
-            </h2>
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               TOEIC {levelInfo.toeicMin}〜{levelInfo.toeicMax} / {levelInfo.description}
             </p>
@@ -177,7 +168,7 @@ export default function Home() {
           >
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">苦手分野をトレーニング</h2>
+              <p className="text-base font-bold text-gray-900 dark:text-gray-100">苦手分野をトレーニング</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {recommendations.map((rec) => (
@@ -204,9 +195,9 @@ export default function Home() {
           <Sparkles className="w-6 h-6 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors">
+          <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors">
             今日のチャレンジ
-          </h2>
+          </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             {dailyCompleted === 5
               ? '全チャレンジ完了！素晴らしい！'
@@ -242,9 +233,9 @@ export default function Home() {
             <Dumbbell className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors">
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors">
               弱点克服
-            </h2>
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {weakPoints.length}件の弱点を復習しよう
             </p>
@@ -518,29 +509,20 @@ export default function Home() {
 
       {/* Section Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-10">
-        {sections.map((section, sIdx) => {
+        {sectionsMeta.map((section, sIdx) => {
           const meta = sectionMeta[section.id] ?? {
             icon: MessageCircle,
             color: 'bg-gray-50 border-gray-200',
             gradient: 'from-gray-500 to-gray-600',
           };
-          const lessonCount = countLessons(section.categories);
-          const hasData = section.categories.length > 0;
           const Icon = meta.icon;
 
           return (
             <Link
               key={section.id}
-              to={hasData ? `/section/${section.id}` : '#'}
-              className={`animate-fade-in-up group relative block rounded-2xl border p-6 transition-all duration-200 ${
-                hasData
-                  ? `${meta.color} dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer`
-                  : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 opacity-60 cursor-default'
-              }`}
+              to={`/section/${section.id}`}
+              className={`animate-fade-in-up group relative block rounded-2xl border p-6 transition-all duration-200 ${meta.color} dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer`}
               style={{ '--stagger': `${480 + sIdx * 60}ms` } as React.CSSProperties}
-              onClick={(e) => {
-                if (!hasData) e.preventDefault();
-              }}
             >
               {/* Icon badge */}
               <div
@@ -562,20 +544,12 @@ export default function Home() {
 
               {/* Footer */}
               <div className="mt-4 flex items-center justify-between">
-                {hasData ? (
-                  <>
-                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
-                      {section.categories.length} カテゴリ / {lessonCount} レッスン
-                    </span>
-                    <span className="text-xs font-medium text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-300 transition-colors">
-                      学習する &rarr;
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
-                    準備中...
-                  </span>
-                )}
+                <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
+                  {`${section.categoryCount} カテゴリ / ${section.lessonCount} レッスン`}
+                </span>
+                <span className="text-xs font-medium text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-300 transition-colors">
+                  学習する &rarr;
+                </span>
               </div>
             </Link>
           );

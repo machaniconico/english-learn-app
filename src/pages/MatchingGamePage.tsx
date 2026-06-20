@@ -1,97 +1,109 @@
 import { Link, useParams } from 'react-router-dom';
-import { sections } from '../data/sections';
+import { useSection, useAllSections } from '../hooks/useSection';
+import ContentLoading from '../components/ContentLoading';
 import MatchingGame from '../components/MatchingGame';
 
-export default function MatchingGamePage() {
-  const { sectionId, categoryId } = useParams<{
-    sectionId: string;
-    categoryId: string;
-  }>();
+function Play({
+  sectionId,
+  categoryId,
+}: {
+  sectionId: string;
+  categoryId: string;
+}) {
+  const section = useSection(sectionId);
 
-  // Game mode: specific category selected
-  if (sectionId && categoryId) {
-    const section = sections.find((s) => s.id === sectionId);
-    const category = section?.categories.find((c) => c.id === categoryId);
+  if (section === undefined) {
+    return <ContentLoading />;
+  }
 
-    if (!section || !category) {
-      return (
-        <div className="text-center py-20">
-          <p className="text-4xl mb-4">😥</p>
-          <p className="text-gray-500 text-lg">
-            カテゴリが見つかりませんでした。
-          </p>
-          <Link
-            to="/matching"
-            className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-          >
-            &larr; カテゴリ一覧に戻る
-          </Link>
-        </div>
-      );
-    }
+  const category = section?.categories.find((c) => c.id === categoryId);
 
-    // Flatten all items from all lessons in this category
-    const allItems = category.lessons.flatMap((lesson) =>
-      lesson.items.map((item) => ({
-        english: item.english,
-        japanese: item.japanese,
-      }))
-    );
-
-    if (allItems.length < 2) {
-      return (
-        <div className="text-center py-20">
-          <p className="text-4xl mb-4">📭</p>
-          <p className="text-gray-500 text-lg">
-            このカテゴリにはアイテムが足りません。
-          </p>
-          <Link
-            to="/matching"
-            className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-          >
-            &larr; カテゴリ一覧に戻る
-          </Link>
-        </div>
-      );
-    }
-
+  if (!section || !category) {
     return (
-      <div>
-        <div className="mb-6">
-          <Link
-            to="/matching"
-            className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
-          >
-            &larr; カテゴリ一覧
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🎮</span>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                マッチングゲーム
-              </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
-                {category.title} - {category.titleJa}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <MatchingGame
-          items={allItems}
-          title={`${category.icon} ${category.titleJa}`}
-        />
-
-        <div className="mt-8 text-center pb-6">
-          <Link
-            to="/matching"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors"
-          >
-            📋 カテゴリ一覧に戻る
-          </Link>
-        </div>
+      <div className="text-center py-20">
+        <p className="text-4xl mb-4">😥</p>
+        <p className="text-gray-500 text-lg">
+          カテゴリが見つかりませんでした。
+        </p>
+        <Link
+          to="/matching"
+          className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+        >
+          &larr; カテゴリ一覧に戻る
+        </Link>
       </div>
     );
+  }
+
+  // Flatten all items from all lessons in this category
+  const allItems = category.lessons.flatMap((lesson) =>
+    lesson.items.map((item) => ({
+      english: item.english,
+      japanese: item.japanese,
+    }))
+  );
+
+  if (allItems.length < 2) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-4xl mb-4">📭</p>
+        <p className="text-gray-500 text-lg">
+          このカテゴリにはアイテムが足りません。
+        </p>
+        <Link
+          to="/matching"
+          className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+        >
+          &larr; カテゴリ一覧に戻る
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <Link
+          to="/matching"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
+        >
+          &larr; カテゴリ一覧
+        </Link>
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">🎮</span>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              マッチングゲーム
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {category.title} - {category.titleJa}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <MatchingGame
+        items={allItems}
+        title={`${category.icon} ${category.titleJa}`}
+      />
+
+      <div className="mt-8 text-center pb-6">
+        <Link
+          to="/matching"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors"
+        >
+          📋 カテゴリ一覧に戻る
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function List() {
+  const sections = useAllSections();
+
+  if (sections === undefined) {
+    return <ContentLoading />;
   }
 
   // List mode: show all sections and categories
@@ -177,4 +189,17 @@ export default function MatchingGamePage() {
       </div>
     </div>
   );
+}
+
+export default function MatchingGamePage() {
+  const { sectionId, categoryId } = useParams<{
+    sectionId: string;
+    categoryId: string;
+  }>();
+
+  if (sectionId && categoryId) {
+    return <Play sectionId={sectionId} categoryId={categoryId} />;
+  }
+
+  return <List />;
 }

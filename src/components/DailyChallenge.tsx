@@ -214,14 +214,14 @@ export default function DailyChallenge() {
     saveState(today, state);
   }, [today, state]);
 
-  // Show celebration when all completed
+  // Auto-dismiss the celebration 3s after it is shown.
+  // (setState here runs in a timeout callback, not synchronously during the
+  // effect, so it does not trip react-hooks/set-state-in-effect.)
   useEffect(() => {
-    if (allCompleted) {
-      setShowCelebration(true);
-      const timer = setTimeout(() => setShowCelebration(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [allCompleted]);
+    if (!showCelebration) return;
+    const timer = setTimeout(() => setShowCelebration(false), 3000);
+    return () => clearTimeout(timer);
+  }, [showCelebration]);
 
   // Countdown timer
   useEffect(() => {
@@ -243,12 +243,19 @@ export default function DailyChallenge() {
   }, [allCompleted]);
 
   const markCompleted = useCallback((index: number) => {
+    let justCompletedAll = false;
     setState(prev => {
       if (prev.completed[index]) return prev;
       const newCompleted = [...prev.completed];
       newCompleted[index] = true;
+      // Detect the transition into "all completed" (pure check, no side effect).
+      justCompletedAll = newCompleted.every(Boolean);
       return { completed: newCompleted };
     });
+    // Trigger the celebration from the completion event, not from an effect.
+    if (justCompletedAll) {
+      setShowCelebration(true);
+    }
   }, []);
 
   const toggleExpand = (index: number) => {
@@ -278,7 +285,7 @@ export default function DailyChallenge() {
               <AudioButton text={word.english} size="sm" />
               <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{word.partOfSpeech}</span>
             </div>
-            <p className="text-lg text-gray-700">{word.japanese} <span className="text-sm text-gray-400">({word.pronunciation})</span></p>
+            <p className="text-lg text-gray-700">{word.japanese} <span className="text-sm text-gray-600">({word.pronunciation})</span></p>
             <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
               <div className="flex items-center gap-2">
                 <AudioButton text={word.example} size="sm" />
@@ -325,6 +332,7 @@ export default function DailyChallenge() {
                     key={i}
                     type="button"
                     disabled={fibSubmitted}
+                    aria-pressed={i === fibSelected}
                     onClick={() => setFibSelected(i)}
                     className={btnClass}
                   >
@@ -346,7 +354,7 @@ export default function DailyChallenge() {
               </button>
             )}
             {fibSubmitted && (
-              <div className={`p-3 rounded-lg text-sm ${fibSelected === question.correctIndex ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
+              <div role="status" aria-live="polite" className={`p-3 rounded-lg text-sm ${fibSelected === question.correctIndex ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
                 {fibSelected === question.correctIndex ? '正解！ ' : '不正解... '}
                 {question.explanation}
               </div>
@@ -373,6 +381,7 @@ export default function DailyChallenge() {
                 }
               }}
               disabled={translationSubmitted}
+              aria-label="英語の訳を入力"
               placeholder="英語を入力..."
               className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent disabled:bg-gray-50"
             />
@@ -389,7 +398,7 @@ export default function DailyChallenge() {
               </button>
             )}
             {translationSubmitted && (
-              <div className="space-y-2">
+              <div role="status" aria-live="polite" className="space-y-2">
                 <div className={`p-3 rounded-lg text-sm ${isCorrect ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
                   {isCorrect ? '正解！' : (
                     <>
@@ -438,6 +447,7 @@ export default function DailyChallenge() {
                     key={i}
                     type="button"
                     disabled={listeningSubmitted}
+                    aria-pressed={i === listeningSelected}
                     onClick={() => setListeningSelected(i)}
                     className={btnClass}
                   >
@@ -459,7 +469,7 @@ export default function DailyChallenge() {
               </button>
             )}
             {listeningSubmitted && (
-              <div className={`p-3 rounded-lg text-sm ${listeningSelected === correctIndex ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
+              <div role="status" aria-live="polite" className={`p-3 rounded-lg text-sm ${listeningSelected === correctIndex ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
                 {listeningSelected === correctIndex ? '正解！' : `不正解... 正解は「${options[correctIndex]}」`}
                 <p className="mt-1 text-gray-600">英語: <span className="font-medium">{phrase.english}</span></p>
               </div>
@@ -520,7 +530,7 @@ export default function DailyChallenge() {
 
       {/* Celebration */}
       {showCelebration && (
-        <div className="text-center py-4 animate-bounce">
+        <div role="status" aria-live="polite" className="text-center py-4 animate-bounce">
           <p className="text-4xl mb-2">🎉</p>
           <p className="text-lg font-bold text-indigo-700">全チャレンジ完了！</p>
           <p className="text-sm text-gray-500">素晴らしい！明日も頑張りましょう！</p>

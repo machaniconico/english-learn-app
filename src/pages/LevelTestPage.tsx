@@ -5,46 +5,10 @@ import {
   useUserLevel,
   LEVEL_INFO,
   CEFR_ORDER,
-  type CEFRLevel,
+  computeLevelFromAnswers,
 } from '../hooks/useUserLevel';
 
 type Phase = 'intro' | 'test' | 'result';
-
-// Adaptive test: go through levels, stop when user gets 3+ wrong in a level
-function computeLevel(answers: Record<string, number>): {
-  level: CEFRLevel;
-  scoreByLevel: Record<CEFRLevel, { correct: number; total: number }>;
-} {
-  const scoreByLevel: Record<CEFRLevel, { correct: number; total: number }> = {
-    A1: { correct: 0, total: 0 },
-    A2: { correct: 0, total: 0 },
-    B1: { correct: 0, total: 0 },
-    B2: { correct: 0, total: 0 },
-    C1: { correct: 0, total: 0 },
-  };
-
-  for (const q of levelTestQuestions) {
-    if (answers[q.id] !== undefined) {
-      scoreByLevel[q.level].total += 1;
-      if (answers[q.id] === q.correctIndex) {
-        scoreByLevel[q.level].correct += 1;
-      }
-    }
-  }
-
-  // Find the highest level where user got >= 3/5 correct
-  let determinedLevel: CEFRLevel = 'A1';
-  for (const lvl of CEFR_ORDER) {
-    const s = scoreByLevel[lvl];
-    if (s.total > 0 && s.correct >= 3) {
-      determinedLevel = lvl;
-    } else if (s.total > 0) {
-      break; // Failed this level, stop
-    }
-  }
-
-  return { level: determinedLevel, scoreByLevel };
-}
 
 export default function LevelTestPage() {
   const [phase, setPhase] = useState<Phase>('intro');
@@ -138,7 +102,7 @@ export default function LevelTestPage() {
     answers,
   ]);
 
-  const result = useMemo(() => computeLevel(answers), [answers]);
+  const result = useMemo(() => computeLevelFromAnswers(answers), [answers]);
 
   const handleSaveResult = useCallback(() => {
     setLevel(result.level, 'diagnostic');

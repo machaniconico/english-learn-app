@@ -158,9 +158,9 @@ function ActivityCalendar({ events }: { events: LearningEvent[] }) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
         学習カレンダー（30日間）
-      </h3>
+      </h2>
       <div className="flex flex-wrap gap-1.5">
         {dayData.map((day) => (
           <div key={day.date} className="relative group">
@@ -201,7 +201,7 @@ function ScoreTrend({ events }: { events: LearningEvent[] }) {
   if (quizScores.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">スコア推移</h3>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">スコア推移</h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
           まだクイズのデータがありません
         </p>
@@ -213,9 +213,9 @@ function ScoreTrend({ events }: { events: LearningEvent[] }) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
         スコア推移（直近10回）
-      </h3>
+      </h2>
       <div className="flex items-end gap-2 h-40">
         {quizScores.map((q, i) => {
           const height = Math.max(4, (q.score / maxScore) * 100);
@@ -266,9 +266,9 @@ function CategoryBreakdown({ events }: { events: LearningEvent[] }) {
   if (categories.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
           カテゴリ別学習
-        </h3>
+        </h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
           まだデータがありません
         </p>
@@ -288,9 +288,9 @@ function CategoryBreakdown({ events }: { events: LearningEvent[] }) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
         カテゴリ別学習
-      </h3>
+      </h2>
       <div className="space-y-3">
         {categories.map((cat, i) => (
           <div key={cat.key}>
@@ -338,7 +338,7 @@ function WeeklyComparison() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">先週と比較</h3>
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">先週と比較</h2>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
         {improvement > 0
           ? `全体スコア +${improvement}% 向上`
@@ -395,9 +395,9 @@ function StudyPatterns({ events }: { events: LearningEvent[] }) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
         曜日別学習パターン
-      </h3>
+      </h2>
       <div className="flex items-end gap-2 sm:gap-3 h-32">
         {dayStats.map((count, i) => {
           const height = Math.max(4, (count / maxCount) * 100);
@@ -499,9 +499,9 @@ function Recommendations({ events, stats }: { events: LearningEvent[]; stats: St
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
         おすすめアドバイス
-      </h3>
+      </h2>
       <div className="space-y-3">
         {tips.map((tip, i) => (
           <div
@@ -558,9 +558,9 @@ function AccuracyAnalysis() {
   if (!hasData) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
           正答率分析
-        </h3>
+        </h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
           まだクイズの正答率データがありません
         </p>
@@ -574,9 +574,9 @@ function AccuracyAnalysis() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Overall Accuracy Gauge */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
             総合正答率
-          </h3>
+          </h2>
           <div className="flex flex-col items-center">
             <div className="relative w-36 h-36">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128">
@@ -618,9 +618,9 @@ function AccuracyAnalysis() {
 
         {/* Accuracy by Type */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
             問題タイプ別正答率
-          </h3>
+          </h2>
           <div className="space-y-3">
             {byType
               .sort((a, b) => b.accuracy - a.accuracy)
@@ -653,9 +653,9 @@ function AccuracyAnalysis() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Accuracy by Level */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
             レベル別正答率
-          </h3>
+          </h2>
           {byLevel.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
               レベル別データがありません
@@ -695,9 +695,9 @@ function AccuracyAnalysis() {
 
         {/* Trend Chart */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
             正答率推移（直近10回）
-          </h3>
+          </h2>
           <div className="space-y-3">
             {Object.entries(trendData)
               .filter(([, scores]) => scores.length >= 2)
@@ -760,9 +760,9 @@ function AccuracyAnalysis() {
               </svg>
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white">
+              <h2 className="font-bold text-gray-900 dark:text-white">
                 苦手分野
-              </h4>
+              </h2>
               <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
                 <span className="font-semibold text-red-600 dark:text-red-400">
                   {weakest.map((t) => QUIZ_TYPE_LABELS[t] ?? t).join('、')}
@@ -795,9 +795,9 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             学習分析
-          </h2>
+          </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
             学習の進捗と傾向を確認しましょう
           </p>
@@ -808,7 +808,9 @@ export default function AnalyticsPage() {
           {PERIOD_OPTIONS.map((opt) => (
             <button
               key={opt.value}
+              type="button"
               onClick={() => setPeriod(opt.value)}
+              aria-pressed={period === opt.value}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 period === opt.value
                   ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'

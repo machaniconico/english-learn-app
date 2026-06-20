@@ -169,7 +169,7 @@ export default function Dictation({ items }: DictationProps) {
       <div className="w-full max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 sm:p-10">
           {/* Score */}
-          <div className="text-center mb-8">
+          <div role="status" className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Results / 結果</h2>
 
             <div className="inline-flex items-baseline gap-1 my-4">
@@ -320,6 +320,8 @@ export default function Dictation({ items }: DictationProps) {
           <button
             type="button"
             onClick={() => setRate(rate === 1 ? 0.6 : 1)}
+            aria-label="再生速度の切り替え"
+            aria-pressed={rate === 0.6}
             className={`
               px-3 py-2 rounded-lg border-2 text-sm font-semibold transition-all duration-200 cursor-pointer
               ${rate === 0.6
@@ -340,6 +342,7 @@ export default function Dictation({ items }: DictationProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={answered}
+            aria-label="聞こえた英語を入力"
             placeholder="聞こえた英語を入力してください..."
             autoComplete="off"
             autoCorrect="off"
@@ -348,7 +351,7 @@ export default function Dictation({ items }: DictationProps) {
             className={`
               w-full px-4 py-3 rounded-xl border-2 text-lg transition-all duration-200
               ${answered
-                ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-default'
+                ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-default focus:ring-2 focus:ring-indigo-300'
                 : 'border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 text-gray-800'}
               focus:outline-none placeholder:text-gray-400
             `}
@@ -395,6 +398,8 @@ export default function Dictation({ items }: DictationProps) {
         {/* Result feedback */}
         {answered && currentResult && (
           <div
+            role="status"
+            aria-live="assertive"
             className={`rounded-xl border p-4 mb-4 ${
               currentResult.grade === 'perfect'
                 ? 'bg-green-50 border-green-200'

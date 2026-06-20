@@ -145,7 +145,7 @@ export default function FillInBlank({ questions }: FillInBlankProps) {
       <div className="w-full max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 sm:p-10">
           {/* Score */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8" role="status">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Results / 結果</h2>
 
             <div className="inline-flex items-baseline gap-1 my-4">
@@ -159,7 +159,7 @@ export default function FillInBlank({ questions }: FillInBlankProps) {
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-600">{percentage}% correct</p>
           </div>
 
           {/* Wrong answers review */}
@@ -236,7 +236,7 @@ export default function FillInBlank({ questions }: FillInBlankProps) {
 
       {/* Sentence card */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8 mb-6">
-        <p className="text-xs text-gray-400 font-medium mb-1 uppercase tracking-wide">
+        <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wide">
           Fill in the blank
         </p>
         <p className="text-lg sm:text-xl text-gray-800 leading-relaxed font-medium">
@@ -278,6 +278,7 @@ export default function FillInBlank({ questions }: FillInBlankProps) {
               type="button"
               onClick={() => handleSelect(index)}
               disabled={state.answered}
+              aria-pressed={index === state.selectedIndex}
               className={`
                 w-full px-5 py-4 rounded-xl border-2 text-left font-medium
                 transition-all duration-200
@@ -308,6 +309,14 @@ export default function FillInBlank({ questions }: FillInBlankProps) {
                     : OPTION_LABELS[index]}
                 </span>
                 <span>{option}</span>
+                {state.answered && index === currentQuestion.correctIndex && (
+                  <span className="sr-only">（正解）</span>
+                )}
+                {state.answered &&
+                  index === state.selectedIndex &&
+                  index !== currentQuestion.correctIndex && (
+                    <span className="sr-only">（不正解）</span>
+                  )}
               </span>
             </button>
           );
@@ -319,6 +328,8 @@ export default function FillInBlank({ questions }: FillInBlankProps) {
         <div className="space-y-4">
           {/* Feedback */}
           <div
+            role="status"
+            aria-live="polite"
             className={`rounded-xl border p-4 ${
               state.selectedIndex === currentQuestion.correctIndex
                 ? 'bg-green-50 border-green-200'

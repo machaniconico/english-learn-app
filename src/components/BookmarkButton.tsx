@@ -53,6 +53,7 @@ export default function BookmarkButton({
         }
       `}
       aria-label={bookmarked ? 'ブックマーク解除' : 'ブックマークに追加'}
+      aria-pressed={bookmarked}
       title={bookmarked ? 'ブックマーク解除' : 'ブックマークに追加'}
       style={{
         animation: bookmarked ? 'bookmark-pop 0.3s ease-out' : 'none',

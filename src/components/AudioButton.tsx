@@ -4,6 +4,7 @@ import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 interface AudioButtonProps {
   text: string;
   size?: 'sm' | 'md' | 'lg';
+  onPlayed?: () => void;
 }
 
 const sizeStyles = {
@@ -14,7 +15,7 @@ const sizeStyles = {
 
 const speeds = [0.5, 0.75, 1] as const;
 
-export default function AudioButton({ text, size = 'md' }: AudioButtonProps) {
+export default function AudioButton({ text, size = 'md', onPlayed }: AudioButtonProps) {
   const { speak, stop, speaking, rate, setRate } = useSpeechSynthesis();
   const [showSpeed, setShowSpeed] = useState(false);
 
@@ -23,6 +24,7 @@ export default function AudioButton({ text, size = 'md' }: AudioButtonProps) {
       stop();
     } else {
       speak(text);
+      onPlayed?.();
     }
   };
 
@@ -49,8 +51,9 @@ export default function AudioButton({ text, size = 'md' }: AudioButtonProps) {
           focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2
           ${speaking ? 'animate-pulse bg-indigo-200 ring-2 ring-indigo-400' : ''}
         `}
-        aria-label={speaking ? 'Stop audio' : 'Play audio'}
-        title="Click to play, right-click for speed"
+        aria-label={speaking ? '音声を停止' : '音声を再生'}
+        aria-pressed={speaking}
+        title="再生（右クリックで速度変更）"
       >
         {speaking ? '🔊' : '🔈'}
       </button>
@@ -65,7 +68,9 @@ export default function AudioButton({ text, size = 'md' }: AudioButtonProps) {
           transition-colors cursor-pointer
           focus:outline-none focus:ring-1 focus:ring-indigo-300
         `}
-        aria-label="Change playback speed"
+        aria-label="再生速度を変更"
+        aria-haspopup="true"
+        aria-expanded={showSpeed}
       >
         {rate}x
       </button>

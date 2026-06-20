@@ -159,6 +159,7 @@ export default function BookmarksPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="ブックマークを検索"
             placeholder="検索... (英語・日本語・発音)"
             className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
           />
@@ -244,17 +245,25 @@ export default function BookmarksPage() {
         </div>
       </div>
 
-      {/* Results info */}
-      {search.trim() && (
-        <p className="text-sm text-gray-500 mb-4">
-          {filtered.length} 件の結果
-          {filtered.length === 0 && (
-            <span className="ml-2 text-gray-400">
-              — 検索条件を変えてみてください
-            </span>
-          )}
-        </p>
-      )}
+      {/* Results info — stable live region so result-count changes are announced */}
+      <p
+        className={search.trim() ? 'text-sm text-gray-500 mb-4' : 'sr-only'}
+        role="status"
+        aria-live="polite"
+      >
+        {search.trim() ? (
+          <>
+            {filtered.length} 件の結果
+            {filtered.length === 0 && (
+              <span className="ml-2 text-gray-400">
+                — 検索条件を変えてみてください
+              </span>
+            )}
+          </>
+        ) : (
+          ''
+        )}
+      </p>
 
       {/* Bookmark cards */}
       <div className="space-y-3 mb-8">

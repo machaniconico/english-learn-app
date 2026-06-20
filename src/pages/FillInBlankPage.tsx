@@ -30,7 +30,7 @@ export default function FillInBlankPage() {
     if (!set) {
       return (
         <div className="text-center py-20">
-          <p className="text-4xl mb-4">😥</p>
+          <p className="text-4xl mb-4" aria-hidden="true">😥</p>
           <p className="text-gray-500 text-lg">問題セットが見つかりませんでした。</p>
           <Link
             to="/toeic-practice"
@@ -55,7 +55,7 @@ export default function FillInBlankPage() {
             &larr; 問題一覧に戻る
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{config.icon}</span>
+            <span className="text-3xl" aria-hidden="true">{config.icon}</span>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 {set.titleJa}
@@ -74,7 +74,7 @@ export default function FillInBlankPage() {
             to="/toeic-practice"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors"
           >
-            📋 問題一覧に戻る
+            <span aria-hidden="true">📋</span> 問題一覧に戻る
           </Link>
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function FillInBlankPage() {
     <div>
       {/* Hero */}
       <div className="text-center mb-8">
-        <p className="text-4xl mb-3">📝</p>
+        <p className="text-4xl mb-3" aria-hidden="true">📝</p>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           TOEIC Part 5 Practice
         </h1>
@@ -120,6 +120,7 @@ export default function FillInBlankPage() {
               {/* Icon */}
               <div
                 className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${config.gradient} text-2xl shadow-sm mb-4`}
+                aria-hidden="true"
               >
                 {config.icon}
               </div>

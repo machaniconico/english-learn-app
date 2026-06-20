@@ -149,6 +149,7 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
             type="button"
             onClick={() => handleSelect(segIdx)}
             disabled={state.answered}
+            aria-pressed={segIdx === state.selectedIndex}
             className={`${segmentStyle} focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-offset-1 rounded ${state.answered ? 'cursor-default' : ''}`}
           >
             {segment}
@@ -310,6 +311,7 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
               type="button"
               onClick={() => handleSelect(index)}
               disabled={state.answered}
+              aria-pressed={index === state.selectedIndex}
               className={`
                 w-full px-3 py-3 rounded-xl border-2 text-center font-medium
                 transition-all duration-200
@@ -338,6 +340,8 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
         <div className="space-y-4">
           {/* Feedback */}
           <div
+            role="status"
+            aria-live="polite"
             className={`rounded-xl border p-4 ${
               state.selectedIndex === currentQuestion.errorIndex
                 ? 'bg-green-50 border-green-200'

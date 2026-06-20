@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-import { sections } from '../data/sections';
+import { useSection } from '../hooks/useSection';
+import ContentLoading from '../components/ContentLoading';
 
 export default function LessonList() {
   const { sectionId, categoryId } = useParams<{
@@ -7,7 +8,12 @@ export default function LessonList() {
     categoryId: string;
   }>();
 
-  const section = sections.find((s) => s.id === sectionId);
+  const section = useSection(sectionId);
+
+  if (section === undefined) {
+    return <ContentLoading />;
+  }
+
   const category = section?.categories.find((c) => c.id === categoryId);
 
   if (!section || !category) {

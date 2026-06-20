@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { sections } from '../data/sections';
+import { useSection } from '../hooks/useSection';
+import ContentLoading from '../components/ContentLoading';
 import { useProgress } from '../hooks/useProgress';
 import {
   useUserLevel,
@@ -26,10 +27,14 @@ function getCategoryLevel(sectionId: string, categoryIndex: number, totalCategor
 
 export default function CategoryList() {
   const { sectionId } = useParams<{ sectionId: string }>();
-  const section = sections.find((s) => s.id === sectionId);
+  const section = useSection(sectionId);
   const { progress } = useProgress();
   const { level: userLevel, hasDiagnosed } = useUserLevel();
   const [filterLevel, setFilterLevel] = useState<CEFRLevel | 'all'>('all');
+
+  if (section === undefined) {
+    return <ContentLoading />;
+  }
 
   if (!section) {
     return (

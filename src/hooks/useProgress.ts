@@ -27,10 +27,42 @@ function getToday(): string {
   return `${year}-${month}-${day}`;
 }
 
-function daysBetween(dateA: string, dateB: string): number {
+export function daysBetween(dateA: string, dateB: string): number {
   const a = new Date(dateA + 'T00:00:00');
   const b = new Date(dateB + 'T00:00:00');
   return Math.round(Math.abs(a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Pure streak transition. Drop-in for the original inline `touchStudyDate`
+ * body: same-day is a no-op (returns prev unchanged), a consecutive day
+ * (daysBetween === 1) increments the streak, and any other case (gap or
+ * first-ever study) resets the streak to 1.
+ */
+export function applyStudyDate(prev: ProgressData, today: string): ProgressData {
+  if (prev.lastStudyDate === today) return prev;
+  let streak = prev.streak;
+  if (prev.lastStudyDate && daysBetween(prev.lastStudyDate, today) === 1) {
+    streak += 1;
+  } else if (prev.lastStudyDate !== today) {
+    streak = 1;
+  }
+  return { ...prev, streak, lastStudyDate: today };
+}
+
+/**
+ * Pure streak-break transition used by `updateStreak`. If there is no recorded
+ * study date, or the gap to `today` is more than one day, the streak is reset
+ * to 0; otherwise the data is returned unchanged.
+ */
+export function applyStreakBreak(prev: ProgressData, today: string): ProgressData {
+  if (!prev.lastStudyDate) return prev;
+  const diff = daysBetween(prev.lastStudyDate, today);
+  if (diff > 1) {
+    // streak broken
+    return { ...prev, streak: 0 };
+  }
+  return prev;
 }
 
 function createDefaultProgress(): ProgressData {
@@ -87,15 +119,7 @@ export function useProgress() {
   }, [progress]);
 
   const touchStudyDate = useCallback((prev: ProgressData): ProgressData => {
-    const today = getToday();
-    if (prev.lastStudyDate === today) return prev;
-    let streak = prev.streak;
-    if (prev.lastStudyDate && daysBetween(prev.lastStudyDate, today) === 1) {
-      streak += 1;
-    } else if (prev.lastStudyDate !== today) {
-      streak = 1;
-    }
-    return { ...prev, streak, lastStudyDate: today };
+    return applyStudyDate(prev, getToday());
   }, []);
 
   const markItemCompleted = useCallback(
@@ -248,16 +272,7 @@ export function useProgress() {
   }, [progress]);
 
   const updateStreak = useCallback(() => {
-    setProgress((prev) => {
-      const today = getToday();
-      if (!prev.lastStudyDate) return prev;
-      const diff = daysBetween(prev.lastStudyDate, today);
-      if (diff > 1) {
-        // streak broken
-        return { ...prev, streak: 0 };
-      }
-      return prev;
-    });
+    setProgress((prev) => applyStreakBreak(prev, getToday()));
   }, []);
 
   return {

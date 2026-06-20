@@ -234,6 +234,7 @@ export default function SearchPage() {
           </div>
           <input
             type="text"
+            aria-label="コンテンツを検索"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="英語・日本語で検索..."
@@ -302,26 +303,30 @@ export default function SearchPage() {
         </div>
       )}
 
-      {hasQuery && totalResults === 0 && (
-        <div className="text-center py-16">
-          <div className="text-5xl mb-4">📭</div>
-          <p className="text-gray-600 text-lg">
-            「<span className="font-semibold text-indigo-600">{debouncedQuery}</span>
-            」に一致する結果がありません
-          </p>
-          <p className="text-gray-400 text-sm mt-2">
-            別のキーワードや、フィルターの設定を確認してみてください
-          </p>
-        </div>
-      )}
+      <div role="status" aria-live="polite">
+        {hasQuery && totalResults === 0 && (
+          <div className="text-center py-16">
+            <div className="text-5xl mb-4">📭</div>
+            <p className="text-gray-600 text-lg">
+              「<span className="font-semibold text-indigo-600">{debouncedQuery}</span>
+              」に一致する結果がありません
+            </p>
+            <p className="text-gray-400 text-sm mt-2">
+              別のキーワードや、フィルターの設定を確認してみてください
+            </p>
+          </div>
+        )}
 
-      {hasQuery && totalResults > 0 && (
-        <>
+        {hasQuery && totalResults > 0 && (
           <p className="text-sm text-gray-500 mb-4">
             「<span className="font-medium text-gray-700">{debouncedQuery}</span>」の検索結果：
             <span className="font-bold text-indigo-600 ml-1">{totalResults}件</span>
           </p>
+        )}
+      </div>
 
+      {hasQuery && totalResults > 0 && (
+        <>
           <div className="space-y-6">
             {allGroups.map((groupKey) => {
               const items = grouped[groupKey];

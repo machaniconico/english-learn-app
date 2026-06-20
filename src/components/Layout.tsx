@@ -28,7 +28,7 @@ function Breadcrumbs() {
   });
 
   return (
-    <nav className="mb-4 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 overflow-x-auto">
+    <nav aria-label="パンくずリスト" className="mb-4 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 overflow-x-auto">
       <Link
         to="/"
         className="shrink-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
@@ -97,7 +97,9 @@ function MoreDropdown() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
       >
         その他
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -109,7 +111,7 @@ function MoreDropdown() {
               key={link.to + link.label}
               to={link.to}
               onClick={() => setOpen(false)}
-              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 transition-colors"
             >
               {link.label}
             </Link>
@@ -132,15 +134,21 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[oklch(13%_0.01_270)]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:bg-white focus:text-indigo-700 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow"
+      >
+        本文へスキップ
+      </a>
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-[oklch(18%_0.01_270/0.8)] backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
             <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-indigo-600 dark:text-indigo-400" />
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-indigo-700 dark:text-indigo-400 group-hover:text-indigo-900 dark:group-hover:text-indigo-300 transition-colors">
+              <span className="block text-lg sm:text-xl font-bold text-indigo-700 dark:text-indigo-400 group-hover:text-indigo-900 dark:group-hover:text-indigo-300 transition-colors">
                 English Learn
-              </h1>
-              <p className="text-xs text-gray-400 dark:text-gray-500 -mt-0.5">英語学習</p>
+              </span>
+              <p className="text-xs text-gray-500 dark:text-gray-400 -mt-0.5">英語学習</p>
             </div>
           </Link>
           <div className="flex items-center gap-2">
@@ -162,7 +170,7 @@ export default function Layout() {
             {/* Dark mode toggle */}
             <button
               onClick={toggle}
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
               aria-label={isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
             >
               {isDark ? (
@@ -185,7 +193,7 @@ export default function Layout() {
             </Link>
           </div>
           {/* H4: Simplified desktop header — 5 key links + More dropdown */}
-          <div className="hidden md:flex items-center gap-4">
+          <nav aria-label="グローバルナビゲーション" className="hidden md:flex items-center gap-4">
             <Link
               to="/search"
               className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
@@ -222,11 +230,11 @@ export default function Layout() {
               進捗
             </Link>
             <MoreDropdown />
-          </div>
+          </nav>
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 pb-24 md:pb-8">
+      <main id="main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 pb-24 md:pb-8">
         <Breadcrumbs />
         <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
           <Outlet />
@@ -240,7 +248,7 @@ export default function Layout() {
       </footer>
 
       {/* Mobile bottom navigation — C2: increased touch targets */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[oklch(18%_0.01_270)] border-t border-gray-200 dark:border-gray-700 md:hidden">
+      <nav aria-label="メインメニュー" className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[oklch(18%_0.01_270)] border-t border-gray-200 dark:border-gray-700 md:hidden">
         <div className="flex items-center justify-around px-2 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
           {bottomNavItems.map((item) => {
             const active = isActive(item.to);
@@ -249,10 +257,10 @@ export default function Layout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center justify-center min-w-0 flex-1 py-2.5 min-h-[48px] transition-colors ${
+                className={`flex flex-col items-center justify-center min-w-0 flex-1 py-2.5 min-h-[48px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-inset rounded-lg ${
                   active
                     ? 'text-indigo-600 dark:text-indigo-400'
-                    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300'
                 }`}
               >
                 <Icon className="w-6 h-6" />

@@ -60,6 +60,36 @@ function saveState(state: TimerState): void {
   }
 }
 
+// Reconcile any stale session left over from a previous visit (e.g. the browser
+// was closed while tracking). Performed at initial-state creation so the hook
+// renders with the already-finalized state instead of finalizing via a mount
+// effect (which would call setState synchronously inside an effect).
+function loadAndReconcileState(): TimerState {
+  const s = loadState();
+  if (s.currentStart && s.lastInteraction) {
+    if (Date.now() - s.lastInteraction > INACTIVITY_TIMEOUT) {
+      const endTime = s.lastInteraction;
+      const duration = Math.floor((endTime - s.currentStart) / 1000);
+      if (duration > 0) {
+        const session: StudySession = {
+          date: getDateString(s.currentStart),
+          startTime: s.currentStart,
+          endTime,
+          duration,
+          activity: s.currentActivity ?? 'unknown',
+        };
+        return {
+          sessions: [...s.sessions, session],
+          currentActivity: null,
+          currentStart: null,
+          lastInteraction: null,
+        };
+      }
+    }
+  }
+  return s;
+}
+
 function startOfWeek(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
@@ -79,7 +109,7 @@ function startOfMonth(date: Date): Date {
 // --- Hook ---
 
 export function useStudyTimer() {
-  const [state, setState] = useState<TimerState>(loadState);
+  const [state, setState] = useState<TimerState>(loadAndReconcileState);
   const [currentDuration, setCurrentDuration] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -103,7 +133,6 @@ export function useStudyTimer() {
         if (intervalRef.current) clearInterval(intervalRef.current);
       };
     } else {
-      setCurrentDuration(0);
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
   }, [isTracking, state.currentStart]);
@@ -149,34 +178,9 @@ export function useStudyTimer() {
     };
   }, [isTracking, state.lastInteraction]);
 
-  // Check for stale sessions on mount (e.g., browser was closed while tracking)
-  useEffect(() => {
-    const s = loadState();
-    if (s.currentStart && s.lastInteraction) {
-      if (Date.now() - s.lastInteraction > INACTIVITY_TIMEOUT) {
-        const endTime = s.lastInteraction;
-        const duration = Math.floor((endTime - s.currentStart) / 1000);
-        if (duration > 0) {
-          const session: StudySession = {
-            date: getDateString(s.currentStart),
-            startTime: s.currentStart,
-            endTime,
-            duration,
-            activity: s.currentActivity ?? 'unknown',
-          };
-          const newState = {
-            sessions: [...s.sessions, session],
-            currentActivity: null,
-            currentStart: null,
-            lastInteraction: null,
-          };
-          setState(newState);
-          saveState(newState);
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Stale sessions left over from a previous visit are reconciled once during
+  // initial state creation (see loadAndReconcileState), and the persistence
+  // effect above writes the reconciled state back to storage.
 
   const startTimer = useCallback((activity: string) => {
     setState((prev) => {
@@ -335,7 +339,7 @@ export function useStudyTimer() {
     startTimer,
     stopTimer,
     isTracking,
-    currentDuration,
+    currentDuration: isTracking ? currentDuration : 0,
     getTotalTime,
     getDailyBreakdown,
     getWeeklyTotal,

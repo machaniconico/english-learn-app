@@ -50,6 +50,7 @@ export default function SRSButton({ item, source, size = 'md' }: SRSButtonProps)
             : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-indigo-500'
         }
       `}
+      aria-pressed={inSRS}
       aria-label={inSRS ? 'SRSから削除' : 'SRSに追加'}
       title={inSRS ? 'SRSから削除' : 'SRSに追加'}
       style={{
