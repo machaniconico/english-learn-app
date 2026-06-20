@@ -31,6 +31,7 @@ import {
   RotateCcw,
   Medal,
   Keyboard,
+  Layers,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -603,6 +604,27 @@ export default function Home() {
             </div>
             <span className="text-sm font-medium text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300 transition-colors shrink-0">
               入力する &rarr;
+            </span>
+          </Link>
+
+          {/* カスタム単語帳 — indigo */}
+          <Link
+            to="/decks"
+            className="group flex items-center gap-4 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm shrink-0">
+              <Layers className="w-6 h-6 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors">
+                単語帳
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                自分だけの単語帳を作って学習しよう
+              </p>
+            </div>
+            <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-300 transition-colors shrink-0">
+              作る &rarr;
             </span>
           </Link>
         </div>

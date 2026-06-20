@@ -85,6 +85,7 @@ function MoreDropdown() {
   }, []);
 
   const moreLinks = [
+    { to: '/decks', label: '単語帳' },
     { to: '/reading-practice', label: '読解' },
     { to: '/study-guide', label: 'ロードマップ' },
     { to: '/score', label: 'スコア' },
