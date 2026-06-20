@@ -22,12 +22,12 @@ function Play({
     return (
       <div className="text-center py-20">
         <p className="text-4xl mb-4">😥</p>
-        <p className="text-gray-500 text-lg">
+        <p className="text-gray-500 dark:text-gray-400 text-lg">
           カテゴリが見つかりませんでした。
         </p>
         <Link
           to="/matching"
-          className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+          className="mt-6 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
         >
           &larr; カテゴリ一覧に戻る
         </Link>
@@ -47,12 +47,12 @@ function Play({
     return (
       <div className="text-center py-20">
         <p className="text-4xl mb-4">📭</p>
-        <p className="text-gray-500 text-lg">
+        <p className="text-gray-500 dark:text-gray-400 text-lg">
           このカテゴリにはアイテムが足りません。
         </p>
         <Link
           to="/matching"
-          className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+          className="mt-6 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
         >
           &larr; カテゴリ一覧に戻る
         </Link>
@@ -65,17 +65,17 @@ function Play({
       <div className="mb-6">
         <Link
           to="/matching"
-          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4"
         >
           &larr; カテゴリ一覧
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-3xl">🎮</span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
               マッチングゲーム
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {category.title} - {category.titleJa}
             </p>
           </div>
@@ -90,7 +90,7 @@ function Play({
       <div className="mt-8 text-center pb-6">
         <Link
           to="/matching"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors"
         >
           📋 カテゴリ一覧に戻る
         </Link>
@@ -112,22 +112,22 @@ function List() {
       <div className="mb-8">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4"
         >
           &larr; ホーム
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-3xl">🎮</span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
               マッチングゲーム
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               英語と日本語のペアを見つけよう
             </p>
           </div>
         </div>
-        <p className="mt-3 text-gray-600">
+        <p className="mt-3 text-gray-600 dark:text-gray-300">
           カードをめくって、英語と日本語の正しいペアをマッチさせましょう。
         </p>
       </div>
@@ -144,10 +144,10 @@ function List() {
             <div key={section.id}>
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-xl">{section.icon}</span>
-                <h2 className="text-lg font-bold text-gray-900">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {section.title}
                 </h2>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {section.titleJa}
                 </span>
               </div>
@@ -162,21 +162,21 @@ function List() {
                     <Link
                       key={category.id}
                       to={`/matching/${section.id}/${category.id}`}
-                      className="group flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                      className="group flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                     >
                       <span className="text-2xl shrink-0">{category.icon}</span>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-gray-900 group-hover:text-indigo-700 transition-colors truncate">
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors truncate">
                           {category.title}
                         </h3>
-                        <p className="text-sm text-gray-500 truncate">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           {category.titleJa}
                         </p>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                           {itemCount} アイテム
                         </p>
                       </div>
-                      <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors shrink-0">
+                      <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors shrink-0">
                         遊ぶ &rarr;
                       </span>
                     </Link>

@@ -5,17 +5,17 @@ import TalkListening from '../components/TalkListening';
 
 const levelConfig = {
   beginner: {
-    badge: 'bg-green-100 text-green-700 border-green-200',
+    badge: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-800',
     gradient: 'from-green-500 to-emerald-600',
     icon: '\u{1F331}',
   },
   intermediate: {
-    badge: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    badge: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-300 dark:border-yellow-800',
     gradient: 'from-yellow-500 to-amber-600',
     icon: '\u{1F4C8}',
   },
   advanced: {
-    badge: 'bg-red-100 text-red-700 border-red-200',
+    badge: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800',
     gradient: 'from-red-500 to-rose-600',
     icon: '\u{1F525}',
   },
@@ -43,11 +43,11 @@ export default function Part4Page() {
       return (
         <div className="text-center py-20">
           <p className="text-4xl mb-4">{'\u{1F625}'}</p>
-          <p className="text-gray-500 text-lg">トークが見つかりませんでした。</p>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">トークが見つかりませんでした。</p>
           <button
             type="button"
             onClick={() => setSelectedId(null)}
-            className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+            className="mt-6 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors cursor-pointer"
           >
             &larr; 問題一覧に戻る
           </button>
@@ -64,17 +64,17 @@ export default function Part4Page() {
           <button
             type="button"
             onClick={() => setSelectedId(null)}
-            className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4 cursor-pointer"
+            className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4 cursor-pointer"
           >
             &larr; 問題一覧に戻る
           </button>
           <div className="flex items-center gap-3">
             <span className="text-3xl">{config.icon}</span>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Part 4 Talk
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                 <span className="inline-flex items-center gap-1 mr-2">
                   {TYPE_ICONS[talk.type] || '\u{1F4AC}'} {talk.typeJa}
                 </span>
@@ -95,7 +95,7 @@ export default function Part4Page() {
           <button
             type="button"
             onClick={() => setSelectedId(null)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors cursor-pointer"
           >
             {'\u{1F4CB}'} 問題一覧に戻る
           </button>
@@ -108,20 +108,20 @@ export default function Part4Page() {
   if (selectedId === '__all__') {
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
-        <div className="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-3xl p-6 sm:p-8 relative">
+        <div className="bg-gray-50 dark:bg-[oklch(18%_0.01_270)] dark:border dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-3xl p-6 sm:p-8 relative">
           <button
             type="button"
             onClick={() => setSelectedId(null)}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 cursor-pointer text-xl"
+            className="absolute top-4 right-4 text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer text-xl"
             aria-label="Close"
           >
             {'\u2715'}
           </button>
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               {'\u{1F3AF}'} 全トークチャレンジ
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               全{part4Talks.length}つのトークに連続で挑戦します
             </p>
           </div>
@@ -142,11 +142,11 @@ export default function Part4Page() {
       {/* Hero */}
       <div className="text-center mb-8">
         <p className="text-4xl mb-3">{'\u{1F399}'}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
           Part 4: Talks
         </h1>
-        <p className="text-sm text-gray-500 mt-1">説明文問題 - トークを聞いて質問に答える</p>
-        <p className="mt-3 text-gray-500 max-w-md mx-auto text-sm leading-relaxed">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">説明文問題 - トークを聞いて質問に答える</p>
+        <p className="mt-3 text-gray-500 dark:text-gray-400 max-w-md mx-auto text-sm leading-relaxed">
           アナウンス、留守番電話、ニュースなどのトークを聞いて、内容に関する質問に答えましょう。本番のTOEICと同様の実践練習です。
         </p>
       </div>
@@ -155,7 +155,7 @@ export default function Part4Page() {
       <div className="mb-6">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors"
         >
           &larr; ホームに戻る
         </Link>
@@ -163,7 +163,7 @@ export default function Part4Page() {
 
       {/* Level filter */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <span className="text-xs text-gray-600 font-medium">Filter:</span>
+        <span className="text-xs text-gray-600 dark:text-gray-300 font-medium">Filter:</span>
         {(['all', 'beginner', 'intermediate', 'advanced'] as LevelFilter[]).map((level) => (
           <button
             key={level}
@@ -172,7 +172,7 @@ export default function Part4Page() {
             className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors cursor-pointer ${
               levelFilter === level
                 ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-500'
             }`}
           >
             {level === 'all' ? 'All' : level.charAt(0).toUpperCase() + level.slice(1)}
@@ -190,7 +190,7 @@ export default function Part4Page() {
               key={talk.id}
               type="button"
               onClick={() => setSelectedId(talk.id)}
-              className="group block rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 text-left cursor-pointer"
+              className="group block rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 text-left cursor-pointer"
             >
               {/* Icon */}
               <div
@@ -201,7 +201,7 @@ export default function Part4Page() {
 
               {/* Badges */}
               <div className="mb-3 flex items-center gap-2">
-                <span className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                <span className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800">
                   {talk.typeJa}
                 </span>
                 <span
@@ -212,21 +212,21 @@ export default function Part4Page() {
               </div>
 
               {/* Title */}
-              <h2 className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
                 {talk.typeJa}
               </h2>
 
               {/* Preview */}
-              <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-2">
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">
                 &ldquo;{talk.talk.slice(0, 80)}...&rdquo;
               </p>
 
               {/* Footer */}
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-400">
+                <span className="text-xs font-medium text-gray-400 dark:text-gray-400">
                   {talk.questions.length} 問
                 </span>
-                <span className="text-xs font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors">
+                <span className="text-xs font-medium text-indigo-500 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
                   開始する &rarr;
                 </span>
               </div>

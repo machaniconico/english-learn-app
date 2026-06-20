@@ -36,10 +36,10 @@ export default function LessonPage() {
     return (
       <div className="text-center py-20">
         <p className="text-4xl mb-4">😥</p>
-        <p className="text-gray-500 text-lg">レッスンが見つかりませんでした。</p>
+        <p className="text-gray-500 dark:text-gray-400 text-lg">レッスンが見つかりませんでした。</p>
         <Link
           to="/"
-          className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+          className="mt-6 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
         >
           &larr; ホームに戻る
         </Link>
@@ -62,26 +62,26 @@ export default function LessonPage() {
       <div className="mb-6">
         <Link
           to={`/section/${sectionId}/${categoryId}`}
-          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4"
         >
           &larr; {category.title}
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
           {lesson.title}
         </h1>
-        <p className="text-sm text-gray-500 mt-1">{lesson.titleJa}</p>
-        <p className="mt-2 text-gray-600">{lesson.description}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{lesson.titleJa}</p>
+        <p className="mt-2 text-gray-600 dark:text-gray-300">{lesson.description}</p>
       </div>
 
       {/* Progress bar */}
-      <div className="mb-6 bg-white rounded-xl border border-gray-200 p-4">
+      <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between text-sm mb-2">
-          <span className="text-gray-600 font-medium">リスニング進捗</span>
-          <span className="text-indigo-600 font-bold">
+          <span className="text-gray-600 dark:text-gray-300 font-medium">リスニング進捗</span>
+          <span className="text-indigo-600 dark:text-indigo-400 font-bold">
             {listenedIds.size} / {lesson.items.length} ({progress}%)
           </span>
         </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}
@@ -94,24 +94,24 @@ export default function LessonPage() {
         {lesson.items.map((item, index) => (
           <div
             key={item.id}
-            className={`rounded-xl border bg-white p-5 transition-all duration-200 ${
+            className={`rounded-xl border bg-white dark:bg-gray-800 p-5 transition-all duration-200 ${
               listenedIds.has(item.id)
-                ? 'border-indigo-200 bg-indigo-50/30'
-                : 'border-gray-200'
+                ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50/30 dark:bg-indigo-900/40'
+                : 'border-gray-200 dark:border-gray-700'
             }`}
           >
             {/* Number + English */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0 flex-1">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-500 text-xs font-bold shrink-0 mt-0.5">
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs font-bold shrink-0 mt-0.5">
                   {index + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
                     {item.english}
                   </p>
-                  <p className="text-base text-gray-700 mt-1">{item.japanese}</p>
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="text-base text-gray-700 dark:text-gray-300 mt-1">{item.japanese}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                     {item.pronunciation}
                   </p>
                 </div>
@@ -137,14 +137,14 @@ export default function LessonPage() {
 
             {/* Example sentence */}
             {item.example && (
-              <div className="mt-4 ml-10 pl-4 border-l-2 border-indigo-200 bg-indigo-50/50 rounded-r-lg py-3 pr-4">
+              <div className="mt-4 ml-10 pl-4 border-l-2 border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-900/40 rounded-r-lg py-3 pr-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-800">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
                       {item.example}
                     </p>
                     {item.exampleJa && (
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                         {item.exampleJa}
                       </p>
                     )}
@@ -158,7 +158,7 @@ export default function LessonPage() {
 
             {/* Listened indicator */}
             {listenedIds.has(item.id) && (
-              <div className="mt-3 ml-10 text-xs text-indigo-500 font-medium flex items-center gap-1">
+              <div className="mt-3 ml-10 text-xs text-indigo-500 dark:text-indigo-400 font-medium flex items-center gap-1">
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"

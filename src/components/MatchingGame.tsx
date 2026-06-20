@@ -206,20 +206,20 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
     return (
       <div className="w-full max-w-lg mx-auto text-center">
         {title && (
-          <h2 className="text-xl font-bold text-gray-900 mb-6">{title}</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">{title}</h2>
         )}
         <div
           role="status"
           aria-live="polite"
-          className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 sm:p-10"
+          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-8 sm:p-10"
         >
           <div className="text-5xl mb-4 animate-bounce">
             {stars === 3 ? '🏆' : stars === 2 ? '🎉' : '👏'}
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             コンプリート！
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
             全てのペアをマッチさせました！
           </p>
 
@@ -244,15 +244,15 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-indigo-50 rounded-xl p-4">
-              <p className="text-sm text-indigo-400 font-medium">タイム</p>
-              <p className="text-2xl font-bold text-indigo-700">
+            <div className="bg-indigo-50 dark:bg-indigo-900/40 rounded-xl p-4">
+              <p className="text-sm text-indigo-400 dark:text-indigo-300 font-medium">タイム</p>
+              <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
                 {formatTime(time)}
               </p>
             </div>
-            <div className="bg-purple-50 rounded-xl p-4">
-              <p className="text-sm text-purple-400 font-medium">手数</p>
-              <p className="text-2xl font-bold text-purple-700">{moves}</p>
+            <div className="bg-purple-50 dark:bg-purple-900/40 rounded-xl p-4">
+              <p className="text-sm text-purple-400 dark:text-purple-300 font-medium">手数</p>
+              <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{moves}</p>
             </div>
           </div>
 
@@ -271,26 +271,26 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       {title && (
-        <h2 className="text-xl font-bold text-gray-900 mb-4">{title}</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{title}</h2>
       )}
 
       {/* Stats bar */}
-      <div className="flex items-center justify-between mb-4 bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
+      <div className="flex items-center justify-between mb-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 shadow-sm">
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-400">⏱</span>
-          <span className="font-mono font-bold text-gray-700">
+          <span className="text-gray-400 dark:text-gray-500">⏱</span>
+          <span className="font-mono font-bold text-gray-700 dark:text-gray-300">
             {formatTime(time)}
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-400">🎯</span>
-          <span className="font-bold text-gray-700">
+          <span className="text-gray-400 dark:text-gray-500">🎯</span>
+          <span className="font-bold text-gray-700 dark:text-gray-300">
             {matchedCount} / {pairCount}
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-400">👆</span>
-          <span className="font-bold text-gray-700">{moves} 手</span>
+          <span className="text-gray-400 dark:text-gray-500">👆</span>
+          <span className="font-bold text-gray-700 dark:text-gray-300">{moves} 手</span>
         </div>
       </div>
 
@@ -354,18 +354,18 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
                 {/* Front (face-up) */}
                 <div
                   className={`
-                    absolute inset-0 rounded-xl bg-white shadow-md
+                    absolute inset-0 rounded-xl bg-white dark:bg-gray-800 shadow-md
                     flex items-center justify-center p-2 sm:p-3 text-center
                     border-2 transition-all duration-300
                     ${
                       card.matched
-                        ? 'border-green-400 shadow-green-200 shadow-lg'
+                        ? 'border-green-400 dark:border-green-700 shadow-green-200 dark:shadow-green-900/40 shadow-lg'
                         : card.type === 'english'
-                          ? 'border-blue-300'
-                          : 'border-purple-300'
+                          ? 'border-blue-300 dark:border-blue-700'
+                          : 'border-purple-300 dark:border-purple-700'
                     }
-                    ${isJustMatched ? 'ring-4 ring-green-300 scale-105' : ''}
-                    ${isMismatch ? 'border-red-400 bg-red-50' : ''}
+                    ${isJustMatched ? 'ring-4 ring-green-300 dark:ring-green-600 scale-105' : ''}
+                    ${isMismatch ? 'border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-900/40' : ''}
                   `}
                   style={{
                     backfaceVisibility: 'hidden',
@@ -376,8 +376,8 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
                     <p
                       className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${
                         card.type === 'english'
-                          ? 'text-blue-400'
-                          : 'text-purple-400'
+                          ? 'text-blue-400 dark:text-blue-300'
+                          : 'text-purple-400 dark:text-purple-300'
                       }`}
                     >
                       {card.type === 'english' ? 'EN' : 'JA'}
@@ -385,10 +385,10 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
                     <p
                       className={`text-sm sm:text-base font-bold leading-tight ${
                         card.matched
-                          ? 'text-green-700'
+                          ? 'text-green-700 dark:text-green-300'
                           : isMismatch
-                            ? 'text-red-600'
-                            : 'text-gray-800'
+                            ? 'text-red-600 dark:text-red-300'
+                            : 'text-gray-800 dark:text-gray-100'
                       }`}
                     >
                       {card.text}
@@ -406,7 +406,7 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
         <button
           type="button"
           onClick={handlePlayAgain}
-          className="px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          className="px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-300"
         >
           🔄 もう一度
         </button>

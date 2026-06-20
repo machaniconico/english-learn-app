@@ -23,10 +23,10 @@ export default function FlashcardPage() {
     return (
       <div className="text-center py-20">
         <p className="text-4xl mb-4">😥</p>
-        <p className="text-gray-500 text-lg">レッスンが見つかりませんでした。</p>
+        <p className="text-gray-500 dark:text-gray-400 text-lg">レッスンが見つかりませんでした。</p>
         <Link
           to="/"
-          className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+          className="mt-6 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
         >
           &larr; ホームに戻る
         </Link>
@@ -42,17 +42,17 @@ export default function FlashcardPage() {
       <div className="mb-6">
         <Link
           to={lessonPath}
-          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4"
         >
           &larr; {lesson.title} に戻る
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-3xl">🃏</span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
               フラッシュカード
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {lesson.title} - {lesson.titleJa}
             </p>
           </div>
@@ -66,7 +66,7 @@ export default function FlashcardPage() {
       <div className="mt-8 text-center pb-6">
         <Link
           to={lessonPath}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors"
         >
           📖 レッスンに戻る
         </Link>

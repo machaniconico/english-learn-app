@@ -75,7 +75,7 @@ export default function ShareButton({ score, title, text }: ShareButtonProps) {
     <div className="relative inline-block" ref={dropdownRef}>
       <button
         onClick={handleShare}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors shadow-sm"
         aria-label="共有"
         aria-haspopup="true"
         aria-expanded={showDropdown}
@@ -97,27 +97,27 @@ export default function ShareButton({ score, title, text }: ShareButtonProps) {
       </button>
 
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2">
+        <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[oklch(18%_0.01_270)] shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2">
           <button
             onClick={shareOnX}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <span className="w-5 text-center font-bold text-black">X</span>
+            <span className="w-5 text-center font-bold text-black dark:text-gray-100">X</span>
             <span>X (Twitter) で共有</span>
           </button>
           <button
             onClick={shareOnLINE}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <span className="w-5 text-center text-green-500 font-bold">L</span>
+            <span className="w-5 text-center text-green-500 dark:text-green-400 font-bold">L</span>
             <span>LINE で共有</span>
           </button>
-          <div className="border-t border-gray-100 my-1" />
+          <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
           <button
             onClick={copyLink}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-400 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
             </svg>
             <span>リンクをコピー</span>

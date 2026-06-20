@@ -281,17 +281,17 @@ export default function DailyChallenge() {
         return (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-indigo-700">{word.english}</span>
+              <span className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">{word.english}</span>
               <AudioButton text={word.english} size="sm" />
-              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{word.partOfSpeech}</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{word.partOfSpeech}</span>
             </div>
-            <p className="text-lg text-gray-700">{word.japanese} <span className="text-sm text-gray-600">({word.pronunciation})</span></p>
-            <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
+            <p className="text-lg text-gray-700 dark:text-gray-300">{word.japanese} <span className="text-sm text-gray-600 dark:text-gray-400">({word.pronunciation})</span></p>
+            <div className="bg-indigo-50 dark:bg-indigo-900/40 rounded-lg p-3 border border-indigo-100 dark:border-indigo-800">
               <div className="flex items-center gap-2">
                 <AudioButton text={word.example} size="sm" />
-                <p className="text-sm text-gray-800 italic">"{word.example}"</p>
+                <p className="text-sm text-gray-800 dark:text-gray-100 italic">"{word.example}"</p>
               </div>
-              <p className="text-sm text-gray-500 mt-1">{word.exampleJa}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{word.exampleJa}</p>
             </div>
             {!state.completed[index] && (
               <button
@@ -310,22 +310,22 @@ export default function DailyChallenge() {
         const { question } = challenge;
         return (
           <div className="space-y-3">
-            <p className="text-gray-800 font-medium">{question.sentence}</p>
+            <p className="text-gray-800 dark:text-gray-100 font-medium">{question.sentence}</p>
             <div className="grid grid-cols-2 gap-2">
               {question.options.map((opt, i) => {
                 let btnClass = 'p-2.5 rounded-lg border text-sm font-medium transition-all cursor-pointer ';
                 if (fibSubmitted) {
                   if (i === question.correctIndex) {
-                    btnClass += 'bg-green-100 border-green-400 text-green-800';
+                    btnClass += 'bg-green-100 dark:bg-green-900/40 border-green-400 dark:border-green-800 text-green-800 dark:text-green-300';
                   } else if (i === fibSelected) {
-                    btnClass += 'bg-red-100 border-red-400 text-red-800';
+                    btnClass += 'bg-red-100 dark:bg-red-900/40 border-red-400 dark:border-red-800 text-red-800 dark:text-red-300';
                   } else {
-                    btnClass += 'bg-gray-50 border-gray-200 text-gray-400';
+                    btnClass += 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500';
                   }
                 } else if (i === fibSelected) {
-                  btnClass += 'bg-indigo-100 border-indigo-400 text-indigo-800';
+                  btnClass += 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-400 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300';
                 } else {
-                  btnClass += 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-indigo-50';
+                  btnClass += 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-gray-700';
                 }
                 return (
                   <button
@@ -354,7 +354,7 @@ export default function DailyChallenge() {
               </button>
             )}
             {fibSubmitted && (
-              <div role="status" aria-live="polite" className={`p-3 rounded-lg text-sm ${fibSelected === question.correctIndex ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
+              <div role="status" aria-live="polite" className={`p-3 rounded-lg text-sm ${fibSelected === question.correctIndex ? 'bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : 'bg-amber-50 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'}`}>
                 {fibSelected === question.correctIndex ? '正解！ ' : '不正解... '}
                 {question.explanation}
               </div>
@@ -368,8 +368,8 @@ export default function DailyChallenge() {
         const isCorrect = translationInput.trim().toLowerCase() === phrase.english.toLowerCase();
         return (
           <div className="space-y-3">
-            <p className="text-gray-600 text-sm">次の日本語を英語に翻訳してください：</p>
-            <p className="text-lg font-bold text-gray-800">{phrase.japanese}</p>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">次の日本語を英語に翻訳してください：</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{phrase.japanese}</p>
             <input
               type="text"
               value={translationInput}
@@ -383,7 +383,7 @@ export default function DailyChallenge() {
               disabled={translationSubmitted}
               aria-label="英語の訳を入力"
               placeholder="英語を入力..."
-              className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent disabled:bg-gray-50"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-900"
             />
             {translationInput.trim() && !translationSubmitted && (
               <button
@@ -399,7 +399,7 @@ export default function DailyChallenge() {
             )}
             {translationSubmitted && (
               <div role="status" aria-live="polite" className="space-y-2">
-                <div className={`p-3 rounded-lg text-sm ${isCorrect ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
+                <div className={`p-3 rounded-lg text-sm ${isCorrect ? 'bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : 'bg-amber-50 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'}`}>
                   {isCorrect ? '正解！' : (
                     <>
                       <p>正解: <span className="font-bold">{phrase.english}</span></p>
@@ -409,7 +409,7 @@ export default function DailyChallenge() {
                 </div>
                 <div className="flex items-center gap-2">
                   <AudioButton text={phrase.english} size="sm" />
-                  <span className="text-sm text-gray-500">{phrase.pronunciation}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{phrase.pronunciation}</span>
                 </div>
               </div>
             )}
@@ -421,26 +421,26 @@ export default function DailyChallenge() {
         const { phrase, options, correctIndex } = challenge;
         return (
           <div className="space-y-3">
-            <p className="text-gray-600 text-sm">音声を聞いて、正しい日本語訳を選んでください：</p>
-            <div className="flex items-center gap-3 bg-indigo-50 p-3 rounded-lg">
+            <p className="text-gray-600 dark:text-gray-300 text-sm">音声を聞いて、正しい日本語訳を選んでください：</p>
+            <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/40 p-3 rounded-lg">
               <AudioButton text={phrase.english} size="lg" />
-              <span className="text-sm text-gray-500">音声を再生</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">音声を再生</span>
             </div>
             <div className="space-y-2">
               {options.map((opt, i) => {
                 let btnClass = 'w-full text-left p-3 rounded-lg border text-sm font-medium transition-all cursor-pointer ';
                 if (listeningSubmitted) {
                   if (i === correctIndex) {
-                    btnClass += 'bg-green-100 border-green-400 text-green-800';
+                    btnClass += 'bg-green-100 dark:bg-green-900/40 border-green-400 dark:border-green-800 text-green-800 dark:text-green-300';
                   } else if (i === listeningSelected) {
-                    btnClass += 'bg-red-100 border-red-400 text-red-800';
+                    btnClass += 'bg-red-100 dark:bg-red-900/40 border-red-400 dark:border-red-800 text-red-800 dark:text-red-300';
                   } else {
-                    btnClass += 'bg-gray-50 border-gray-200 text-gray-400';
+                    btnClass += 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500';
                   }
                 } else if (i === listeningSelected) {
-                  btnClass += 'bg-indigo-100 border-indigo-400 text-indigo-800';
+                  btnClass += 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-400 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300';
                 } else {
-                  btnClass += 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-indigo-50';
+                  btnClass += 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-gray-700';
                 }
                 return (
                   <button
@@ -469,9 +469,9 @@ export default function DailyChallenge() {
               </button>
             )}
             {listeningSubmitted && (
-              <div role="status" aria-live="polite" className={`p-3 rounded-lg text-sm ${listeningSelected === correctIndex ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
+              <div role="status" aria-live="polite" className={`p-3 rounded-lg text-sm ${listeningSelected === correctIndex ? 'bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : 'bg-amber-50 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'}`}>
                 {listeningSelected === correctIndex ? '正解！' : `不正解... 正解は「${options[correctIndex]}」`}
-                <p className="mt-1 text-gray-600">英語: <span className="font-medium">{phrase.english}</span></p>
+                <p className="mt-1 text-gray-600 dark:text-gray-300">英語: <span className="font-medium">{phrase.english}</span></p>
               </div>
             )}
           </div>
@@ -483,21 +483,21 @@ export default function DailyChallenge() {
         return (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <span className="text-xl font-bold text-amber-700">{idiom.english}</span>
+              <span className="text-xl font-bold text-amber-700 dark:text-amber-300">{idiom.english}</span>
               <AudioButton text={idiom.english} size="sm" />
             </div>
-            <p className="text-lg text-gray-700">{idiom.japanese}</p>
+            <p className="text-lg text-gray-700 dark:text-gray-300">{idiom.japanese}</p>
             {idiom.pronunciation && (
-              <p className="text-sm text-gray-400">{idiom.pronunciation}</p>
+              <p className="text-sm text-gray-400 dark:text-gray-400">{idiom.pronunciation}</p>
             )}
             {idiom.example && (
-              <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+              <div className="bg-amber-50 dark:bg-amber-900/40 rounded-lg p-3 border border-amber-100 dark:border-amber-800">
                 <div className="flex items-center gap-2">
                   <AudioButton text={idiom.example} size="sm" />
-                  <p className="text-sm text-gray-800 italic">"{idiom.example}"</p>
+                  <p className="text-sm text-gray-800 dark:text-gray-100 italic">"{idiom.example}"</p>
                 </div>
                 {idiom.exampleJa && (
-                  <p className="text-sm text-gray-500 mt-1">{idiom.exampleJa}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{idiom.exampleJa}</p>
                 )}
               </div>
             )}
@@ -520,11 +520,11 @@ export default function DailyChallenge() {
     <div className="space-y-4">
       {/* Header */}
       <div className="text-center">
-        <p className="text-sm text-gray-500 font-medium">{today}</p>
-        <h2 className="text-2xl font-extrabold text-gray-900 mt-1">Daily Challenge</h2>
-        <div className="mt-2 inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full text-sm font-bold">
+        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{today}</p>
+        <h2 className="text-2xl font-extrabold text-gray-900 dark:text-gray-100 mt-1">Daily Challenge</h2>
+        <div className="mt-2 inline-flex items-center gap-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-full text-sm font-bold">
           <span>{completedCount}/5 完了</span>
-          {allCompleted && <span className="text-green-600">✓</span>}
+          {allCompleted && <span className="text-green-600 dark:text-green-400">✓</span>}
         </div>
       </div>
 
@@ -532,16 +532,16 @@ export default function DailyChallenge() {
       {showCelebration && (
         <div role="status" aria-live="polite" className="text-center py-4 animate-bounce">
           <p className="text-4xl mb-2">🎉</p>
-          <p className="text-lg font-bold text-indigo-700">全チャレンジ完了！</p>
-          <p className="text-sm text-gray-500">素晴らしい！明日も頑張りましょう！</p>
+          <p className="text-lg font-bold text-indigo-700 dark:text-indigo-400">全チャレンジ完了！</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">素晴らしい！明日も頑張りましょう！</p>
         </div>
       )}
 
       {/* Countdown (shown when all completed) */}
       {allCompleted && !showCelebration && countdown && (
-        <div className="text-center bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
-          <p className="text-sm text-gray-500">明日のチャレンジまで</p>
-          <p className="text-lg font-bold text-indigo-700 mt-1">{countdown}</p>
+        <div className="text-center bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 rounded-xl p-4 border border-indigo-200 dark:border-indigo-800">
+          <p className="text-sm text-gray-500 dark:text-gray-400">明日のチャレンジまで</p>
+          <p className="text-lg font-bold text-indigo-700 dark:text-indigo-400 mt-1">{countdown}</p>
         </div>
       )}
 
@@ -556,8 +556,8 @@ export default function DailyChallenge() {
               key={index}
               className={`rounded-xl border transition-all duration-200 overflow-hidden ${
                 isCompleted
-                  ? 'border-green-200 bg-green-50/50'
-                  : 'border-gray-200 bg-white hover:border-indigo-200'
+                  ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/40'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-indigo-200 dark:hover:border-indigo-700'
               }`}
             >
               {/* Card Header (clickable) */}
@@ -568,16 +568,16 @@ export default function DailyChallenge() {
               >
                 <span className="text-2xl shrink-0">{challengeIcons[index]}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-sm">{challengeTitles[index]}</p>
-                  <p className="text-xs text-gray-500">{challengeTitlesJa[index]}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{challengeTitles[index]}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{challengeTitlesJa[index]}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {isCompleted && (
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white text-xs">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500 dark:bg-green-600 text-white text-xs">
                       ✓
                     </span>
                   )}
-                  <span className={`text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                  <span className={`text-gray-400 dark:text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
                     ▼
                   </span>
                 </div>
@@ -585,7 +585,7 @@ export default function DailyChallenge() {
 
               {/* Expanded Content */}
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+                <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
                   {renderChallenge(challenge, index)}
                 </div>
               )}

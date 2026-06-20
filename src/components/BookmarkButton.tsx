@@ -45,11 +45,11 @@ export default function BookmarkButton({
         ${sizeStyles[size]}
         inline-flex items-center justify-center rounded-full
         transition-all duration-200 cursor-pointer
-        focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2
+        focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900
         ${
           bookmarked
-            ? 'bg-amber-100 text-amber-500 hover:bg-amber-200 scale-100'
-            : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-amber-400'
+            ? 'bg-amber-100 text-amber-500 hover:bg-amber-200 scale-100 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60'
+            : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-amber-400 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-amber-300'
         }
       `}
       aria-label={bookmarked ? 'ブックマーク解除' : 'ブックマークに追加'}

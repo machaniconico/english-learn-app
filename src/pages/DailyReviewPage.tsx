@@ -27,15 +27,15 @@ export default function DailyReviewPage() {
       <div className="mb-6">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4"
         >
           &larr; ホーム
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-3xl" aria-hidden="true">🔁</span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">今日の復習</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">今日の復習</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               復習タイミングの単語と弱点をまとめてチェック
             </p>
           </div>
@@ -45,13 +45,13 @@ export default function DailyReviewPage() {
       {items.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-5xl mb-4" aria-hidden="true">✅</p>
-          <p className="text-lg font-bold text-gray-800 mb-2">今日の復習はありません！</p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">今日の復習はありません！</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             単語をSRSに追加したり、問題を解くと、復習リストがたまります。
           </p>
           <Link
             to="/srs"
-            className="inline-block px-5 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+            className="inline-block px-5 py-2.5 rounded-lg bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-medium hover:bg-indigo-700 dark:hover:bg-indigo-400 transition-colors"
           >
             単語カードを見る
           </Link>

@@ -32,10 +32,10 @@ const HISTORY_KEY = 'english-learn-score-history';
 const MAX_HISTORY = 10;
 
 const LEVEL_LABELS: Record<string, { label: string; color: string }> = {
-  beginner: { label: '初級', color: 'bg-green-100 text-green-700' },
-  intermediate: { label: '中級', color: 'bg-blue-100 text-blue-700' },
-  advanced: { label: '上級', color: 'bg-purple-100 text-purple-700' },
-  expert: { label: '達人', color: 'bg-amber-100 text-amber-700' },
+  beginner: { label: '初級', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
+  intermediate: { label: '中級', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+  advanced: { label: '上級', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+  expert: { label: '達人', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
 };
 
 // --- Helpers ---
@@ -151,7 +151,7 @@ function CircularGauge({ score, size = 200 }: { score: number; size?: number }) 
         <span className="text-4xl sm:text-5xl font-extrabold" style={{ color }}>
           {score}
         </span>
-        <span className="text-xs text-gray-400 mt-0.5">/ 990</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">/ 990</span>
       </div>
     </div>
   );
@@ -170,14 +170,14 @@ function SkillBar({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500 w-8 text-right shrink-0">{label}</span>
-      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+      <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right shrink-0">{label}</span>
+      <div className="flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
         <div
           className={`h-full ${color} rounded-full transition-all duration-700 ease-out`}
           style={{ width: `${clamp(value, 0, 100)}%` }}
         />
       </div>
-      <span className="text-xs font-medium text-gray-600 w-10 text-right shrink-0">
+      <span className="text-xs font-medium text-gray-600 dark:text-gray-300 w-10 text-right shrink-0">
         {value > 0 ? `${Math.round(value)}%` : '-'}
       </span>
     </div>
@@ -195,8 +195,8 @@ function HistoryChart({ history }: { history: ScoreEstimate[] }) {
   const barWidth = Math.min(40, Math.floor(280 / history.length));
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 mb-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-4">スコア推移</h2>
+    <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 sm:p-6 mb-6">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">スコア推移</h2>
       <div className="flex items-end justify-center gap-1 h-36">
         {history.map((entry, i) => {
           const height = ((entry.score - minScore) / range) * 100;
@@ -211,7 +211,7 @@ function HistoryChart({ history }: { history: ScoreEstimate[] }) {
               className="flex flex-col items-center gap-1"
               style={{ width: barWidth }}
             >
-              <span className="text-[10px] font-medium text-gray-500">
+              <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
                 {entry.score}
               </span>
               <div
@@ -223,7 +223,7 @@ function HistoryChart({ history }: { history: ScoreEstimate[] }) {
                   opacity: i === history.length - 1 ? 1 : 0.6,
                 }}
               />
-              <span className="text-[9px] text-gray-400">{date}</span>
+              <span className="text-[9px] text-gray-400 dark:text-gray-500">{date}</span>
             </div>
           );
         })}
@@ -236,7 +236,7 @@ function HistoryChart({ history }: { history: ScoreEstimate[] }) {
         return (
           <div className="mt-3 text-center">
             <span
-              className={`text-sm font-bold ${diff > 0 ? 'text-green-600' : 'text-red-500'}`}
+              className={`text-sm font-bold ${diff > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}
             >
               {diff > 0 ? `前回より +${diff}点アップ！` : `前回より ${diff}点ダウン`}
             </span>
@@ -469,18 +469,18 @@ export default function ScoreEstimator() {
     return (
       <div className="pb-10">
         <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100">
             TOEIC スコア予測
           </h1>
-          <p className="mt-1 text-gray-500">TOEIC Score Estimator</p>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">TOEIC Score Estimator</p>
         </div>
 
-        <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-8 text-center">
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/40 dark:to-orange-900/40 p-8 text-center">
           <div className="text-5xl mb-4">📋</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
             まだデータがありません
           </h2>
-          <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
             スコアを予測するには、クイズや練習問題に取り組む必要があります。<br />
             以下のセクションから始めてみましょう！
           </p>
@@ -509,7 +509,7 @@ export default function ScoreEstimator() {
         <div className="mt-6 text-center">
           <Link
             to="/"
-            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors"
           >
             &larr; ホームに戻る
           </Link>
@@ -523,14 +523,14 @@ export default function ScoreEstimator() {
     <div className="pb-10">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100">
           TOEIC スコア予測
         </h1>
-        <p className="mt-1 text-gray-500">TOEIC Score Estimator</p>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">TOEIC Score Estimator</p>
       </div>
 
       {/* Score Display */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 mb-6 text-center">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 sm:p-8 mb-6 text-center">
         <div className="flex justify-center mb-4">
           <CircularGauge score={estimate.score} />
         </div>
@@ -541,10 +541,10 @@ export default function ScoreEstimator() {
             {getScoreLevel(estimate.score)}
           </span>
         </div>
-        <p className="text-lg font-bold text-gray-800 mb-1">
+        <p className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
           推定スコア: {estimate.low} - {estimate.high}
         </p>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           {getMotivationalMessage(estimate.score)}
         </p>
         <ShareButton
@@ -554,18 +554,18 @@ export default function ScoreEstimator() {
       </div>
 
       {/* Breakdown Section */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-5">スキル分析</h2>
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 sm:p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-5">スキル分析</h2>
 
         {/* Fill-in-blank breakdown */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">{fillInBreakdown.icon}</span>
-              <span className="font-semibold text-gray-800">{fillInBreakdown.label}</span>
+              <span className="font-semibold text-gray-800 dark:text-gray-100">{fillInBreakdown.label}</span>
             </div>
             <span
-              className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${LEVEL_LABELS[fillInBreakdown.level]?.color ?? 'bg-gray-100 text-gray-600'}`}
+              className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${LEVEL_LABELS[fillInBreakdown.level]?.color ?? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
             >
               {LEVEL_LABELS[fillInBreakdown.level]?.label ?? '未挑戦'}
             </span>
@@ -582,10 +582,10 @@ export default function ScoreEstimator() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">{readingBreakdown.icon}</span>
-              <span className="font-semibold text-gray-800">{readingBreakdown.label}</span>
+              <span className="font-semibold text-gray-800 dark:text-gray-100">{readingBreakdown.label}</span>
             </div>
             <span
-              className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${LEVEL_LABELS[readingBreakdown.level]?.color ?? 'bg-gray-100 text-gray-600'}`}
+              className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${LEVEL_LABELS[readingBreakdown.level]?.color ?? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
             >
               {LEVEL_LABELS[readingBreakdown.level]?.label ?? '未挑戦'}
             </span>
@@ -602,15 +602,15 @@ export default function ScoreEstimator() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">📖</span>
-              <span className="font-semibold text-gray-800">語彙力</span>
+              <span className="font-semibold text-gray-800 dark:text-gray-100">語彙力</span>
             </div>
             <span
-              className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${LEVEL_LABELS[vocabProgress.level]?.color ?? 'bg-gray-100 text-gray-600'}`}
+              className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${LEVEL_LABELS[vocabProgress.level]?.color ?? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
             >
               {LEVEL_LABELS[vocabProgress.level]?.label ?? '未挑戦'}
             </span>
           </div>
-          <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700"
               style={{ width: `${vocabProgress.percentage}%` }}
@@ -626,15 +626,15 @@ export default function ScoreEstimator() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">📖</span>
-              <span className="font-semibold text-gray-800">文法力</span>
+              <span className="font-semibold text-gray-800 dark:text-gray-100">文法力</span>
             </div>
             <span
-              className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${LEVEL_LABELS[grammarProgress.level]?.color ?? 'bg-gray-100 text-gray-600'}`}
+              className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${LEVEL_LABELS[grammarProgress.level]?.color ?? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
             >
               {LEVEL_LABELS[grammarProgress.level]?.label ?? '未挑戦'}
             </span>
           </div>
-          <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all duration-700"
               style={{ width: `${grammarProgress.percentage}%` }}
@@ -648,17 +648,17 @@ export default function ScoreEstimator() {
 
       {/* Recommendations */}
       {recommendations.length > 0 && (
-        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 p-5 sm:p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">
+        <div className="rounded-2xl border border-indigo-100 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/40 dark:to-blue-900/40 p-5 sm:p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
             おすすめの学習
           </h2>
           <ul className="space-y-3">
             {recommendations.map((rec, i) => (
               <li
                 key={i}
-                className="flex items-start gap-3 bg-white/70 rounded-xl p-3.5"
+                className="flex items-start gap-3 bg-white/70 dark:bg-gray-800/70 rounded-xl p-3.5"
               >
-                <span className="text-indigo-500 mt-0.5 shrink-0">
+                <span className="text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -674,10 +674,10 @@ export default function ScoreEstimator() {
                   </svg>
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700">{rec.text}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{rec.text}</p>
                   <Link
                     to={rec.link}
-                    className="inline-block mt-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                    className="inline-block mt-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
                   >
                     {rec.linkLabel} &rarr;
                   </Link>
@@ -695,7 +695,7 @@ export default function ScoreEstimator() {
       <div className="mt-6 text-center">
         <Link
           to="/"
-          className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+          className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors"
         >
           &larr; ホームに戻る
         </Link>
