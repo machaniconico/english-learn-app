@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
-import { sections } from '../data/sections';
 import ListeningQuiz from '../components/ListeningQuiz';
+import ContentLoading from '../components/ContentLoading';
+import { useSection } from '../hooks/useSection';
 
 export default function QuizPage() {
   const { sectionId, categoryId, lessonId } = useParams<{
@@ -9,7 +10,12 @@ export default function QuizPage() {
     lessonId: string;
   }>();
 
-  const section = sections.find((s) => s.id === sectionId);
+  const section = useSection(sectionId);
+
+  if (section === undefined) {
+    return <ContentLoading />;
+  }
+
   const category = section?.categories.find((c) => c.id === categoryId);
   const lesson = category?.lessons.find((l) => l.id === lessonId);
 
