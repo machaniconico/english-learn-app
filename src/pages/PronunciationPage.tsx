@@ -39,15 +39,15 @@ export default function PronunciationPage() {
       <div className="mb-6">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4"
         >
           &larr; ホーム
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-3xl" aria-hidden="true">🎤</span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">発音練習</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">発音練習</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               フレーズを声に出して、発音をチェックしよう
             </p>
           </div>
@@ -57,7 +57,7 @@ export default function PronunciationPage() {
       {section === undefined ? (
         <ContentLoading />
       ) : items.length === 0 ? (
-        <p className="text-center text-gray-500 py-20">練習できるフレーズがありません。</p>
+        <p className="text-center text-gray-500 dark:text-gray-400 py-20">練習できるフレーズがありません。</p>
       ) : (
         <PronunciationPractice items={items} />
       )}

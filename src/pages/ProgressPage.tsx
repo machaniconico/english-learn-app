@@ -106,25 +106,25 @@ export default function ProgressPage() {
         <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100">
           学習の進捗
         </h1>
-        <p className="mt-1 text-gray-500">Your Learning Progress</p>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">Your Learning Progress</p>
       </div>
 
       {/* Streak + Completion Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {/* Streak Card */}
-        <div className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-6 text-center">
+        <div className="rounded-2xl border border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/40 dark:to-amber-900/40 p-6 text-center">
           <div className="text-4xl mb-2">{progress.streak > 0 ? '\u{1F525}' : '\u{1F4A4}'}</div>
-          <div className="text-3xl font-extrabold text-orange-600">
+          <div className="text-3xl font-extrabold text-orange-600 dark:text-orange-300">
             {progress.streak > 0 ? `${progress.streak}` : '0'}
           </div>
-          <div className="text-sm font-medium text-gray-600 mt-1">
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-1">
             {progress.streak > 0 ? `${progress.streak}日連続` : '今日から始めよう！'}
           </div>
-          <div className="text-xs text-gray-400 mt-1">Study Streak</div>
+          <div className="text-xs text-gray-400 dark:text-gray-400 mt-1">Study Streak</div>
         </div>
 
         {/* Overall Completion Card */}
-        <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-6 text-center">
+        <div className="rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/40 dark:to-blue-900/40 p-6 text-center">
           <div className="relative w-20 h-20 mx-auto mb-2">
             <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
               <circle
@@ -147,37 +147,37 @@ export default function ProgressPage() {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-lg font-bold text-indigo-700">
+              <span className="text-lg font-bold text-indigo-700 dark:text-indigo-300">
                 {completionPercentage}%
               </span>
             </div>
           </div>
-          <div className="text-sm font-medium text-gray-600">全体の達成率</div>
-          <div className="text-xs text-gray-400 mt-0.5">Overall Completion</div>
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">全体の達成率</div>
+          <div className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">Overall Completion</div>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">{stats.totalItems}</div>
-          <div className="text-xs text-gray-500 mt-1">学習済みアイテム</div>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center">
+          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalItems}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">学習済みアイテム</div>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center">
+          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {stats.averageScore > 0 ? `${stats.averageScore}%` : '-'}
           </div>
-          <div className="text-xs text-gray-500 mt-1">平均スコア</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">平均スコア</div>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">{flashcardCompletions}</div>
-          <div className="text-xs text-gray-500 mt-1">フラッシュカード完了</div>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center">
+          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{flashcardCompletions}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">フラッシュカード完了</div>
         </div>
       </div>
 
       {/* Section Breakdown */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">セクション別の進捗</h2>
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 sm:p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">セクション別の進捗</h2>
         <div className="space-y-4">
           {sections.map((section) => {
             const meta = sectionMeta[section.id] ?? {
@@ -196,15 +196,15 @@ export default function ProgressPage() {
                     >
                       {meta.icon}
                     </span>
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       {bySection[section.id]?.name ?? section.titleJa}
                     </span>
                   </div>
-                  <span className="text-xs font-medium text-gray-500">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                     {sCompleted}/{sTotal} ({pct}%)
                   </span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
                     className={`h-full bg-gradient-to-r ${meta.gradient} rounded-full transition-all duration-500`}
                     style={{ width: `${pct}%` }}
@@ -218,8 +218,8 @@ export default function ProgressPage() {
 
       {/* Recent Activity */}
       {recentLessons.length > 0 && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">最近のアクティビティ</h2>
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 sm:p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">最近のアクティビティ</h2>
           <ul className="space-y-3">
             {recentLessons.map((lp) => {
               const title = findLessonTitle(lp.lessonId);
@@ -232,10 +232,10 @@ export default function ProgressPage() {
               return (
                 <li
                   key={lp.lessonId}
-                  className="flex items-center justify-between py-2 border-b border-gray-50 last:border-b-0"
+                  className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700 last:border-b-0"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-800 truncate">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
                       {title}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -244,7 +244,7 @@ export default function ProgressPage() {
                       {lp.flashcardCompleted && ' / FC完了'}
                     </p>
                   </div>
-                  <span className="text-xs text-gray-400 shrink-0 ml-3">
+                  <span className="text-xs text-gray-400 dark:text-gray-400 shrink-0 ml-3">
                     {dateStr}
                   </span>
                 </li>
@@ -255,8 +255,8 @@ export default function ProgressPage() {
       )}
 
       {/* Motivational Message */}
-      <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-5 text-center">
-        <p className="text-sm font-medium text-indigo-700">
+      <div className="rounded-2xl border border-indigo-100 dark:border-indigo-800 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 p-5 text-center">
+        <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
           {getMotivationalMessage(completionPercentage)}
         </p>
       </div>
@@ -265,7 +265,7 @@ export default function ProgressPage() {
       <div className="mt-6 text-center">
         <Link
           to="/"
-          className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+          className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors"
         >
           &larr; ホームに戻る
         </Link>

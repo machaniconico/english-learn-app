@@ -31,9 +31,9 @@ const stages: Stage[] = [
     number: 1,
     title: '基礎を固めよう',
     subtitle: 'Build Your Foundation',
-    color: 'text-green-700',
-    borderColor: 'border-green-300',
-    bgColor: 'bg-green-50',
+    color: 'text-green-700 dark:text-green-300',
+    borderColor: 'border-green-300 dark:border-green-800',
+    bgColor: 'bg-green-50 dark:bg-green-900/40',
     dotColor: 'bg-green-500',
     lineColor: 'from-green-400 to-blue-400',
     gradientFrom: 'from-green-500',
@@ -62,9 +62,9 @@ const stages: Stage[] = [
     number: 2,
     title: '会話力を伸ばそう',
     subtitle: 'Expand Your Communication',
-    color: 'text-blue-700',
-    borderColor: 'border-blue-300',
-    bgColor: 'bg-blue-50',
+    color: 'text-blue-700 dark:text-blue-300',
+    borderColor: 'border-blue-300 dark:border-blue-800',
+    bgColor: 'bg-blue-50 dark:bg-blue-900/40',
     dotColor: 'bg-blue-500',
     lineColor: 'from-blue-400 to-purple-400',
     gradientFrom: 'from-blue-500',
@@ -98,9 +98,9 @@ const stages: Stage[] = [
     number: 3,
     title: 'ビジネス英語に挑戦',
     subtitle: 'Business English',
-    color: 'text-purple-700',
-    borderColor: 'border-purple-300',
-    bgColor: 'bg-purple-50',
+    color: 'text-purple-700 dark:text-purple-300',
+    borderColor: 'border-purple-300 dark:border-purple-800',
+    bgColor: 'bg-purple-50 dark:bg-purple-900/40',
     dotColor: 'bg-purple-500',
     lineColor: 'from-purple-400 to-orange-400',
     gradientFrom: 'from-purple-500',
@@ -134,9 +134,9 @@ const stages: Stage[] = [
     number: 4,
     title: 'TOEIC対策',
     subtitle: 'TOEIC Preparation',
-    color: 'text-orange-700',
-    borderColor: 'border-orange-300',
-    bgColor: 'bg-orange-50',
+    color: 'text-orange-700 dark:text-orange-300',
+    borderColor: 'border-orange-300 dark:border-orange-800',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/40',
     dotColor: 'bg-orange-500',
     lineColor: 'from-orange-400 to-red-400',
     gradientFrom: 'from-orange-500',
@@ -175,9 +175,9 @@ const stages: Stage[] = [
     number: 5,
     title: '満点を目指す',
     subtitle: 'Aim for Perfect Score',
-    color: 'text-red-700',
-    borderColor: 'border-red-300',
-    bgColor: 'bg-red-50',
+    color: 'text-red-700 dark:text-red-300',
+    borderColor: 'border-red-300 dark:border-red-800',
+    bgColor: 'bg-red-50 dark:bg-red-900/40',
     dotColor: 'bg-red-500',
     lineColor: 'from-red-400 to-red-600',
     gradientFrom: 'from-red-500',
@@ -299,13 +299,13 @@ export default function StudyGuide() {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-3xl shadow-lg mb-4">
           {'\u{1F5FA}\u{FE0F}'}
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
           学習ロードマップ
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Study Roadmap: Beginner to TOEIC-Ready
         </p>
-        <p className="mt-3 text-sm text-gray-600 max-w-lg mx-auto leading-relaxed">
+        <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 max-w-lg mx-auto leading-relaxed">
           初心者からTOEIC高得点まで、5つのステージで
           <br className="hidden sm:inline" />
           あなたの英語力を段階的にレベルアップ!
@@ -313,22 +313,22 @@ export default function StudyGuide() {
       </div>
 
       {/* Overall Progress Bar */}
-      <div className="mb-10 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 p-5">
+      <div className="mb-10 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 p-5">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-bold text-gray-800">
+          <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
             {'\u{1F4CA}'} 全体の進捗
           </span>
-          <span className="text-sm font-bold text-indigo-700">
+          <span className="text-sm font-bold text-indigo-700 dark:text-indigo-400">
             {completionPct}%
           </span>
         </div>
-        <div className="h-3 bg-white/60 rounded-full overflow-hidden">
+        <div className="h-3 bg-white/60 dark:bg-gray-900/60 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-700"
             style={{ width: `${completionPct}%` }}
           />
         </div>
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           {stats.totalItems} / {totalAvailable} アイテム学習済み
         </p>
       </div>
@@ -349,7 +349,7 @@ export default function StudyGuide() {
                     className={`w-full h-full ${
                       isPastStage
                         ? `bg-gradient-to-b ${stage.lineColor}`
-                        : 'bg-gray-200'
+                        : 'bg-gray-200 dark:bg-gray-700'
                     }`}
                   />
                 </div>
@@ -363,7 +363,7 @@ export default function StudyGuide() {
                     className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-extrabold text-sm sm:text-base shadow-lg ${
                       isPastStage || isCurrentStage
                         ? `bg-gradient-to-br ${stage.gradientFrom} ${stage.gradientTo}`
-                        : 'bg-gray-300'
+                        : 'bg-gray-300 dark:bg-gray-600'
                     } ${isCurrentStage ? 'ring-4 ring-offset-2 ring-opacity-50 ring-current' : ''}`}
                     style={
                       isCurrentStage
@@ -381,13 +381,13 @@ export default function StudyGuide() {
                     isCurrentStage
                       ? `${stage.borderColor} ${stage.bgColor} shadow-lg`
                       : isPastStage
-                        ? 'border-gray-200 bg-white/80'
-                        : 'border-gray-200 bg-white'
+                        ? 'border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80'
+                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                   }`}
                 >
                   {/* Current stage marker */}
                   {isCurrentStage && (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold mb-3 animate-pulse">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-bold mb-3 animate-pulse">
                       <span>{'\u{1F4CD}'}</span>
                       <span>現在地 - You are here</span>
                     </div>
@@ -399,7 +399,7 @@ export default function StudyGuide() {
                       className={`text-lg sm:text-xl font-extrabold ${
                         isPastStage || isCurrentStage
                           ? stage.color
-                          : 'text-gray-400'
+                          : 'text-gray-400 dark:text-gray-500'
                       }`}
                     >
                       Stage {stage.number}: {stage.title}
@@ -407,8 +407,8 @@ export default function StudyGuide() {
                     <p
                       className={`text-xs mt-0.5 ${
                         isPastStage || isCurrentStage
-                          ? 'text-gray-500'
-                          : 'text-gray-400'
+                          ? 'text-gray-500 dark:text-gray-400'
+                          : 'text-gray-400 dark:text-gray-500'
                       }`}
                     >
                       {stage.subtitle}
@@ -422,7 +422,7 @@ export default function StudyGuide() {
                         <div
                           className={`flex items-start gap-3 p-3 rounded-xl transition-all duration-200 ${
                             item.link
-                              ? 'hover:bg-white/80 hover:shadow-sm cursor-pointer group'
+                              ? 'hover:bg-white/80 dark:hover:bg-gray-700/80 hover:shadow-sm cursor-pointer group'
                               : ''
                           } ${
                             isPastStage || isCurrentStage
@@ -437,20 +437,20 @@ export default function StudyGuide() {
                             <span
                               className={`text-sm font-medium ${
                                 item.link
-                                  ? 'text-gray-800 group-hover:text-indigo-700'
-                                  : 'text-gray-700'
+                                  ? 'text-gray-800 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300'
+                                  : 'text-gray-700 dark:text-gray-300'
                               } transition-colors`}
                             >
                               {item.label}
                             </span>
                             {item.description && (
-                              <p className="text-xs text-gray-400 mt-0.5">
+                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                                 {item.description}
                               </p>
                             )}
                           </div>
                           {item.link && (
-                            <span className="text-xs text-indigo-400 group-hover:text-indigo-600 shrink-0 mt-1 transition-colors">
+                            <span className="text-xs text-indigo-400 dark:text-indigo-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 shrink-0 mt-1 transition-colors">
                               &rarr;
                             </span>
                           )}
@@ -471,22 +471,22 @@ export default function StudyGuide() {
                   <div
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl ${
                       isPastStage
-                        ? 'bg-green-100/80'
+                        ? 'bg-green-100/80 dark:bg-green-900/40'
                         : isCurrentStage
                           ? `${stage.bgColor} border ${stage.borderColor}`
-                          : 'bg-gray-50'
+                          : 'bg-gray-50 dark:bg-gray-900'
                     }`}
                   >
-                    <span className="text-xs font-bold text-gray-400 tracking-wider">
+                    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 tracking-wider">
                       {stage.goalLabel}
                     </span>
                     <span
                       className={`text-sm font-bold ${
                         isPastStage
-                          ? 'text-green-700'
+                          ? 'text-green-700 dark:text-green-300'
                           : isCurrentStage
                             ? stage.color
-                            : 'text-gray-400'
+                            : 'text-gray-400 dark:text-gray-500'
                       }`}
                     >
                       {isPastStage && '\u{2705} '}
@@ -498,8 +498,8 @@ export default function StudyGuide() {
 
               {/* Motivational quote between stages */}
               {!isLastStage && motivationalQuotes[stageIndex] && (
-                <div className="ml-14 sm:ml-18 mb-6 pl-4 border-l-2 border-dashed border-gray-200">
-                  <p className="text-xs text-gray-400 italic">
+                <div className="ml-14 sm:ml-18 mb-6 pl-4 border-l-2 border-dashed border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 italic">
                     "{motivationalQuotes[stageIndex].text}"
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
@@ -513,12 +513,12 @@ export default function StudyGuide() {
       </div>
 
       {/* Final message */}
-      <div className="mt-8 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 p-6 text-center">
+      <div className="mt-8 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-900/40 dark:via-purple-900/40 dark:to-pink-900/40 p-6 text-center">
         <p className="text-3xl mb-3">{'\u{1F3C6}'}</p>
-        <p className="text-sm font-bold text-gray-800">
+        <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
           あなたのペースで、一歩ずつ進めていこう!
         </p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           Every expert was once a beginner. Keep going!
         </p>
       </div>
@@ -527,31 +527,31 @@ export default function StudyGuide() {
       <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Link
           to="/"
-          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
         >
           <span className="text-2xl">{'\u{1F3E0}'}</span>
-          <span className="text-xs font-medium text-gray-600">ホーム</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">ホーム</span>
         </Link>
         <Link
           to="/toeic-practice"
-          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
         >
           <span className="text-2xl">{'\u{270F}\u{FE0F}'}</span>
-          <span className="text-xs font-medium text-gray-600">TOEIC模試</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">TOEIC模試</span>
         </Link>
         <Link
           to="/dictionary"
-          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
         >
           <span className="text-2xl">{'\u{1F4D6}'}</span>
-          <span className="text-xs font-medium text-gray-600">辞書</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">辞書</span>
         </Link>
         <Link
           to="/progress"
-          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+          className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
         >
           <span className="text-2xl">{'\u{1F4CA}'}</span>
-          <span className="text-xs font-medium text-gray-600">進捗</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">進捗</span>
         </Link>
       </div>
     </div>

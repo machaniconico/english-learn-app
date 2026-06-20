@@ -133,9 +133,13 @@ describe('CustomDeckStudyPage', () => {
       const srsButton = screen.getByRole('button', { name: '🧠 SRSに追加' });
       fireEvent.click(srsButton);
 
-      const banner = screen.getByRole('status');
-      expect(banner).toBeInTheDocument();
-      expect(banner.textContent).toMatch(/2 語を SRS に追加しました/);
+      // The page has multiple status live regions (the Flashcard flip announcer
+      // and this SRS result banner), so disambiguate by the banner's text.
+      const banner = screen
+        .getAllByRole('status')
+        .find((el) => /SRS に追加しました/.test(el.textContent ?? ''));
+      expect(banner).toBeDefined();
+      expect(banner?.textContent).toMatch(/2 語を SRS に追加しました/);
     });
 
     it('reports already-in count when items are already in SRS', () => {
@@ -156,9 +160,11 @@ describe('CustomDeckStudyPage', () => {
 
       fireEvent.click(screen.getByRole('button', { name: '🧠 SRSに追加' }));
 
-      const banner = screen.getByRole('status');
-      expect(banner.textContent).toMatch(/1 語を SRS に追加しました/);
-      expect(banner.textContent).toMatch(/1 語は追加済み/);
+      const banner = screen
+        .getAllByRole('status')
+        .find((el) => /SRS に追加しました/.test(el.textContent ?? ''));
+      expect(banner?.textContent).toMatch(/1 語を SRS に追加しました/);
+      expect(banner?.textContent).toMatch(/1 語は追加済み/);
     });
 
     it('has no accessibility violations in populated state', async () => {

@@ -70,7 +70,7 @@ function highlightDifferences(typed: string, correct: string): React.ReactNode {
         return (
           <span key={i}>
             {i > 0 && ' '}
-            <span className={match ? 'text-green-700' : 'text-red-600 font-semibold underline decoration-2'}>
+            <span className={match ? 'text-green-700 dark:text-green-300' : 'text-red-600 dark:text-red-300 font-semibold underline decoration-2'}>
               {word}
             </span>
           </span>
@@ -167,34 +167,34 @@ export default function Dictation({ items }: DictationProps) {
 
     return (
       <div className="w-full max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 sm:p-10">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-8 sm:p-10">
           {/* Score */}
           <div role="status" className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Results / 結果</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Results / 結果</h2>
 
             <div className="inline-flex items-baseline gap-1 my-4">
-              <span className="text-5xl font-bold text-indigo-600">{scorePoints}</span>
-              <span className="text-2xl text-gray-400">/ {totalMax}</span>
+              <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{scorePoints}</span>
+              <span className="text-2xl text-gray-400 dark:text-gray-400">/ {totalMax}</span>
             </div>
 
-            <div className="w-full h-3 bg-gray-200 rounded-full mb-2 overflow-hidden">
+            <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400">{percentage}% score</p>
+            <p className="text-sm text-gray-400 dark:text-gray-400">{percentage}% score</p>
 
             <div className="flex justify-center gap-4 mt-4 text-sm">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full">
                 <span className="w-2 h-2 rounded-full bg-green-500" />
                 Perfect: {perfectCount}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-50 text-yellow-700 rounded-full">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-50 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 rounded-full">
                 <span className="w-2 h-2 rounded-full bg-yellow-500" />
                 Close: {closeCount}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full">
                 <span className="w-2 h-2 rounded-full bg-red-500" />
                 Wrong: {results.length - perfectCount - closeCount}
               </span>
@@ -204,8 +204,8 @@ export default function Dictation({ items }: DictationProps) {
           {/* Mistakes review */}
           {mistakes.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <span className="text-red-500">&#10005;</span>
+              <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                <span className="text-red-500 dark:text-red-400">&#10005;</span>
                 間違えた問題の復習
               </h3>
               <div className="space-y-4">
@@ -214,16 +214,16 @@ export default function Dictation({ items }: DictationProps) {
                     key={result.item.id}
                     className={`border rounded-xl p-4 ${
                       result.grade === 'close'
-                        ? 'bg-yellow-50 border-yellow-200'
-                        : 'bg-red-50 border-red-200'
+                        ? 'bg-yellow-50 dark:bg-yellow-900/40 border-yellow-200 dark:border-yellow-800'
+                        : 'bg-red-50 dark:bg-red-900/40 border-red-200 dark:border-red-800'
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span
                         className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-full ${
                           result.grade === 'close'
-                            ? 'bg-yellow-200 text-yellow-800'
-                            : 'bg-red-200 text-red-800'
+                            ? 'bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200'
+                            : 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200'
                         }`}
                       >
                         {result.grade === 'close'
@@ -231,14 +231,14 @@ export default function Dictation({ items }: DictationProps) {
                           : 'Wrong'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-500 mb-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                       <span className="font-medium">Your answer:</span> {result.typed}
                     </p>
-                    <p className="text-sm mb-1">
-                      <span className="font-medium text-gray-500">Correct:</span>{' '}
+                    <p className="text-sm mb-1 text-gray-700 dark:text-gray-300">
+                      <span className="font-medium text-gray-500 dark:text-gray-400">Correct:</span>{' '}
                       {highlightDifferences(result.typed, result.item.sentence)}
                     </p>
-                    <p className="text-sm text-indigo-600 mt-2">{result.item.japanese}</p>
+                    <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-2">{result.item.japanese}</p>
                   </div>
                 ))}
               </div>
@@ -264,16 +264,16 @@ export default function Dictation({ items }: DictationProps) {
     <div className="w-full max-w-2xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 text-sm">
-        <span className="text-gray-500 font-medium">
+        <span className="text-gray-500 dark:text-gray-400 font-medium">
           Question {currentIndex + 1} / {items.length}
         </span>
-        <span className="text-indigo-600 font-semibold">
+        <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
           Score: {scorePoints} / {maxPoints}
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full h-1.5 bg-gray-200 rounded-full mb-6 overflow-hidden">
+      <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
         <div
           className="h-full bg-indigo-500 rounded-full transition-all duration-300 ease-out"
           style={{
@@ -283,8 +283,8 @@ export default function Dictation({ items }: DictationProps) {
       </div>
 
       {/* Listening card */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8 mb-6">
-        <p className="text-xs text-gray-400 font-medium mb-4 uppercase tracking-wide">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-6">
+        <p className="text-xs text-gray-400 dark:text-gray-400 font-medium mb-4 uppercase tracking-wide">
           Listen and type / 聞いて書こう
         </p>
 
@@ -325,8 +325,8 @@ export default function Dictation({ items }: DictationProps) {
             className={`
               px-3 py-2 rounded-lg border-2 text-sm font-semibold transition-all duration-200 cursor-pointer
               ${rate === 0.6
-                ? 'border-amber-400 bg-amber-50 text-amber-700'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300'}
+                ? 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500'}
               focus:outline-none focus:ring-2 focus:ring-indigo-300
             `}
           >
@@ -351,9 +351,9 @@ export default function Dictation({ items }: DictationProps) {
             className={`
               w-full px-4 py-3 rounded-xl border-2 text-lg transition-all duration-200
               ${answered
-                ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-default focus:ring-2 focus:ring-indigo-300'
-                : 'border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 text-gray-800'}
-              focus:outline-none placeholder:text-gray-400
+                ? 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 cursor-default focus:ring-2 focus:ring-indigo-300'
+                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 text-gray-800 dark:text-gray-100'}
+              focus:outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500
             `}
           />
         </div>
@@ -362,14 +362,14 @@ export default function Dictation({ items }: DictationProps) {
         {currentItem.hint && !answered && (
           <div className="mb-4">
             {showHint ? (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
                 <span className="font-medium">Hint:</span> {currentItem.hint}
               </p>
             ) : (
               <button
                 type="button"
                 onClick={() => setShowHint(true)}
-                className="text-sm text-indigo-500 hover:text-indigo-700 font-medium transition-colors cursor-pointer"
+                className="text-sm text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors cursor-pointer"
               >
                 ヒントを見る
               </button>
@@ -402,19 +402,19 @@ export default function Dictation({ items }: DictationProps) {
             aria-live="assertive"
             className={`rounded-xl border p-4 mb-4 ${
               currentResult.grade === 'perfect'
-                ? 'bg-green-50 border-green-200'
+                ? 'bg-green-50 dark:bg-green-900/40 border-green-200 dark:border-green-800'
                 : currentResult.grade === 'close'
-                  ? 'bg-yellow-50 border-yellow-200'
-                  : 'bg-red-50 border-red-200'
+                  ? 'bg-yellow-50 dark:bg-yellow-900/40 border-yellow-200 dark:border-yellow-800'
+                  : 'bg-red-50 dark:bg-red-900/40 border-red-200 dark:border-red-800'
             }`}
           >
             <p
               className={`font-bold mb-2 ${
                 currentResult.grade === 'perfect'
-                  ? 'text-green-700'
+                  ? 'text-green-700 dark:text-green-300'
                   : currentResult.grade === 'close'
-                    ? 'text-yellow-700'
-                    : 'text-red-700'
+                    ? 'text-yellow-700 dark:text-yellow-300'
+                    : 'text-red-700 dark:text-red-300'
               }`}
             >
               {currentResult.grade === 'perfect'
@@ -426,21 +426,21 @@ export default function Dictation({ items }: DictationProps) {
 
             {currentResult.grade !== 'perfect' && (
               <div className="text-sm space-y-1 mb-2">
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   <span className="font-medium">Your answer:</span> {currentResult.typed}
                 </p>
-                <p>
-                  <span className="font-medium text-gray-600">Correct:</span>{' '}
+                <p className="text-gray-700 dark:text-gray-300">
+                  <span className="font-medium text-gray-600 dark:text-gray-300">Correct:</span>{' '}
                   {highlightDifferences(currentResult.typed, currentResult.item.sentence)}
                 </p>
               </div>
             )}
 
             {currentResult.grade === 'perfect' && (
-              <p className="text-sm text-green-700 font-medium">{currentResult.item.sentence}</p>
+              <p className="text-sm text-green-700 dark:text-green-300 font-medium">{currentResult.item.sentence}</p>
             )}
 
-            <p className="text-sm text-indigo-600 mt-2">{currentItem.japanese}</p>
+            <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-2">{currentItem.japanese}</p>
           </div>
         )}
       </div>
@@ -455,13 +455,13 @@ export default function Dictation({ items }: DictationProps) {
           >
             {currentIndex + 1 >= items.length ? 'See Results / 結果を見る' : 'Next \u2192'}
           </button>
-          <p className="text-xs text-gray-400 mt-2">Press Enter to continue</p>
+          <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">Press Enter to continue</p>
         </div>
       )}
 
       {/* Keyboard hint */}
       {!answered && (
-        <p className="text-center text-xs text-gray-400 mt-2">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-2">
           Enter to check your answer
         </p>
       )}

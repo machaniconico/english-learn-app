@@ -144,10 +144,10 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
 
     return (
       <div className="w-full max-w-lg mx-auto text-center">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 sm:p-10">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-8 sm:p-10">
           <p className="text-5xl mb-4">{emoji}</p>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Quiz Complete!</h2>
-          <p className="text-gray-500 mb-6">クイズ完了</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Quiz Complete!</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">クイズ完了</p>
 
           <div
             role="status"
@@ -155,11 +155,11 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
             aria-label={`スコア ${score} / ${totalQuestions} (${percentage}% 正解)`}
             className="inline-flex items-baseline gap-1 mb-6"
           >
-            <span className="text-5xl font-bold text-indigo-600">{score}</span>
-            <span className="text-2xl text-gray-400">/ {totalQuestions}</span>
+            <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{score}</span>
+            <span className="text-2xl text-gray-400 dark:text-gray-400">/ {totalQuestions}</span>
           </div>
 
-          <div className="w-full h-3 bg-gray-200 rounded-full mb-2 overflow-hidden">
+          <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-700 ease-out ${
                 percentage >= 80
@@ -171,7 +171,7 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
               style={{ width: `${percentage}%` }}
             />
           </div>
-          <p className="text-sm text-gray-400 mb-8">{percentage}% correct</p>
+          <p className="text-sm text-gray-400 dark:text-gray-400 mb-8">{percentage}% correct</p>
 
           {/* Results breakdown */}
           <div className="flex flex-wrap justify-center gap-2 mb-8">
@@ -182,8 +182,8 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
                 aria-label={correct ? '正解' : '不正解'}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   correct
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
+                    ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+                    : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
                 }`}
               >
                 {correct ? '○' : '✕'}
@@ -207,16 +207,16 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
     <div className="w-full max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 text-sm">
-        <span className="text-gray-500 font-medium">
+        <span className="text-gray-500 dark:text-gray-400 font-medium">
           Question {state.questionIndex + 1} / {totalQuestions}
         </span>
-        <span className="text-indigo-600 font-semibold">
+        <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
           Score: {correctCount} / {state.questionIndex + (state.answered ? 1 : 0)}
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full h-1.5 bg-gray-200 rounded-full mb-6 overflow-hidden">
+      <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
         <div
           className="h-full bg-indigo-500 rounded-full transition-all duration-300 ease-out"
           style={{ width: `${((state.questionIndex + (state.answered ? 1 : 0)) / totalQuestions) * 100}%` }}
@@ -224,9 +224,9 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
       </div>
 
       {/* Audio prompt */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 sm:p-8 mb-6 text-center">
-        <p className="text-sm text-gray-400 mb-4 font-medium">Listen and choose the correct Japanese translation</p>
-        <p className="text-xs text-gray-400 mb-4">音声を聞いて正しい日本語訳を選んでください</p>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-6 text-center">
+        <p className="text-sm text-gray-400 dark:text-gray-400 mb-4 font-medium">Listen and choose the correct Japanese translation</p>
+        <p className="text-xs text-gray-400 dark:text-gray-400 mb-4">音声を聞いて正しい日本語訳を選んでください</p>
         <button
           type="button"
           onClick={handleReplay}
@@ -236,20 +236,20 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
             transition-all duration-200 cursor-pointer
             focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2
             ${speaking
-              ? 'bg-indigo-200 text-indigo-700 animate-pulse ring-2 ring-indigo-400'
-              : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 active:scale-95'
+              ? 'bg-indigo-200 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 animate-pulse ring-2 ring-indigo-400'
+              : 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 active:scale-95'
             }
           `}
           aria-label="Play audio"
         >
           🔊
         </button>
-        <p className="text-xs text-gray-300 mt-3">
+        <p className="text-xs text-gray-300 dark:text-gray-500 mt-3">
           {speaking ? 'Playing...' : 'Tap to replay'}
         </p>
 
         {state.answered && (
-          <p className="mt-4 text-lg font-semibold text-gray-700">
+          <p className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
             &ldquo;{state.correctItem.english}&rdquo;
           </p>
         )}
@@ -258,15 +258,15 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
       {/* Options */}
       <div className="grid grid-cols-1 gap-3 mb-6">
         {state.options.map((option, index) => {
-          let optionStyle = 'bg-white border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-gray-700';
+          let optionStyle = 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 text-gray-700 dark:text-gray-300';
 
           if (state.answered) {
             if (index === state.correctOptionIndex) {
-              optionStyle = 'bg-green-50 border-green-400 text-green-800 ring-2 ring-green-300';
+              optionStyle = 'bg-green-50 dark:bg-green-900/40 border-green-400 dark:border-green-800 text-green-800 dark:text-green-300 ring-2 ring-green-300 dark:ring-green-700';
             } else if (index === state.selectedIndex && index !== state.correctOptionIndex) {
-              optionStyle = 'bg-red-50 border-red-400 text-red-800 ring-2 ring-red-300';
+              optionStyle = 'bg-red-50 dark:bg-red-900/40 border-red-400 dark:border-red-800 text-red-800 dark:text-red-300 ring-2 ring-red-300 dark:ring-red-700';
             } else {
-              optionStyle = 'bg-gray-50 border-gray-200 text-gray-400';
+              optionStyle = 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500';
             }
           }
 
@@ -289,10 +289,10 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
                 <span className={`
                   w-7 h-7 rounded-full inline-flex items-center justify-center text-sm font-bold shrink-0
                   ${state.answered && index === state.correctOptionIndex
-                    ? 'bg-green-200 text-green-800'
+                    ? 'bg-green-200 dark:bg-green-900/40 text-green-800 dark:text-green-300'
                     : state.answered && index === state.selectedIndex
-                      ? 'bg-red-200 text-red-800'
-                      : 'bg-gray-100 text-gray-500'
+                      ? 'bg-red-200 dark:bg-red-900/40 text-red-800 dark:text-red-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                   }
                 `}>
                   {state.answered
@@ -319,8 +319,8 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
             aria-live="assertive"
             className={`text-lg font-bold mb-4 ${
               state.selectedIndex === state.correctOptionIndex
-                ? 'text-green-600'
-                : 'text-red-600'
+                ? 'text-green-600 dark:text-green-300'
+                : 'text-red-600 dark:text-red-300'
             }`}
           >
             {state.selectedIndex === state.correctOptionIndex
