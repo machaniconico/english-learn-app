@@ -171,7 +171,7 @@ export default function SearchPage() {
     <div className="max-w-3xl mx-auto">
       {/* Search Header */}
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4">
           <span className="mr-2">🔍</span>コンテンツ検索
         </h1>
         <div className="relative">
@@ -196,14 +196,14 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="英語・日本語で検索..."
-            className="w-full pl-12 pr-10 py-3.5 text-lg rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white transition-shadow"
+            className="w-full pl-12 pr-10 py-3.5 text-lg rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-shadow"
             autoFocus
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
               aria-label="検索をクリア"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +228,7 @@ export default function SearchPage() {
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
               activeFilters.size === allGroups.length
                 ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-400'
             }`}
           >
             すべて
@@ -241,7 +241,7 @@ export default function SearchPage() {
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
                 activeFilters.has(key)
                   ? `${GROUP_COLORS[key]} border-current`
-                  : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
               }`}
             >
               {GROUP_ICONS[key]} {GROUP_LABELS[key]}
@@ -254,7 +254,7 @@ export default function SearchPage() {
       {!hasQuery && (
         <div className="text-center py-16">
           <div className="text-5xl mb-4">🔍</div>
-          <p className="text-gray-500 text-lg">検索キーワードを入力してください</p>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">検索キーワードを入力してください</p>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
             フレーズ、単語、文法、慣用句、TOEIC、辞書を横断検索できます
           </p>
@@ -265,8 +265,8 @@ export default function SearchPage() {
         {hasQuery && totalResults === 0 && (
           <div className="text-center py-16">
             <div className="text-5xl mb-4">📭</div>
-            <p className="text-gray-600 text-lg">
-              「<span className="font-semibold text-indigo-600">{debouncedQuery}</span>
+            <p className="text-gray-600 dark:text-gray-300 text-lg">
+              「<span className="font-semibold text-indigo-600 dark:text-indigo-400">{debouncedQuery}</span>
               」に一致する結果がありません
             </p>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
@@ -276,9 +276,9 @@ export default function SearchPage() {
         )}
 
         {hasQuery && totalResults > 0 && (
-          <p className="text-sm text-gray-500 mb-4">
-            「<span className="font-medium text-gray-700">{debouncedQuery}</span>」の検索結果：
-            <span className="font-bold text-indigo-600 ml-1">{totalResults}件</span>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            「<span className="font-medium text-gray-700 dark:text-gray-200">{debouncedQuery}</span>」の検索結果：
+            <span className="font-bold text-indigo-600 dark:text-indigo-400 ml-1">{totalResults}件</span>
           </p>
         )}
       </div>
@@ -295,7 +295,7 @@ export default function SearchPage() {
               const hasMore = items.length > INITIAL_LIMIT;
 
               return (
-                <div key={groupKey} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                <div key={groupKey} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
                   {/* Group Header */}
                   <div className={`px-4 py-3 border-b ${GROUP_COLORS[groupKey]} flex items-center justify-between`}>
                     <h2 className="font-bold text-base flex items-center gap-2">
@@ -308,26 +308,26 @@ export default function SearchPage() {
                   </div>
 
                   {/* Items */}
-                  <ul className="divide-y divide-gray-100">
+                  <ul className="divide-y divide-gray-100 dark:divide-gray-700">
                     {displayItems.map((item) => (
-                      <li key={item.id} className="px-4 py-3 hover:bg-gray-50 transition-colors">
+                      <li key={item.id} className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
                         <div className="flex items-start gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <Link
                                 to={item.link}
-                                className="font-semibold text-gray-800 hover:text-indigo-600 transition-colors"
+                                className="font-semibold text-gray-800 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                               >
                                 {highlightMatch(item.english, debouncedQuery)}
                               </Link>
                               <AudioButton text={item.english} size="sm" />
                               {item.partOfSpeech && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300">
                                   {item.partOfSpeech}
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-600 mt-0.5">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
                               {highlightMatch(item.japanese, debouncedQuery)}
                             </p>
                             {item.pronunciation && (
@@ -336,13 +336,13 @@ export default function SearchPage() {
                               </p>
                             )}
                             {item.example && (
-                              <p className="text-xs text-gray-500 mt-1 italic">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
                                 {highlightMatch(item.example, debouncedQuery)}
                               </p>
                             )}
                             <Link
                               to={item.link}
-                              className="inline-flex items-center gap-1 text-[11px] text-indigo-500 hover:text-indigo-700 mt-1.5 transition-colors"
+                              className="inline-flex items-center gap-1 text-[11px] text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mt-1.5 transition-colors"
                             >
                               <svg
                                 className="w-3 h-3"
@@ -367,11 +367,11 @@ export default function SearchPage() {
 
                   {/* Show More */}
                   {hasMore && (
-                    <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
+                    <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                       <button
                         type="button"
                         onClick={() => toggleExpand(groupKey)}
-                        className="w-full text-center text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+                        className="w-full text-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors cursor-pointer"
                       >
                         {isExpanded
                           ? '折りたたむ'

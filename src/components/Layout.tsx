@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Suspense, useState, useRef, useEffect } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useStudyTimer } from '../hooks/useStudyTimer';
 import {
@@ -12,6 +13,10 @@ import {
   BookMarked,
   ChevronDown,
 } from 'lucide-react';
+
+const navLinkColorClass =
+  'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300';
+const navLinkClass = `text-sm ${navLinkColorClass} font-medium transition-colors flex items-center gap-1`;
 
 function Breadcrumbs() {
   const location = useLocation();
@@ -31,7 +36,7 @@ function Breadcrumbs() {
     <nav aria-label="パンくずリスト" className="mb-4 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 overflow-x-auto">
       <Link
         to="/"
-        className="shrink-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+        className={`shrink-0 ${navLinkColorClass} transition-colors`}
       >
         Home
       </Link>
@@ -45,7 +50,7 @@ function Breadcrumbs() {
           ) : (
             <Link
               to={crumb.to}
-              className="truncate text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+              className={`truncate ${navLinkColorClass} transition-colors`}
             >
               {crumb.label}
             </Link>
@@ -73,6 +78,7 @@ function formatTimer(seconds: number): string {
 function MoreDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -83,6 +89,18 @@ function MoreDropdown() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  function closeAndRefocus() {
+    setOpen(false);
+    btnRef.current?.focus();
+  }
+
+  function handleKeyDown(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Escape' && open) {
+      e.stopPropagation();
+      closeAndRefocus();
+    }
+  }
 
   const moreLinks = [
     { to: '/plan', label: '学習プラン' },
@@ -97,12 +115,13 @@ function MoreDropdown() {
   ];
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative" ref={ref} onKeyDown={handleKeyDown}>
       <button
+        ref={btnRef}
         onClick={() => setOpen(!open)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
+        className={`${navLinkClass} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded`}
       >
         その他
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -113,7 +132,7 @@ function MoreDropdown() {
             <Link
               key={link.to + link.label}
               to={link.to}
-              onClick={() => setOpen(false)}
+              onClick={closeAndRefocus}
               className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 transition-colors"
             >
               {link.label}
@@ -197,38 +216,23 @@ export default function Layout() {
           </div>
           {/* H4: Simplified desktop header — 5 key links + More dropdown */}
           <nav aria-label="グローバルナビゲーション" className="hidden md:flex items-center gap-4">
-            <Link
-              to="/search"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
+            <Link to="/search" className={navLinkClass}>
               <Search className="w-4 h-4" />
               検索
             </Link>
-            <Link
-              to="/dictionary"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
+            <Link to="/dictionary" className={navLinkClass}>
               <BookOpen className="w-4 h-4" />
               辞書
             </Link>
-            <Link
-              to="/toeic-practice"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
+            <Link to="/toeic-practice" className={navLinkClass}>
               <Target className="w-4 h-4" />
               練習
             </Link>
-            <Link
-              to="/bookmarks"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
+            <Link to="/bookmarks" className={navLinkClass}>
               <BookMarked className="w-4 h-4" />
               ブックマーク
             </Link>
-            <Link
-              to="/progress"
-              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors flex items-center gap-1"
-            >
+            <Link to="/progress" className={navLinkClass}>
               <BarChart3 className="w-4 h-4" />
               進捗
             </Link>
@@ -245,7 +249,7 @@ export default function Layout() {
       </main>
 
       <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[oklch(18%_0.01_270)]">
-        <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6 text-center text-sm text-gray-400 dark:text-gray-500">
+        <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>&copy; {new Date().getFullYear()} English Learn. All rights reserved.</p>
         </div>
       </footer>

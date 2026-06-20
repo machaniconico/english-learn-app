@@ -73,17 +73,17 @@ export default function BookmarksPage() {
           <button
             type="button"
             onClick={() => setShowFlashcard(false)}
-            className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4 cursor-pointer"
+            className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4 cursor-pointer"
           >
             &larr; ブックマーク一覧に戻る
           </button>
           <div className="flex items-center gap-3">
             <span className="text-3xl">🃏</span>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 フラッシュカード復習
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                 ブックマーク済み {flashcardItems.length} 件
               </p>
             </div>
@@ -96,7 +96,7 @@ export default function BookmarksPage() {
           <button
             type="button"
             onClick={() => setShowFlashcard(false)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-colors cursor-pointer"
           >
             📖 ブックマーク一覧に戻る
           </button>
@@ -110,10 +110,10 @@ export default function BookmarksPage() {
     return (
       <div className="text-center py-20">
         <p className="text-5xl mb-4">⭐</p>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           まだブックマークがありません
         </h1>
-        <p className="text-gray-500 mb-6">
+        <p className="text-gray-500 dark:text-gray-400 mb-6">
           レッスンで気になるフレーズや単語の★ボタンを押して
           <br />
           ブックマークに追加しましょう。
@@ -134,17 +134,17 @@ export default function BookmarksPage() {
       <div className="mb-6">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition-colors mb-4"
         >
           &larr; ホーム
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-3xl">⭐</span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
               ブックマーク
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               保存済み {bookmarks.length} 件
             </p>
           </div>
@@ -152,7 +152,7 @@ export default function BookmarksPage() {
       </div>
 
       {/* Controls */}
-      <div className="mb-6 bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+      <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
         {/* Search */}
         <div className="relative">
           <input
@@ -161,10 +161,10 @@ export default function BookmarksPage() {
             onChange={(e) => setSearch(e.target.value)}
             aria-label="ブックマークを検索"
             placeholder="検索... (英語・日本語・発音)"
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
           />
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -180,14 +180,14 @@ export default function BookmarksPage() {
 
         {/* Sort + Actions */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
             <button
               type="button"
               onClick={() => setSortMode('newest')}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 sortMode === 'newest'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
               新しい順
@@ -197,8 +197,8 @@ export default function BookmarksPage() {
               onClick={() => setSortMode('alphabetical')}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 sortMode === 'alphabetical'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
               アルファベット順
@@ -220,7 +220,7 @@ export default function BookmarksPage() {
             <button
               type="button"
               onClick={() => setShowClearConfirm(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 text-red-500 text-xs font-medium hover:bg-red-50 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 text-xs font-medium hover:bg-red-50 dark:hover:bg-red-950 transition-colors cursor-pointer"
             >
               すべてクリア
             </button>
@@ -236,7 +236,7 @@ export default function BookmarksPage() {
               <button
                 type="button"
                 onClick={() => setShowClearConfirm(false)}
-                className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
                 キャンセル
               </button>
@@ -247,7 +247,9 @@ export default function BookmarksPage() {
 
       {/* Results info — stable live region so result-count changes are announced */}
       <p
-        className={search.trim() ? 'text-sm text-gray-500 mb-4' : 'sr-only'}
+        className={
+          search.trim() ? 'text-sm text-gray-500 dark:text-gray-400 mb-4' : 'sr-only'
+        }
         role="status"
         aria-live="polite"
       >
@@ -255,7 +257,7 @@ export default function BookmarksPage() {
           <>
             {filtered.length} 件の結果
             {filtered.length === 0 && (
-              <span className="ml-2 text-gray-400">
+              <span className="ml-2 text-gray-400 dark:text-gray-500">
                 — 検索条件を変えてみてください
               </span>
             )}
@@ -270,21 +272,23 @@ export default function BookmarksPage() {
         {filtered.map((item: BookmarkedItem) => (
           <div
             key={item.id}
-            className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 transition-all duration-200 hover:border-indigo-200"
+            className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-5 transition-all duration-200 hover:border-indigo-200 dark:hover:border-indigo-600"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl font-bold text-gray-900 leading-snug">
+                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
                   {item.english}
                 </p>
-                <p className="text-base text-gray-700 mt-1">{item.japanese}</p>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-base text-gray-700 dark:text-gray-300 mt-1">
+                  {item.japanese}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                   {item.pronunciation}
                 </p>
 
                 {/* Source badge */}
                 <div className="mt-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 text-indigo-600 border border-indigo-100">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
                     {formatSource(item.source)}
                   </span>
                 </div>
@@ -295,7 +299,7 @@ export default function BookmarksPage() {
                 <button
                   type="button"
                   onClick={() => removeBookmark(item.id)}
-                  className="w-8 h-8 inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-300"
+                  className="w-8 h-8 inline-flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-300"
                   aria-label="ブックマーク解除"
                   title="ブックマーク解除"
                 >

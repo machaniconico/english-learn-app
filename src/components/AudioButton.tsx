@@ -8,7 +8,7 @@ interface AudioButtonProps {
 }
 
 const sizeStyles = {
-  sm: 'w-8 h-8 text-base',
+  sm: 'w-9 h-9 sm:w-8 sm:h-8 text-base',
   md: 'w-10 h-10 text-lg',
   lg: 'w-12 h-12 text-xl',
 } as const;
@@ -64,7 +64,9 @@ export default function AudioButton({ text, size = 'md', onPlayed }: AudioButton
         className={`
           ${size === 'sm' ? 'text-[10px] px-1 py-0.5' : 'text-xs px-1.5 py-0.5'}
           rounded bg-gray-100 text-gray-500
+          dark:bg-gray-700 dark:text-gray-300
           hover:bg-gray-200 hover:text-gray-700
+          dark:hover:bg-gray-600 dark:hover:text-gray-100
           transition-colors cursor-pointer
           focus:outline-none focus:ring-1 focus:ring-indigo-300
         `}
@@ -76,7 +78,7 @@ export default function AudioButton({ text, size = 'md', onPlayed }: AudioButton
       </button>
 
       {showSpeed && (
-        <div className="absolute top-full left-0 mt-1 z-10 flex gap-1 bg-white rounded-lg shadow-lg border border-gray-200 p-1.5">
+        <div className="absolute top-full right-0 sm:left-0 sm:right-auto mt-1 z-10 flex gap-1 bg-white dark:bg-[oklch(18%_0.01_270)] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1.5">
           {speeds.map((speed) => (
             <button
               key={speed}
@@ -87,8 +89,8 @@ export default function AudioButton({ text, size = 'md', onPlayed }: AudioButton
                 focus:outline-none focus:ring-1 focus:ring-indigo-300
                 ${
                   rate === speed
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700'
+                    ? 'bg-indigo-600 dark:bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-indigo-100 hover:text-indigo-700'
                 }
               `}
             >

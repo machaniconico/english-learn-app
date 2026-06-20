@@ -127,7 +127,7 @@ export default function Dictionary() {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           aria-label="英単語を検索"
           placeholder="英語または日本語で検索..."
-          className="w-full pl-12 pr-4 py-3.5 text-lg rounded-xl border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow placeholder:text-gray-400"
+          className="w-full pl-12 pr-4 py-3.5 text-lg rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
         />
         {searchQuery && (
           <button
@@ -142,7 +142,7 @@ export default function Dictionary() {
       </div>
 
       {/* Alphabet Quick Jump */}
-      <div className="flex flex-wrap justify-center gap-1 mb-5 max-w-2xl mx-auto">
+      <div className="flex flex-wrap justify-center gap-1.5 mb-5 max-w-2xl mx-auto">
         {ALPHABET.map((letter) => (
           <button
             key={letter}
@@ -151,7 +151,7 @@ export default function Dictionary() {
               handleLetterChange(selectedLetter === letter ? null : letter)
             }
             aria-pressed={selectedLetter === letter}
-            className={`w-8 h-8 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+            className={`min-w-[40px] min-h-[40px] w-9 h-9 sm:w-8 sm:h-8 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
               selectedLetter === letter
                 ? 'bg-indigo-600 text-white shadow-md'
                 : 'bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700'

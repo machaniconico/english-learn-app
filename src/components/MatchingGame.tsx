@@ -208,7 +208,11 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
         {title && (
           <h2 className="text-xl font-bold text-gray-900 mb-6">{title}</h2>
         )}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 sm:p-10">
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 sm:p-10"
+        >
           <div className="text-5xl mb-4 animate-bounce">
             {stars === 3 ? '🏆' : stars === 2 ? '🎉' : '👏'}
           </div>
@@ -289,6 +293,15 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
           <span className="font-bold text-gray-700">{moves} 手</span>
         </div>
       </div>
+
+      {/* Live region for screen-reader announcements */}
+      <p aria-live="polite" className="sr-only">
+        {showMismatch
+          ? '不正解です。もう一度選んでください'
+          : justMatched.length
+            ? 'マッチしました'
+            : `${matchedCount} / ${pairCount} ペア`}
+      </p>
 
       {/* Card grid */}
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">

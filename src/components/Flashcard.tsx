@@ -126,6 +126,16 @@ export default function Flashcard({ items }: FlashcardProps) {
         style={{ perspective: '1000px' }}
         onClick={toggleFlip}
       >
+        {/* Polite live region: announces the currently visible card content to
+            assistive tech when the card flips. Both faces stay in the DOM (3D
+            transform), so without this AT never learns the visible content
+            changed. sr-only keeps it visually hidden. The prefixes keep the
+            announced strings from colliding with the visible faces' text. */}
+        <p aria-live="polite" role="status" className="sr-only">
+          {flipped
+            ? `答え: ${current.japanese} ${current.pronunciation ?? ''}`.trim()
+            : `問題: ${current.english}`}
+        </p>
         <div
           className="relative w-full transition-transform duration-500"
           style={{
@@ -138,7 +148,7 @@ export default function Flashcard({ items }: FlashcardProps) {
             className="w-full min-h-[260px] sm:min-h-[300px] rounded-2xl bg-white border border-gray-200 shadow-lg p-6 sm:p-8 flex flex-col items-center justify-center gap-4"
             style={{ backfaceVisibility: 'hidden' }}
           >
-            <p className="text-xs uppercase tracking-wider text-indigo-400 font-semibold">
+            <p className="text-xs uppercase tracking-wider text-indigo-600 font-semibold">
               English
             </p>
             <p className="text-2xl sm:text-3xl font-bold text-gray-800 text-center leading-relaxed">
@@ -165,7 +175,7 @@ export default function Flashcard({ items }: FlashcardProps) {
               transform: 'rotateY(180deg)',
             }}
           >
-            <p className="text-xs uppercase tracking-wider text-indigo-400 font-semibold">
+            <p className="text-xs uppercase tracking-wider text-indigo-600 font-semibold">
               Japanese
             </p>
             <p className="text-2xl sm:text-3xl font-bold text-indigo-800 text-center leading-relaxed">
@@ -175,7 +185,7 @@ export default function Flashcard({ items }: FlashcardProps) {
               {current.pronunciation}
             </p>
             {current.exampleJa && (
-              <p className="text-sm text-indigo-400 text-center italic mt-1">
+              <p className="text-sm text-indigo-700 text-center italic mt-1">
                 {current.exampleJa}
               </p>
             )}
