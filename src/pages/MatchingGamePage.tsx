@@ -147,7 +147,7 @@ function List() {
                 <h2 className="text-lg font-bold text-gray-900">
                   {section.title}
                 </h2>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-500">
                   {section.titleJa}
                 </span>
               </div>
@@ -172,7 +172,7 @@ function List() {
                         <p className="text-sm text-gray-500 truncate">
                           {category.titleJa}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-sm text-gray-500 mt-1">
                           {itemCount} アイテム
                         </p>
                       </div>

@@ -136,7 +136,7 @@ export default function AchievementsPage() {
               <p className={`text-sm font-bold ${a.unlocked ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'}`}>
                 {a.title}
               </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 leading-snug">{a.description}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">{a.description}</p>
               {a.unlocked ? (
                 <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mt-2">達成！</p>
               ) : (
@@ -154,7 +154,7 @@ export default function AchievementsPage() {
                       style={{ width: `${(a.progress.current / a.progress.target) * 100}%` }}
                     />
                   </div>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {a.progress.current} / {a.progress.target}
                   </p>
                 </div>

@@ -278,7 +278,7 @@ export default function BookmarksPage() {
                   {item.english}
                 </p>
                 <p className="text-base text-gray-700 mt-1">{item.japanese}</p>
-                <p className="text-sm text-gray-400 mt-0.5">
+                <p className="text-sm text-gray-500 mt-0.5">
                   {item.pronunciation}
                 </p>
 

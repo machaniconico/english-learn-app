@@ -103,7 +103,7 @@ export default function ProgressPage() {
             text={`English Learnで英語学習中！全体達成率${completionPercentage}%、${stats.totalItems}アイテム学習済み！`}
           />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-100">
           学習の進捗
         </h1>
         <p className="mt-1 text-gray-500">Your Learning Progress</p>
@@ -238,7 +238,7 @@ export default function ProgressPage() {
                     <p className="text-sm font-medium text-gray-800 truncate">
                       {title}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       {lp.completedItems.length} items
                       {lp.quizScore !== undefined && ` / Quiz: ${lp.quizScore}%`}
                       {lp.flashcardCompleted && ' / FC完了'}

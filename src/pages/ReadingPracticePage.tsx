@@ -204,7 +204,7 @@ export default function ReadingPracticePage() {
                 <span className="text-xs font-medium text-gray-400">
                   {passage.questions.length} 問
                 </span>
-                <span className="text-xs font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors">
+                <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 transition-colors">
                   挑戦する &rarr;
                 </span>
               </div>
