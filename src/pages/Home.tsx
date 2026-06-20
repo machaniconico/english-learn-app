@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { sectionsMeta } from '../data/sectionsMeta';
 import { useProgress } from '../hooks/useProgress';
 import { useWeakPoints } from '../hooks/useWeakPoints';
+import { useSpacedRepetition } from '../hooks/useSpacedRepetition';
+import { buildReviewQueue } from '../utils/reviewQueue';
 import { useUserLevel } from '../hooks/useUserLevel';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useEffect, useState } from 'react';
@@ -26,6 +28,7 @@ import {
   Flame,
   TrendingUp,
   GraduationCap,
+  RotateCcw,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -71,8 +74,12 @@ function getWeakPointRecommendation(type: string): { label: string; path: string
 export default function Home() {
   const { progress, getOverallStats, updateStreak } = useProgress();
   const { weakPoints } = useWeakPoints();
+  const { getDueCards } = useSpacedRepetition();
   const { hasDiagnosed, level: userLevel, levelInfo } = useUserLevel();
   const { getWeakestTypes } = useAccuracy();
+
+  // Match the actual review session exactly (same cap + weak-point mastery filter).
+  const reviewCount = buildReviewQueue(getDueCards(), weakPoints).length;
 
   useEffect(() => {
     updateStreak();
@@ -184,6 +191,35 @@ export default function Home() {
           </div>
         );
       })()}
+
+      {/* Today's Review Card — only when something is due */}
+      {reviewCount > 0 && (
+        <Link
+          to="/review"
+          className="animate-fade-in-up group mb-6 flex items-center gap-4 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/50 dark:to-violet-950/50 p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+          style={{ '--stagger': '0ms' } as React.CSSProperties}
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm shrink-0">
+            <RotateCcw className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors">
+              今日の復習
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              復習タイミングの単語と弱点 {reviewCount}件
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
+              {reviewCount}
+            </span>
+            <span className="text-sm font-medium text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-300 transition-colors hidden sm:block">
+              復習する &rarr;
+            </span>
+          </div>
+        </Link>
+      )}
 
       {/* Daily Challenge Card */}
       <Link
