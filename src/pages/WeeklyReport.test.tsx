@@ -1,0 +1,98 @@
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach } from 'vitest';
+import { axe } from 'vitest-axe';
+import * as matchers from 'vitest-axe/matchers';
+import { renderWithRouter, screen, fireEvent } from '../test/test-utils';
+import WeeklyReport from './WeeklyReport';
+import type { StudySession } from '../hooks/useStudyTimer';
+import type { LearningEvent } from '../hooks/useAnalytics';
+
+expect.extend(matchers);
+
+beforeEach(() => {
+  localStorage.clear();
+});
+
+// Build a study session for today so the report shows data this-week
+function makeSession(minutesAgo: number, durationSeconds: number): StudySession {
+  const now = Date.now();
+  const startTime = now - minutesAgo * 60 * 1000;
+  const endTime = startTime + durationSeconds * 1000;
+  const d = new Date(startTime);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return {
+    date: `${year}-${month}-${day}`,
+    startTime,
+    endTime,
+    duration: durationSeconds,
+    activity: 'lesson',
+  };
+}
+
+function makeEvent(minutesAgo: number, score: number): LearningEvent {
+  return {
+    type: 'quiz_complete',
+    score,
+    timestamp: Date.now() - minutesAgo * 60 * 1000,
+  };
+}
+
+describe('WeeklyReport', () => {
+  it('renders the page heading and period toggle buttons', () => {
+    renderWithRouter(<WeeklyReport />);
+    expect(screen.getByRole('heading', { level: 1 })).toBeTruthy();
+    expect(screen.getByText('学習レポート')).toBeTruthy();
+
+    expect(screen.getByRole('button', { name: '今週' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '先週' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '今月' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '先月' })).toBeTruthy();
+  });
+
+  it('switches active period when a toggle button is clicked', () => {
+    renderWithRouter(<WeeklyReport />);
+
+    const thisWeekBtn = screen.getByRole('button', { name: '今週' });
+    const lastWeekBtn = screen.getByRole('button', { name: '先週' });
+
+    // Default is this-week
+    expect(thisWeekBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(lastWeekBtn.getAttribute('aria-pressed')).toBe('false');
+
+    fireEvent.click(lastWeekBtn);
+
+    expect(lastWeekBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(thisWeekBtn.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('shows study-time stats when localStorage has session data', () => {
+    const sessions: StudySession[] = [
+      makeSession(30, 30 * 60),  // 30 min session
+      makeSession(60, 30 * 60),  // another 30 min session -> 60 min total
+    ];
+    localStorage.setItem(
+      'english-learn-study-time',
+      JSON.stringify({ sessions, currentActivity: null, currentStart: null, lastInteraction: null }),
+    );
+
+    const events: LearningEvent[] = [makeEvent(45, 90)];
+    localStorage.setItem('english-learn-analytics', JSON.stringify(events));
+
+    renderWithRouter(<WeeklyReport />);
+
+    // 60 minutes total = 1時間
+    expect(screen.getByText('1時間')).toBeTruthy();
+    // Achievement for reaching 60 min
+    expect(screen.getByText('1時間学習達成')).toBeTruthy();
+    // Stat card labels
+    expect(screen.getByText('総学習時間')).toBeTruthy();
+    expect(screen.getByText('学習日数')).toBeTruthy();
+  });
+
+  it('has no axe accessibility violations', async () => {
+    const { container } = renderWithRouter(<WeeklyReport />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
