@@ -270,7 +270,7 @@ export default function WeakPointsPage() {
             <button
               type="button"
               onClick={() => setShowClearConfirm(false)}
-              className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
             >
               {'\u30AD\u30E3\u30F3\u30BB\u30EB'}
             </button>
@@ -316,7 +316,7 @@ export default function WeakPointsPage() {
                 <div className="flex items-start gap-2 p-2.5 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
                   <span className="text-xs mt-0.5 shrink-0">{'\u{2705}'}</span>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-medium text-green-400 mb-0.5">
+                    <p className="text-[10px] font-medium text-green-600 dark:text-green-400 mb-0.5">
                       {'\u6B63\u3057\u3044\u7B54\u3048'}
                     </p>
                     <p className="text-sm text-green-700 dark:text-green-300 break-words">{wp.correctAnswer}</p>

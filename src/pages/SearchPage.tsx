@@ -28,12 +28,12 @@ const GROUP_ICONS: Record<GroupKey, string> = {
 };
 
 const GROUP_COLORS: Record<GroupKey, string> = {
-  phrases: 'bg-indigo-50 border-indigo-200 text-indigo-700',
-  vocabulary: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-  grammar: 'bg-amber-50 border-amber-200 text-amber-700',
-  idioms: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-  toeic: 'bg-rose-50 border-rose-200 text-rose-700',
-  dictionary: 'bg-purple-50 border-purple-200 text-purple-700',
+  phrases: 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:border-indigo-800 dark:text-indigo-300',
+  vocabulary: 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-300',
+  grammar: 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-300',
+  idioms: 'bg-yellow-50 border-yellow-200 text-yellow-700 dark:bg-yellow-900/40 dark:border-yellow-800 dark:text-yellow-300',
+  toeic: 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300',
+  dictionary: 'bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-900/40 dark:border-purple-800 dark:text-purple-300',
 };
 
 const INITIAL_LIMIT = 20;
@@ -302,7 +302,7 @@ export default function SearchPage() {
                       <span>{GROUP_ICONS[groupKey]}</span>
                       {GROUP_LABELS[groupKey]}
                     </h2>
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/60">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/60 dark:bg-white/10">
                       {items.length}件
                     </span>
                   </div>

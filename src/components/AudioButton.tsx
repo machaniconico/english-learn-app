@@ -45,11 +45,11 @@ export default function AudioButton({ text, size = 'md', onPlayed }: AudioButton
         className={`
           ${sizeStyles[size]}
           inline-flex items-center justify-center rounded-full
-          bg-indigo-100 text-indigo-700
-          hover:bg-indigo-200 active:scale-95
+          bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300
+          hover:bg-indigo-200 dark:hover:bg-indigo-900/60 active:scale-95
           transition-all duration-200 cursor-pointer
           focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2
-          ${speaking ? 'animate-pulse bg-indigo-200 ring-2 ring-indigo-400' : ''}
+          ${speaking ? 'animate-pulse bg-indigo-200 dark:bg-indigo-900/60 ring-2 ring-indigo-400' : ''}
         `}
         aria-label={speaking ? '音声を停止' : '音声を再生'}
         aria-pressed={speaking}

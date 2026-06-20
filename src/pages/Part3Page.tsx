@@ -222,7 +222,7 @@ export default function Part3Page() {
 function AllConversationsModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl p-6 sm:p-8 relative">
+      <div className="bg-gray-50 dark:bg-[oklch(18%_0.01_270)] dark:border dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-3xl p-6 sm:p-8 relative">
         <button
           type="button"
           onClick={onClose}

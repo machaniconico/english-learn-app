@@ -8,30 +8,30 @@ const ITEMS_PER_PAGE = 20;
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 const categoryColors: Record<string, string> = {
-  基本: 'bg-blue-100 text-blue-700',
-  食べ物: 'bg-orange-100 text-orange-700',
-  動物: 'bg-green-100 text-green-700',
-  自然: 'bg-emerald-100 text-emerald-700',
-  体: 'bg-rose-100 text-rose-700',
-  家族: 'bg-pink-100 text-pink-700',
-  仕事: 'bg-slate-100 text-slate-700',
-  旅行: 'bg-cyan-100 text-cyan-700',
-  学校: 'bg-yellow-100 text-yellow-700',
-  感情: 'bg-purple-100 text-purple-700',
-  時間: 'bg-indigo-100 text-indigo-700',
-  天気: 'bg-sky-100 text-sky-700',
-  買い物: 'bg-amber-100 text-amber-700',
-  健康: 'bg-red-100 text-red-700',
-  趣味: 'bg-teal-100 text-teal-700',
-  スポーツ: 'bg-lime-100 text-lime-700',
-  音楽: 'bg-violet-100 text-violet-700',
-  料理: 'bg-orange-100 text-orange-700',
-  色: 'bg-fuchsia-100 text-fuchsia-700',
-  数字: 'bg-gray-100 text-gray-700',
+  基本: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  食べ物: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+  動物: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
+  自然: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+  体: 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300',
+  家族: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300',
+  仕事: 'bg-slate-100 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300',
+  旅行: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300',
+  学校: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300',
+  感情: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+  時間: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
+  天気: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300',
+  買い物: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  健康: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  趣味: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
+  スポーツ: 'bg-lime-100 dark:bg-lime-900/40 text-lime-700 dark:text-lime-300',
+  音楽: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300',
+  料理: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+  色: 'bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-700 dark:text-fuchsia-300',
+  数字: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
 };
 
 function getCategoryColor(category: string): string {
-  return categoryColors[category] ?? 'bg-gray-100 text-gray-700';
+  return categoryColors[category] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 }
 
 export default function Dictionary() {
@@ -133,7 +133,7 @@ export default function Dictionary() {
           <button
             type="button"
             onClick={() => setSearchQuery('')}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
             aria-label="検索をクリア"
           >
             ✕
@@ -154,7 +154,7 @@ export default function Dictionary() {
             className={`min-w-[40px] min-h-[40px] w-9 h-9 sm:w-8 sm:h-8 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
               selectedLetter === letter
                 ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-700 dark:hover:text-indigo-300'
             }`}
           >
             {letter}
@@ -164,7 +164,7 @@ export default function Dictionary() {
           <button
             type="button"
             onClick={() => handleLetterChange(null)}
-            className="px-3 h-8 rounded-lg text-xs font-medium bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="px-3 h-8 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400"
           >
             クリア
           </button>
@@ -183,7 +183,7 @@ export default function Dictionary() {
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
                 selectedCategory === cat
                   ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-700 dark:hover:text-indigo-300'
               }`}
             >
               {cat}
@@ -203,7 +203,7 @@ export default function Dictionary() {
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
               selectedLevel === label
                 ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-700 dark:hover:text-indigo-300'
             }`}
           >
             {label}
@@ -212,7 +212,7 @@ export default function Dictionary() {
       </div>
 
       {/* Results Count */}
-      <p className="text-sm text-gray-500 mb-4 font-medium" role="status" aria-live="polite">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 font-medium" role="status" aria-live="polite">
         {filteredEntries.length} 件の結果
         {selectedLetter && (
           <span className="ml-2 text-indigo-600">
@@ -227,22 +227,22 @@ export default function Dictionary() {
           {visibleEntries.map((entry: DictionaryEntry) => (
             <div
               key={entry.id}
-              className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow duration-200"
+              className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow duration-200"
             >
               {/* Top row: Word + Audio + Part of speech */}
               <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {entry.english}
                 </h2>
                 <AudioButton text={entry.english} size="sm" />
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                   {entry.partOfSpeech}
                 </span>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     entry.level === 'beginner'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-amber-100 text-amber-700'
+                      ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+                      : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
                   }`}
                 >
                   {entry.level === 'beginner' ? '初級' : '中級'}
@@ -250,20 +250,20 @@ export default function Dictionary() {
               </div>
 
               {/* Japanese + Pronunciation */}
-              <p className="mt-2 text-lg text-gray-800">{entry.japanese}</p>
+              <p className="mt-2 text-lg text-gray-800 dark:text-gray-200">{entry.japanese}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                 {entry.pronunciation}
               </p>
 
               {/* Example sentence */}
-              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                 <div className="flex items-start gap-2">
                   <div className="flex-1">
-                    <p className="text-sm text-gray-700 leading-relaxed">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                       <span className="font-medium text-indigo-600">例文: </span>
                       {entry.example}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       {entry.exampleJa}
                     </p>
                   </div>
@@ -290,7 +290,7 @@ export default function Dictionary() {
               <button
                 type="button"
                 onClick={handleLoadMore}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-indigo-600 border border-indigo-200 bg-white hover:bg-indigo-50 hover:shadow-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-gray-700 hover:shadow-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
               >
                 もっと見る
                 <span className="text-xs text-gray-400">
@@ -304,10 +304,10 @@ export default function Dictionary() {
         /* Empty State */
         <div className="text-center py-16" role="status" aria-live="polite">
           <p className="text-5xl mb-4" aria-hidden="true">🔍</p>
-          <p className="text-lg font-medium text-gray-700">
+          <p className="text-lg font-medium text-gray-700 dark:text-gray-200">
             検索結果がありません
           </p>
-          <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto leading-relaxed">
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto leading-relaxed">
             別のキーワードやフィルターを試してみてください。
             <br />
             英語でも日本語でも検索できます。
@@ -320,7 +320,7 @@ export default function Dictionary() {
               handleLevelChange('すべて');
               handleLetterChange(null);
             }}
-            className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400"
           >
             フィルターをリセット
           </button>
