@@ -540,6 +540,27 @@ export default function Home() {
               挑戦する &rarr;
             </span>
           </Link>
+
+          {/* 発音練習 — sky */}
+          <Link
+            to="/pronunciation"
+            className="group flex items-center gap-4 rounded-2xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/50 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-sm shrink-0">
+              <Mic className="w-6 h-6 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors">
+                発音練習
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                フレーズを声に出して発音をチェック
+              </p>
+            </div>
+            <span className="text-sm font-medium text-sky-500 group-hover:text-sky-700 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors shrink-0">
+              話す &rarr;
+            </span>
+          </Link>
         </div>
       </section>
 
