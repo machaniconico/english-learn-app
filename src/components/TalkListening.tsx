@@ -251,8 +251,10 @@ export default function TalkListening({ talks }: TalkListeningProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-400 font-medium">速度</label>
+          <label className="text-xs text-gray-400 font-medium" htmlFor="talk-speed">速度</label>
           <select
+            id="talk-speed"
+            aria-label="再生速度"
             value={rate}
             onChange={(e) => setRate(Number(e.target.value))}
             className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-300"

@@ -5,6 +5,7 @@ import { fillInBlankSets } from '../data/toeic/fill-in-blank';
 import { readingPassages } from '../data/toeic/reading-passages';
 import { sections } from '../data/sections';
 import ShareButton from '../components/ShareButton';
+import { clamp, determineSkillLevel, estimateToeicScore } from './scoreEstimate';
 
 // --- Types ---
 
@@ -39,10 +40,6 @@ const LEVEL_LABELS: Record<string, { label: string; color: string }> = {
 
 // --- Helpers ---
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
 function getScoreColor(score: number): string {
   if (score >= 800) return '#22c55e';
   if (score >= 600) return '#3b82f6';
@@ -73,13 +70,6 @@ function getMotivationalMessage(score: number): string {
   if (score >= 500) return '基礎力はあります。演習を重ねてステップアップしましょう！';
   if (score >= 400) return '中級レベルです。毎日の学習を続けて実力を伸ばしましょう。';
   return '始めたばかりです。基礎から一歩ずつ進めていきましょう！';
-}
-
-function determineSkillLevel(avg: number): string {
-  if (avg >= 90) return 'expert';
-  if (avg >= 70) return 'advanced';
-  if (avg >= 40) return 'intermediate';
-  return 'beginner';
 }
 
 function loadHistory(): ScoreEstimate[] {
@@ -371,39 +361,26 @@ export default function ScoreEstimator() {
 
   // Calculate estimated TOEIC score
   const estimate = useMemo((): Omit<ScoreEstimate, 'timestamp'> => {
-    let score = 200; // TOEIC minimum base
-
-    // Fill-in-blank contribution
-    const fibBegAvg = fillInBreakdown.beginner;
-    const fibIntAvg = fillInBreakdown.intermediate;
-    const fibAdvAvg = fillInBreakdown.advanced;
-    score += (fibBegAvg / 100) * 100; // beginner: +0-100
-    score += (fibIntAvg / 100) * 150; // intermediate: +0-150
-    score += (fibAdvAvg / 100) * 200; // advanced: +0-200
-
-    // Reading contribution
-    const readBegAvg = readingBreakdown.beginner;
-    const readIntAvg = readingBreakdown.intermediate;
-    const readAdvAvg = readingBreakdown.advanced;
-    score += (readBegAvg / 100) * 50;  // beginner: +0-50
-    score += (readIntAvg / 100) * 100; // intermediate: +0-100
-    score += (readAdvAvg / 100) * 150; // advanced: +0-150
-
-    // Completion bonus
     const totalSections = sections.reduce((sum, s) => {
       return sum + s.categories.reduce((cSum, c) => {
         return cSum + c.lessons.reduce((lSum, l) => lSum + l.items.length, 0);
       }, 0);
     }, 0);
-    const completionPct = totalSections > 0 ? stats.totalItems / totalSections : 0;
-    score += clamp(completionPct, 0, 1) * 100; // +0-100
 
-    score = Math.round(score);
-    const low = clamp(score - 50, 10, 990);
-    const high = clamp(score + 50, 10, 990);
-    score = clamp(score, 10, 990);
-
-    return { score, low, high };
+    return estimateToeicScore({
+      fillIn: {
+        beginner: fillInBreakdown.beginner,
+        intermediate: fillInBreakdown.intermediate,
+        advanced: fillInBreakdown.advanced,
+      },
+      reading: {
+        beginner: readingBreakdown.beginner,
+        intermediate: readingBreakdown.intermediate,
+        advanced: readingBreakdown.advanced,
+      },
+      completedItems: stats.totalItems,
+      totalItems: totalSections,
+    });
   }, [fillInBreakdown, readingBreakdown, stats.totalItems]);
 
   // Save estimate to history on mount (once per page visit, throttled to 1 per hour)
