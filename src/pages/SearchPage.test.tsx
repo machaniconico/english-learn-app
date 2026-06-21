@@ -10,6 +10,7 @@ import {
   within,
 } from '../test/test-utils';
 import SearchPage from './SearchPage';
+import { STORAGE_KEY } from '../hooks/useSearchHistory';
 
 expect.extend(matchers);
 
@@ -177,5 +178,127 @@ describe('SearchPage', () => {
   it('exposes a polite live status region for result announcements', () => {
     const { container } = renderWithRouter(<SearchPage />);
     expect(within(container).getByRole('status')).toBeInTheDocument();
+  });
+
+  // --- 検索履歴(US-002) ---
+
+  it('records a successful search to history and shows it as a chip after clearing the input', async () => {
+    renderWithRouter(<SearchPage />);
+
+    typeQuery(COMMON_QUERY);
+    // 結果が出た(= totalResults > 0)ことで履歴記録 effect が走る。
+    await screen.findByText(/の検索結果/, {}, { timeout: 2000 });
+
+    // 入力を空にすると『最近の検索』セクションが現れる。
+    fireEvent.change(screen.getByRole('textbox', { name: 'コンテンツを検索' }), {
+      target: { value: '' },
+    });
+
+    expect(await screen.findByText('最近の検索')).toBeInTheDocument();
+    // 検索した語の chip(再検索ボタン)が表示されている。
+    expect(
+      screen.getByRole('button', { name: `${COMMON_QUERY}を再検索` })
+    ).toBeInTheDocument();
+  });
+
+  it('does not record too-short queries or zero-result searches', async () => {
+    renderWithRouter(<SearchPage />);
+
+    // (1) 1 文字のクエリは結果の有無にかかわらず記録しない(trim 後 2 文字未満)。
+    typeQuery('y');
+    // デバウンスが効いて hasQuery=true になるまで待つ。
+    await waitFor(
+      () =>
+        expect(screen.queryByText('検索キーワードを入力してください')).not.toBeInTheDocument(),
+      { timeout: 2000 }
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'コンテンツを検索' }), {
+      target: { value: '' },
+    });
+    await waitFor(
+      () => expect(screen.getByText('検索キーワードを入力してください')).toBeInTheDocument(),
+      { timeout: 2000 }
+    );
+    expect(screen.queryByText('最近の検索')).not.toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toEqual([]);
+
+    // (2) フィルタをすべて外し、結果が 0 件になる状態で検索 -> 記録しない。
+    fireEvent.click(screen.getByRole('button', { name: 'すべて' }));
+    typeQuery(COMMON_QUERY);
+    await waitFor(
+      () => expect(screen.getByText(/一致する結果がありません/)).toBeInTheDocument(),
+      { timeout: 2000 }
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'コンテンツを検索' }), {
+      target: { value: '' },
+    });
+    await waitFor(
+      () => expect(screen.getByText('検索キーワードを入力してください')).toBeInTheDocument(),
+      { timeout: 2000 }
+    );
+    expect(screen.queryByText('最近の検索')).not.toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toEqual([]);
+  });
+
+  it('shows seeded recent searches as chips when the input is empty', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(['apple', 'banana']));
+    renderWithRouter(<SearchPage />);
+
+    expect(screen.getByText('最近の検索')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'appleを再検索' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'bananaを再検索' })
+    ).toBeInTheDocument();
+  });
+
+  it('does not show the recent searches section when history is empty', () => {
+    renderWithRouter(<SearchPage />);
+    expect(screen.queryByText('最近の検索')).not.toBeInTheDocument();
+  });
+
+  it('restores the query into the input when a recent-search chip is clicked', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(['apple', 'banana']));
+    renderWithRouter(<SearchPage />);
+
+    const input = screen.getByRole('textbox', { name: 'コンテンツを検索' });
+    expect(input).toHaveValue('');
+
+    fireEvent.click(screen.getByRole('button', { name: 'appleを再検索' }));
+    expect(input).toHaveValue('apple');
+  });
+
+  it('removes a single entry via the chip delete button', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(['apple', 'banana']));
+    renderWithRouter(<SearchPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'appleを履歴から削除' }));
+
+    expect(
+      screen.queryByRole('button', { name: 'appleを再検索' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'bananaを再検索' })
+    ).toBeInTheDocument();
+  });
+
+  it('clears all history via the "履歴をクリア" button', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(['apple', 'banana']));
+    renderWithRouter(<SearchPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: '履歴をクリア' }));
+
+    // 履歴が空になるとセクションごと消える。
+    expect(screen.queryByText('最近の検索')).not.toBeInTheDocument();
+    expect(localStorage.getItem(STORAGE_KEY)).toBe('[]');
+  });
+
+  it('has no detectable axe accessibility violations in the recent-searches state', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(['apple', 'banana']));
+    const { container } = renderWithRouter(<SearchPage />);
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });
