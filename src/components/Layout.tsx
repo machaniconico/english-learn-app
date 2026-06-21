@@ -5,6 +5,7 @@ import { useDarkMode } from '../hooks/useDarkMode';
 import { useStudyTimer } from '../hooks/useStudyTimer';
 import CommandPalette from './CommandPalette';
 import InstallButton from './InstallButton';
+import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import {
   Home,
   BookOpen,
@@ -15,6 +16,7 @@ import {
   BookMarked,
   ChevronDown,
   Command,
+  Keyboard,
 } from 'lucide-react';
 
 const navLinkColorClass =
@@ -155,19 +157,41 @@ export default function Layout() {
   const { isTracking, currentDuration, stopTimer } = useStudyTimer();
   // コマンドパレットの開閉状態。
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // キーボードショートカットヘルプ(? キー)の開閉状態。
+  const [helpOpen, setHelpOpen] = useState(false);
 
-  // グローバルショートカット: ⌘K / Ctrl+K でパレットをトグルする。
-  // functional updater を使うので依存配列は空でよい(stale closure を避けられる)。
+  // グローバルショートカット:
+  //  - ⌘K / Ctrl+K: コマンドパレットのトグル(既存挙動・維持)
+  //  - ?           : キーボードショートカットヘルプを開く
+  // paletteOpen を依存配列に含めることで再订阅が走るが、cleanup で安全に入れ替わる。
+  // ⌘K 側は functional updater なので stale closure は起きない。
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // ⌘K / Ctrl+K: コマンドパレットのトグル(既存挙動・維持)。
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPaletteOpen((v) => !v);
+        return;
+      }
+      // ? : ヘルプを開く。入力中(INPUT/TEXTAREA/SELECT/contentEditable)と
+      // コマンドパレットオープン中は無視(検索欄等で ? を打っても開かない)。
+      if (e.key === '?' && !paletteOpen) {
+        const ae = document.activeElement as HTMLElement | null;
+        const tag = ae?.tagName;
+        const isTyping =
+          tag === 'INPUT' ||
+          tag === 'TEXTAREA' ||
+          tag === 'SELECT' ||
+          ae?.isContentEditable === true;
+        if (!isTyping) {
+          e.preventDefault();
+          setHelpOpen(true);
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [paletteOpen]);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -178,6 +202,8 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[oklch(13%_0.01_270)]">
       {/* コマンドパレット(⌘K / Ctrl+K)。open=false のとき何も描画しない。 */}
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      {/* キーボードショートカットヘルプ(? キー / ヘッダーボタン)。open=false のとき何も描画しない。 */}
+      <KeyboardShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:bg-white focus:text-indigo-700 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow"
@@ -237,6 +263,15 @@ export default function Layout() {
               title="コマンドパレット (Ctrl+K)"
             >
               <Command className="w-5 h-5" />
+            </button>
+            {/* キーボードショートカットヘルプを開くボタン(? キーと同じ挙動・控えめ) */}
+            <button
+              onClick={() => setHelpOpen(true)}
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+              aria-label="キーボードショートカット (?)"
+              title="キーボードショートカット (?)"
+            >
+              <Keyboard className="w-5 h-5" />
             </button>
             {/* Mobile search icon */}
             <Link
