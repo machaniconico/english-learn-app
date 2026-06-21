@@ -34,9 +34,12 @@ import {
   Layers,
   Download,
   ListChecks,
+  ArrowRight,
+  X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import StreakBanner from '../components/StreakBanner';
+import { useLastActivity } from '../hooks/useLastActivity';
 
 const sectionMeta: Record<string, { icon: LucideIcon; color: string; gradient: string }> = {
   phrases: {
@@ -83,6 +86,8 @@ export default function Home() {
   const { getDueCards } = useSpacedRepetition();
   const { hasDiagnosed, level: userLevel, levelInfo } = useUserLevel();
   const { getWeakestTypes } = useAccuracy();
+  // 最後に開いた学習ページ(US-002)。last があれば『前回の続き』カードを表示する。
+  const { last, clear } = useLastActivity();
 
   // Match the actual review session exactly (same cap + weak-point mastery filter).
   const reviewCount = buildReviewQueue(getDueCards(), weakPoints).length;
@@ -379,6 +384,46 @@ export default function Home() {
           ステップバイステップで英語力を伸ばそう。
         </p>
       </section>
+
+      {/* 前回の続き: last-activity に学習ページが記録されていれば再開カードを出す(US-002) */}
+      {last && (
+        <section
+          className="animate-fade-in-up mb-6"
+          style={{ '--stagger': '0ms' } as React.CSSProperties}
+          aria-label="前回の続き"
+        >
+          <div className="relative flex items-stretch rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-gray-800">
+            <Link
+              to={last.path}
+              className="group flex flex-1 items-center gap-4 rounded-2xl p-4 min-w-0 transition-colors hover:bg-indigo-50 dark:hover:bg-gray-700/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-inset"
+              aria-label={`前回の続き: ${last.label} を再開する`}
+            >
+              <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm shrink-0">
+                <RotateCcw className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">前回の続き</p>
+                <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors truncate">
+                  {last.label}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  途中から再開しましょう
+                </p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-indigo-500 group-hover:text-indigo-700 dark:text-indigo-400 dark:group-hover:text-indigo-300 transition-colors shrink-0" />
+            </Link>
+            {/* × ボタンで last-activity をクリア(任意機能) */}
+            <button
+              type="button"
+              onClick={clear}
+              className="self-start m-2 inline-flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              aria-label="前回の続きを閉じる"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* ストリーク維持バナー: streakAtRisk のときだけ表示、それ以外は null */}
       <StreakBanner />

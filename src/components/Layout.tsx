@@ -6,6 +6,8 @@ import { useStudyTimer } from '../hooks/useStudyTimer';
 import CommandPalette from './CommandPalette';
 import InstallButton from './InstallButton';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import { useLastActivity } from '../hooks/useLastActivity';
+import { PALETTE_COMMANDS } from '../utils/commandPalette';
 import {
   Home,
   BookOpen,
@@ -22,6 +24,23 @@ import {
 const navLinkColorClass =
   'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300';
 const navLinkClass = `text-sm ${navLinkColorClass} font-medium transition-colors flex items-center gap-1`;
+
+// 学習ページとして記録対象にするコマンドグループ(US-002)。
+// メイン(ホーム/辞書/検索)とツール(進捗/設定 等)は記録対象外=ホームに戻っても前回の学習が上書きされない。
+const LEARNING_COMMANDS = PALETTE_COMMANDS.filter(
+  (cmd) => cmd.group === '練習' || cmd.group === 'リスニング' || cmd.group === '学習管理',
+).sort((a, b) => b.path.length - a.path.length);
+
+// pathname が学習ページ(練習/リスニング/学習管理)にマッチするかを返す。
+// 完全一致、または cmd.path + '/' の下位パスを許容し、最長一致を優先する。
+function matchLearningCommand(pathname: string) {
+  for (const cmd of LEARNING_COMMANDS) {
+    if (pathname === cmd.path || pathname.startsWith(cmd.path + '/')) {
+      return cmd;
+    }
+  }
+  return null;
+}
 
 function Breadcrumbs() {
   const location = useLocation();
@@ -155,6 +174,8 @@ export default function Layout() {
   const location = useLocation();
   const { isDark, toggle } = useDarkMode();
   const { isTracking, currentDuration, stopTimer } = useStudyTimer();
+  // 最後に開いた学習ページを localStorage に記録する(US-002)。
+  const { record } = useLastActivity();
   // コマンドパレットの開閉状態。
   const [paletteOpen, setPaletteOpen] = useState(false);
   // キーボードショートカットヘルプ(? キー)の開閉状態。
@@ -192,6 +213,16 @@ export default function Layout() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [paletteOpen]);
+
+  // location.pathname が変わるたびに、学習ページ(練習/リスニング/学習管理)なら
+  // useLastActivity.record で localStorage に記録する。メイン/ツールページは
+  // マッチしないので記録されず、ホームに戻っても前回の学習が上書きされない。
+  useEffect(() => {
+    const cmd = matchLearningCommand(location.pathname);
+    if (cmd) {
+      record({ path: location.pathname, label: cmd.label });
+    }
+  }, [location.pathname, record]);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
