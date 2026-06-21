@@ -36,6 +36,7 @@ import {
   ListChecks,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import StreakBanner from '../components/StreakBanner';
 
 const sectionMeta: Record<string, { icon: LucideIcon; color: string; gradient: string }> = {
   phrases: {
@@ -378,6 +379,9 @@ export default function Home() {
           ステップバイステップで英語力を伸ばそう。
         </p>
       </section>
+
+      {/* ストリーク維持バナー: streakAtRisk のときだけ表示、それ以外は null */}
+      <StreakBanner />
 
       {/* Quick Links — H1: section-specific colors, H2: visual variety */}
       <section className="mb-8 space-y-3">

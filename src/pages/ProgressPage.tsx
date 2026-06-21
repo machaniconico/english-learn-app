@@ -3,6 +3,7 @@ import { useProgress } from '../hooks/useProgress';
 import { sections } from '../data/sections';
 import { useEffect, useMemo } from 'react';
 import ShareButton from '../components/ShareButton';
+import ReminderSettings from '../components/ReminderSettings';
 
 function getMotivationalMessage(percentage: number): string {
   if (percentage === 0) return '今日から始めよう！最初の一歩を踏み出そう。';
@@ -253,6 +254,9 @@ export default function ProgressPage() {
           </ul>
         </div>
       )}
+
+      {/* リマインダー設定: 進捗/設定の文脈で表示するカード */}
+      <ReminderSettings />
 
       {/* Motivational Message */}
       <div className="rounded-2xl border border-indigo-100 dark:border-indigo-800 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 p-5 text-center">
