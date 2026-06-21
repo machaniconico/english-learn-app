@@ -114,6 +114,8 @@ function MoreDropdown() {
     { to: '/analytics', label: '分析' },
     { to: '/srs', label: 'SRS' },
     { to: '/backup', label: 'バックアップ' },
+    // 設定ページへの導線(US-003)。Home の前が自然な末尾位置。
+    { to: '/settings', label: '設定' },
     { to: '/', label: 'Home' },
   ];
 

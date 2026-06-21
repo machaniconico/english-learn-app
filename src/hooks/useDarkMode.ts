@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-type Mode = 'light' | 'dark' | 'system';
+// テーマの選択モード。system は OS の prefers-color-scheme に追従する。
+export type Mode = 'light' | 'dark' | 'system';
 const STORAGE_KEY = 'english-learn-theme';
 
 function getSystemDark(): boolean {
@@ -47,5 +48,5 @@ export function useDarkMode() {
     setMode(isDark ? 'light' : 'dark');
   }, [isDark, setMode]);
 
-  return { isDark, toggle, setMode };
+  return { isDark, mode, toggle, setMode };
 }
