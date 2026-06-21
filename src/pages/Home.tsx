@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import StreakBanner from '../components/StreakBanner';
+import DailyGoalProgress from '../components/DailyGoalProgress';
 import { useLastActivity } from '../hooks/useLastActivity';
 
 const sectionMeta: Record<string, { icon: LucideIcon; color: string; gradient: string }> = {
@@ -427,6 +428,9 @@ export default function Home() {
 
       {/* ストリーク維持バナー: streakAtRisk のときだけ表示、それ以外は null */}
       <StreakBanner />
+
+      {/* 今日のデイリー目標の進捗(US-002): StreakBanner の直後に配置 */}
+      <DailyGoalProgress />
 
       {/* Quick Links — H1: section-specific colors, H2: visual variety */}
       <section className="mb-8 space-y-3">

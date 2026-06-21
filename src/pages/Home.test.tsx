@@ -8,6 +8,15 @@ import { STORAGE_KEY, type LastActivity } from '../hooks/useLastActivity';
 
 expect.extend(matchers);
 
+// 今日のローカル暦日を 'YYYY-MM-DD' で返す(useStudyTimer の getDateString と同等)。
+function todayStr(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 describe('Home a11y smoke', () => {
   it('renders without axe violations', async () => {
     const { container } = renderWithRouter(<Home />, { route: '/' });
@@ -49,5 +58,35 @@ describe('Home 前回の続き card (US-002)', () => {
     // クリック後: カードが消え、localStorage も null に書き戻る。
     expect(screen.queryByRole('link', { name: '前回の続き: TOEIC練習 を再開する' })).not.toBeInTheDocument();
     expect(localStorage.getItem(STORAGE_KEY)).toBe('null');
+  });
+});
+
+describe('Home デイリー目標の進捗表示 (US-002)', () => {
+  it('renders the daily-goal progressbar and 今日の目標 heading when goal & study-time are seeded', () => {
+    // 目標分を 10 分に設定
+    localStorage.setItem('english-learn-daily-goal', '10');
+    // 今日のセッション(10分)を記録して達成状態にする
+    const now = Date.now();
+    const seeded = {
+      sessions: [
+        {
+          date: todayStr(),
+          startTime: now,
+          endTime: now,
+          duration: 600, // 秒 = 10分
+          activity: 'test',
+        },
+      ],
+      currentActivity: null,
+      currentStart: null,
+      lastInteraction: null,
+    };
+    localStorage.setItem('english-learn-study-time', JSON.stringify(seeded));
+
+    renderWithRouter(<Home />, { route: '/' });
+
+    // 進捗バー(role=progressbar)と『今日の目標』見出しが表示されること(最小アサーション)
+    expect(screen.getByRole('progressbar', { name: '今日の学習目標の進捗' })).toBeInTheDocument();
+    expect(screen.getByText('今日の目標')).toBeInTheDocument();
   });
 });
