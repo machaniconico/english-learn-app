@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Clock, X } from 'lucide-react';
 import { sections } from '../data/sections';
 import { dictionary } from '../data/dictionary';
 import AudioButton from '../components/AudioButton';
+import { useSearchHistory } from '../hooks/useSearchHistory';
 import type { DictionaryEntry } from '../data/types';
 import { groupResults } from './searchIndex';
 import type { SearchResult, GroupKey } from './searchIndex';
@@ -110,6 +112,9 @@ export default function SearchPage() {
   );
   const [expandedGroups, setExpandedGroups] = useState<Set<GroupKey>>(new Set());
 
+  // 検索履歴(US-001 の useSearchHistory を配線)
+  const { history, addQuery, removeQuery, clear } = useSearchHistory();
+
   // Debounce
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 300);
@@ -129,6 +134,17 @@ export default function SearchPage() {
   const totalResults = useMemo(() => {
     return Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0);
   }, [grouped]);
+
+  // 検索履歴への記録: debouncedQuery が trim 後 2 文字以上 かつ 結果が 1 件以上
+  // のときだけ記録する。短すぎる語や 0 件の検索は履歴に残さない。
+  // 依存は debouncedQuery と totalResults のみ(フィルタ切替でも totalResults が
+  // 変わるが addQuery は大小無視で重複排除するため再呼び出しは無害)。
+  useEffect(() => {
+    const trimmed = debouncedQuery.trim();
+    if (trimmed.length >= 2 && totalResults > 0) {
+      addQuery(trimmed);
+    }
+  }, [debouncedQuery, totalResults, addQuery]);
 
   const toggleFilter = useCallback((key: GroupKey) => {
     setActiveFilters((prev) => {
@@ -218,6 +234,55 @@ export default function SearchPage() {
           )}
         </div>
       </div>
+
+      {/* 最近の検索: 入力が空のときだけ表示。履歴が空なら何も出さない。 */}
+      {query.trim() === '' && history.length > 0 && (
+        <section className="mb-6" aria-label="最近の検索">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+              <Clock className="w-4 h-4" aria-hidden="true" />
+              最近の検索
+            </h2>
+            <button
+              type="button"
+              onClick={clear}
+              className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer transition-colors"
+              aria-label="履歴をクリア"
+            >
+              <X className="w-3 h-3" aria-hidden="true" />
+              履歴をクリア
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {history.map((item) => (
+              // chip 全体をひとつのボタンにはせず、再検索ボタンと削除ボタンを
+              // 兄弟要素として並べる(ボタンの中にボタンを入れると a11y 違反)。
+              <div
+                key={item}
+                className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+              >
+                <button
+                  type="button"
+                  onClick={() => setQuery(item)}
+                  className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors"
+                  aria-label={`${item}を再検索`}
+                >
+                  <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                  <span>{item}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeQuery(item)}
+                  className="inline-flex items-center justify-center mr-1 p-1.5 rounded-full text-gray-400 dark:text-gray-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+                  aria-label={`${item}を履歴から削除`}
+                >
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Filters */}
       <div className="mb-6">
