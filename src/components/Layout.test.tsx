@@ -5,6 +5,7 @@ import * as matchers from 'vitest-axe/matchers';
 import { Routes, Route, MemoryRouter } from 'react-router-dom';
 import { render, screen, fireEvent, within } from '../test/test-utils';
 import Layout from './Layout';
+import { STORAGE_KEY } from '../hooks/useLastActivity';
 
 expect.extend(matchers);
 
@@ -38,6 +39,7 @@ function renderLayout(route = '/') {
         <Route element={<Layout />}>
           <Route index element={<h1>ページ本文</h1>} />
           <Route path="dictionary" element={<h1>辞書ページ</h1>} />
+          <Route path="toeic-practice" element={<h1>TOEIC練習ページ</h1>} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -162,5 +164,22 @@ describe('Layout', () => {
     fireEvent.keyDown(window, { key: '?' });
 
     expect(screen.queryByRole('dialog', { name: 'キーボードショートカット' })).not.toBeInTheDocument();
+  });
+
+  describe('last-activity recording (US-002)', () => {
+    it('records last-activity to localStorage when navigated to a learning page (/toeic-practice)', () => {
+      renderLayout('/toeic-practice');
+      // /toeic-practice は練習グループなので last-activity に記録される。
+      const raw = localStorage.getItem(STORAGE_KEY);
+      expect(raw).not.toBeNull();
+      const stored = JSON.parse(raw ?? 'null');
+      expect(stored).toEqual({ path: '/toeic-practice', label: 'TOEIC練習' });
+    });
+
+    it('does not record last-activity on a main page (/)', () => {
+      renderLayout('/');
+      // / はメイングループなので last-activity は記録されない。
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    });
   });
 });
