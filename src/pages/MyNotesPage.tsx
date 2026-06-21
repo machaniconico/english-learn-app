@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Download } from 'lucide-react';
 import { useWordNotes } from '../hooks/useWordNotes';
 import { dictionary } from '../data/dictionary';
 import type { DictionaryEntry } from '../data/types';
@@ -9,6 +10,7 @@ import {
   type NoteRow,
   type NoteSortKey,
 } from './myNotesFilter';
+import { notesToCsv, buildNotesCsvFilename } from './myNotesCsv';
 
 // MyNotesPage: 辞書で単語に付けたメモ(useWordNotes)を横断で見返し・編集・削除する一覧ページ。
 // US-002: myNotesFilter(検索 + 並べ替え)を配線し、visibleRows を表示する。
@@ -86,6 +88,34 @@ export default function MyNotesPage() {
     setDraft('');
   };
 
+  // US-002: 現在の表示行(visibleRows)を CSV でダウンロードする。
+  // 検索/並べ替えで絞った状態ならその分だけ出る。BOM を先頭に付け Excel 文字化けを防ぐ。
+  // SSR や非対応環境(typeof document / URL.createObjectURL が無い)では何もしない安全策。
+  const handleExportCsv = () => {
+    try {
+      if (
+        typeof document === 'undefined' ||
+        typeof URL?.createObjectURL !== 'function'
+      ) {
+        return;
+      }
+      const csv = notesToCsv(visibleRows);
+      const blob = new Blob(['\uFEFF' + csv], {
+        type: 'text/csv;charset=utf-8;',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = buildNotesCsvFilename(new Date());
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // SSR / 非対応環境では黙って無視する
+    }
+  };
+
   // 空状態: メモが1件もないときは辞書への導線を出す(検索UIは出さない)。
   if (count === 0) {
     return (
@@ -112,7 +142,7 @@ export default function MyNotesPage() {
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="text-3xl">📝</span>
           <div>
@@ -124,6 +154,18 @@ export default function MyNotesPage() {
             </p>
           </div>
         </div>
+        {/* US-002: CSV エクスポートボタン。表示中のメモ(visibleRows)をダウンロード。
+            検索ヒット0件(visibleCount===0)のときは無効化し空ヘッダーCSV を防ぐ。 */}
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          disabled={visibleCount === 0}
+          aria-label="メモをCSVでエクスポート"
+          className="shrink-0 inline-flex items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <Download aria-hidden="true" className="h-4 w-4" />
+          CSVをエクスポート
+        </button>
       </div>
 
       {/* 検索 + 並べ替え(メモ1件以上のときだけ表示) */}
