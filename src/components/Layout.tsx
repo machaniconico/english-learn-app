@@ -4,6 +4,7 @@ import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useStudyTimer } from '../hooks/useStudyTimer';
 import CommandPalette from './CommandPalette';
+import InstallButton from './InstallButton';
 import {
   Home,
   BookOpen,
@@ -193,6 +194,8 @@ export default function Layout() {
             </div>
           </Link>
           <div className="flex items-center gap-2">
+            {/* PWA インストール促進ボタン(インストール可能なときだけ表示) */}
+            <InstallButton />
             {/* Study timer indicator */}
             {isTracking && (
               <button
