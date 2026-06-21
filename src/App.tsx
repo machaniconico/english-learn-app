@@ -41,6 +41,8 @@ const BackupPage = lazy(() => import('./pages/BackupPage'))
 const StudyPlanPage = lazy(() => import('./pages/StudyPlanPage'))
 // 設定ページ(US-002)。テーマ/文字サイズ/リマインダー/バックアップを集約。
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+// 単語メモ一覧ページ(US-002)。useWordNotes のメモを横断で見返し・編集・削除。
+const MyNotesPage = lazy(() => import('./pages/MyNotesPage'))
 
 export default function App() {
   return (
@@ -82,6 +84,8 @@ export default function App() {
         <Route path="/decks/:deckId/edit" element={<CustomDeckEditPage />} />
         <Route path="/decks/:deckId" element={<CustomDeckStudyPage />} />
         <Route path="/bookmarks" element={<BookmarksPage />} />
+        {/* 単語メモ一覧(US-002): /my-notes */}
+        <Route path="/my-notes" element={<MyNotesPage />} />
         <Route path="/backup" element={<BackupPage />} />
         <Route path="/daily" element={<DailyChallengePage />} />
         <Route path="/review" element={<DailyReviewPage />} />

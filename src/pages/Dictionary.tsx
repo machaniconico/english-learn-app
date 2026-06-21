@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Clock, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Clock, X, NotebookPen } from 'lucide-react';
 import { dictionary } from '../data/dictionary';
 import type { DictionaryEntry } from '../data/types';
 import { filterDictionary } from './dictionaryFilter';
@@ -161,6 +162,15 @@ export default function Dictionary() {
         <p className="mt-3 text-gray-500 max-w-md mx-auto leading-relaxed">
           英単語を検索して、意味・発音・例文を確認しよう。
         </p>
+        {/* 単語メモ一覧ページへの導線。メモはこの辞書で付けられるため、ここに置くのが最も自然。 */}
+        <Link
+          to="/my-notes"
+          aria-label="単語メモ一覧を見る"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1.5 text-sm font-medium text-indigo-700 dark:text-indigo-300 transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+        >
+          <NotebookPen className="h-4 w-4" aria-hidden="true" />
+          単語メモ一覧
+        </Link>
       </section>
 
       {/* Search Bar */}

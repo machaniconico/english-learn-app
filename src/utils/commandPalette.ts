@@ -46,6 +46,8 @@ export const PALETTE_COMMANDS: PaletteCommand[] = [
   // --- 学習管理 ---
   { id: 'decks', label: '単語帳', path: '/decks', group: '学習管理', keywords: ['deck', 'tangocho', '単語帳'] },
   { id: 'bookmarks', label: 'ブックマーク', path: '/bookmarks', group: '学習管理', keywords: ['bookmark', 'ブックマーク'] },
+  // 単語メモ一覧(US-002): useWordNotes のメモを横断で見返す。
+  { id: 'my-notes', label: '単語メモ', path: '/my-notes', group: '学習管理', keywords: ['word notes', 'memo', 'note', 'tango memo', '単語メモ', 'メモ', 'ノート'] },
   { id: 'srs', label: 'SRS復習', path: '/srs', group: '学習管理', keywords: ['srs', 'spaced repetition', 'fukushu', '復習'] },
   { id: 'daily', label: 'デイリーチャレンジ', path: '/daily', group: '学習管理', keywords: ['daily', 'challenge', 'デイリー', 'チャレンジ'] },
   { id: 'review', label: 'デイリー復習', path: '/review', group: '学習管理', keywords: ['daily review', 'review', '復習'] },

@@ -13,9 +13,9 @@ const sample: PaletteCommand[] = [
 ];
 
 describe('PALETTE_COMMANDS', () => {
-  it('仕様の全目的地(31件)を定義している', () => {
-    // メイン3 + 練習8 + リスニング4 + 学習管理8 + ツール8 = 31
-    expect(PALETTE_COMMANDS.length).toBe(31);
+  it('仕様の全目的地(32件)を定義している', () => {
+    // メイン3 + 練習8 + リスニング4 + 学習管理9(my-notes追加) + ツール8 = 32
+    expect(PALETTE_COMMANDS.length).toBe(32);
   });
 
   it('全コマンドが必須フィールドを持つ', () => {
@@ -34,6 +34,14 @@ describe('PALETTE_COMMANDS', () => {
   it('id が一意', () => {
     const ids = PALETTE_COMMANDS.map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('my-notes が 学習管理グループに存在する (US-002)', () => {
+    const cmd = PALETTE_COMMANDS.find((c) => c.id === 'my-notes');
+    expect(cmd).toBeDefined();
+    expect(cmd?.path).toBe('/my-notes');
+    expect(cmd?.group).toBe('学習管理');
+    expect(cmd?.label).toBe('単語メモ');
   });
 
   it('path が一意', () => {
@@ -153,6 +161,18 @@ describe('filterCommands', () => {
     // ローマ字読み(せってい)でもヒットすること。
     const byRomaji = filterCommands('せってい');
     expect(byRomaji.some((c) => c.id === 'settings')).toBe(true);
+  });
+
+  it('単語メモが日本語クエリでヒットする (US-002)', () => {
+    // 日本語ラベル「単語メモ」で my-notes に絞り込めること。
+    const byJapanese = filterCommands('単語メモ');
+    expect(byJapanese.some((c) => c.id === 'my-notes')).toBe(true);
+    // 英語キーワードでもヒットすること。
+    const byEnglish = filterCommands('memo');
+    expect(byEnglish.some((c) => c.id === 'my-notes')).toBe(true);
+    // ローマ字読みでもヒットすること。
+    const byRomaji = filterCommands('tango memo');
+    expect(byRomaji.some((c) => c.id === 'my-notes')).toBe(true);
   });
 
   it('同ランクは元の定義順を維持する(安定ソート)', () => {
