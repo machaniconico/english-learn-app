@@ -143,4 +143,126 @@ describe('MyNotesPage', () => {
     const stored = JSON.parse(localStorage.getItem(WORD_NOTES_KEY) ?? '{}');
     expect(stored['dict-basic-1']).toBe('元のメモ');
   });
+
+  // ---- US-002: 検索 + 並べ替え ----
+
+  it('メモ1件以上のとき検索 input と並べ替え select が表示される', () => {
+    localStorage.setItem(
+      WORD_NOTES_KEY,
+      JSON.stringify({ 'dict-basic-1': 'メモ' }),
+    );
+
+    renderWithRouter(<MyNotesPage />, { route: '/my-notes' });
+
+    // 検索 input(type=search -> searchbox role)と並べ替え select(combobox role)
+    expect(screen.getByRole('searchbox', { name: 'メモを検索' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '並べ替え' })).toBeInTheDocument();
+  });
+
+  it('メモ0件のとき検索UIは表示されず空状態のままである', () => {
+    renderWithRouter(<MyNotesPage />, { route: '/my-notes' });
+
+    // 空状態メッセージ
+    expect(screen.getByText(/まだメモがありません。/)).toBeInTheDocument();
+    // 検索UIは出ない
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+
+  it('検索 input に英語/和訳/メモの一部を入れると一致行だけ残り他が消える', () => {
+    // dict-basic-1 = "I"/"私", dict-basic-2 = "you"/"あなた", dict-basic-3 = "he"/"彼"
+    localStorage.setItem(
+      WORD_NOTES_KEY,
+      JSON.stringify({
+        'dict-basic-1': 'apple 好き',
+        'dict-basic-2': 'dog 好き',
+        'dict-basic-3': 'cat 好き',
+      }),
+    );
+
+    renderWithRouter(<MyNotesPage />, { route: '/my-notes' });
+
+    // 事前に3件すべて表示されている
+    expect(screen.getByRole('heading', { level: 2, name: 'I' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'you' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'he' })).toBeInTheDocument();
+
+    const search = screen.getByRole('searchbox', { name: 'メモを検索' });
+
+    // 英語で検索 -> you 行だけ残る
+    fireEvent.change(search, { target: { value: 'you' } });
+    expect(screen.getByRole('heading', { level: 2, name: 'you' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'I' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'he' })).not.toBeInTheDocument();
+
+    // クリア -> 3件に戻る
+    fireEvent.change(search, { target: { value: '' } });
+    expect(screen.getByRole('heading', { level: 2, name: 'I' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'he' })).toBeInTheDocument();
+
+    // 和訳で検索 -> he 行だけ残る(『彼』は dict-basic-3 の和訳)
+    fireEvent.change(search, { target: { value: '彼' } });
+    expect(screen.getByRole('heading', { level: 2, name: 'he' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'I' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'you' })).not.toBeInTheDocument();
+
+    // クリア
+    fireEvent.change(search, { target: { value: '' } });
+
+    // メモ本文で検索 -> I 行だけ残る(『apple』は dict-basic-1 のメモ)
+    fireEvent.change(search, { target: { value: 'apple' } });
+    expect(screen.getByRole('heading', { level: 2, name: 'I' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'you' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'he' })).not.toBeInTheDocument();
+  });
+
+  it('ヒット無しのクエリで『該当するメモがありません』が表示される', () => {
+    localStorage.setItem(
+      WORD_NOTES_KEY,
+      JSON.stringify({ 'dict-basic-1': 'メモ' }),
+    );
+
+    renderWithRouter(<MyNotesPage />, { route: '/my-notes' });
+
+    const search = screen.getByRole('searchbox', { name: 'メモを検索' });
+    fireEvent.change(search, { target: { value: 'zzzzzz' } });
+
+    // 検索結果0件のメッセージ
+    expect(screen.getByText('該当するメモがありません')).toBeInTheDocument();
+    // 空状態の辞書導線(別物)は出ない
+    expect(screen.queryByText(/まだメモがありません。/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '📖 辞書を見る' })).not.toBeInTheDocument();
+  });
+
+  it('並べ替え select を変更すると順序が変わる(先頭行の英語で確認)', () => {
+    // dict-basic-1 = "I", dict-basic-2 = "you", dict-basic-3 = "he"
+    // note を長さ順に変えておき、note-length-desc で確定的な順序を作る。
+    //   dict-basic-2 のメモを一番長くすると、note-length-desc の先頭は 'you' になる。
+    localStorage.setItem(
+      WORD_NOTES_KEY,
+      JSON.stringify({
+        'dict-basic-1': '中程度',
+        'dict-basic-2': '一番長いメモ',
+        'dict-basic-3': '短',
+      }),
+    );
+
+    renderWithRouter(<MyNotesPage />, { route: '/my-notes' });
+
+    const select = screen.getByRole('combobox', { name: '並べ替え' });
+
+    // 既定(word-asc=英語 A→Z)では『you』は先頭ではない(y は I/h より後)
+    const headingsBefore = screen.getAllByRole('heading', { level: 2 });
+    expect(headingsBefore[0].textContent).not.toBe('you');
+
+    // 『メモが長い順』に変更 -> 一番長いメモ(dict-basic-2)の行が先頭に来る
+    fireEvent.change(select, { target: { value: 'note-length-desc' } });
+    const headingsAfter = screen.getAllByRole('heading', { level: 2 });
+    expect(headingsAfter[0].textContent).toBe('you');
+
+    // 『英語 Z→A』に変更 -> 先頭が変わる(word-desc は word-asc の逆順)
+    fireEvent.change(select, { target: { value: 'word-desc' } });
+    const headingsDesc = screen.getAllByRole('heading', { level: 2 });
+    expect(headingsDesc[0].textContent).not.toBe(headingsBefore[0].textContent);
+  });
 });
