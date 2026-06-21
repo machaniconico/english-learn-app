@@ -128,4 +128,39 @@ describe('Layout', () => {
 
     expect(screen.queryByRole('textbox', { name: 'コマンドを検索' })).not.toBeInTheDocument();
   });
+
+  it('opens the keyboard shortcuts help when "?" is pressed on window', () => {
+    renderLayout();
+    // 初期状態ではヘルプダイアログは出ていない。
+    expect(screen.queryByRole('dialog', { name: 'キーボードショートカット' })).not.toBeInTheDocument();
+
+    // window の keydown に ? を発火するとヘルプが開く。
+    fireEvent.keyDown(window, { key: '?' });
+
+    // ダイアログとその見出しが出現する。
+    const dialog = screen.getByRole('dialog', { name: 'キーボードショートカット' });
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole('heading', { name: 'キーボードショートカット' })).toBeInTheDocument();
+  });
+
+  it('does not open the keyboard shortcuts help when "?" is pressed while focused on an input', () => {
+    // 入力欄を持つ子ルートを独自にマウントし、Layout の Outlet 経由で表示する。
+    render(
+      <MemoryRouter initialEntries={['/input']}>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="input" element={<input type="text" placeholder="入力欄" />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    );
+    const input = screen.getByPlaceholderText('入力欄') as HTMLInputElement;
+    input.focus();
+    expect(document.activeElement).toBe(input);
+
+    // 入力フォーカス中に ? を打ってもヘルプは開かない(テキスト入力を妨げない)。
+    fireEvent.keyDown(window, { key: '?' });
+
+    expect(screen.queryByRole('dialog', { name: 'キーボードショートカット' })).not.toBeInTheDocument();
+  });
 });
