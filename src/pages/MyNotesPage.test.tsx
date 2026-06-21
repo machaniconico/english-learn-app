@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderWithRouter, screen, fireEvent } from '../test/test-utils';
 import MyNotesPage from './MyNotesPage';
 import { STORAGE_KEY as WORD_NOTES_KEY } from '../hooks/useWordNotes';
@@ -264,5 +264,109 @@ describe('MyNotesPage', () => {
     fireEvent.change(select, { target: { value: 'word-desc' } });
     const headingsDesc = screen.getAllByRole('heading', { level: 2 });
     expect(headingsDesc[0].textContent).not.toBe(headingsBefore[0].textContent);
+  });
+
+  // ---- US-002: CSV エクスポート ----
+
+  it('メモ1件以上のとき『CSVをエクスポート』ボタンが表示される', () => {
+    localStorage.setItem(
+      WORD_NOTES_KEY,
+      JSON.stringify({ 'dict-basic-1': 'メモ' }),
+    );
+
+    renderWithRouter(<MyNotesPage />, { route: '/my-notes' });
+
+    // aria-label で部分一致(テキストとアイコン両方含むため name に 'CSVをエクスポート' を含む)
+    const btn = screen.getByRole('button', { name: /メモをCSVでエクスポート/ });
+    expect(btn).toBeInTheDocument();
+    expect(btn).not.toBeDisabled();
+  });
+
+  it('『CSVをエクスポート』をクリックすると URL.createObjectURL が呼ばれる', () => {
+    localStorage.setItem(
+      WORD_NOTES_KEY,
+      JSON.stringify({
+        'dict-basic-1': 'apple 好き',
+        'dict-basic-2': 'dog 好き',
+      }),
+    );
+
+    // jsdom は createObjectURL / revokeObjectURL を持たないのでモックする。
+    // HTMLAnchorElement.prototype.click も jsdom では何もしないが、明示的にモックして
+    // クリック時の副作用(a.click が呼ばれたこと)を確認できるようにする。
+    const createObjectURL = vi.fn().mockReturnValue('blob:fake-url');
+    const revokeObjectURL = vi.fn();
+    const clickSpy = vi.fn();
+    const createObjectURLDesc = Object.getOwnPropertyDescriptor(
+      URL,
+      'createObjectURL',
+    );
+    const revokeObjectURLDesc = Object.getOwnPropertyDescriptor(
+      URL,
+      'revokeObjectURL',
+    );
+    const clickDesc = Object.getOwnPropertyDescriptor(
+      HTMLAnchorElement.prototype,
+      'click',
+    );
+
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      writable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      writable: true,
+      value: revokeObjectURL,
+    });
+    Object.defineProperty(HTMLAnchorElement.prototype, 'click', {
+      configurable: true,
+      writable: true,
+      value: clickSpy,
+    });
+
+    try {
+      renderWithRouter(<MyNotesPage />, { route: '/my-notes' });
+
+      fireEvent.click(
+        screen.getByRole('button', { name: /メモをCSVでエクスポート/ }),
+      );
+
+      // createObjectURL が 1 回呼ばれる(Blob から URL を作る)
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      // a.click() も呼ばれる(ダウンロードトリガ)
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+      // revokeObjectURL も呼ばれる(クリーンアップ)
+      expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+    } finally {
+      // モックを必ず復元する(他テストへの影響を防ぐ)
+      if (createObjectURLDesc) {
+        Object.defineProperty(URL, 'createObjectURL', createObjectURLDesc);
+      } else {
+        delete (URL as Partial<typeof URL>).createObjectURL;
+      }
+      if (revokeObjectURLDesc) {
+        Object.defineProperty(URL, 'revokeObjectURL', revokeObjectURLDesc);
+      } else {
+        delete (URL as Partial<typeof URL>).revokeObjectURL;
+      }
+      if (clickDesc) {
+        Object.defineProperty(HTMLAnchorElement.prototype, 'click', clickDesc);
+      } else {
+        delete (HTMLAnchorElement.prototype as Partial<typeof HTMLAnchorElement.prototype>).click;
+      }
+    }
+  });
+
+  it('メモ0件(空状態)のときはエクスポートボタンが出ない', () => {
+    renderWithRouter(<MyNotesPage />, { route: '/my-notes' });
+
+    // 空状態メッセージ
+    expect(screen.getByText(/まだメモがありません。/)).toBeInTheDocument();
+    // エクスポートボタンは出ない(空状態は従来の辞書導線のみ)
+    expect(
+      screen.queryByRole('button', { name: /メモをCSVでエクスポート/ }),
+    ).not.toBeInTheDocument();
   });
 });
