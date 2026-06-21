@@ -5,6 +5,7 @@ import * as axeMatchers from 'vitest-axe/matchers';
 import { renderWithRouter, screen, fireEvent, waitFor, within } from '../test/test-utils';
 import Dictionary from './Dictionary';
 import { STORAGE_KEY, type RecentWord } from '../hooks/useRecentWords';
+import { STORAGE_KEY as WORD_NOTES_KEY } from '../hooks/useWordNotes';
 
 expect.extend(axeMatchers);
 
@@ -284,6 +285,118 @@ describe('Dictionary page', () => {
       // 動物カテゴリーを選ぶとデフォルト表示でなくなるのでセクションが消える
       fireEvent.click(screen.getByRole('button', { name: '動物' }));
       expect(screen.queryByRole('button', { name: 'dog を検索' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('単語メモ', () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it('メモを追加して保存するとカードに表示され localStorage に永続化される', () => {
+      renderWithRouter(<Dictionary />);
+
+      // "I" のカードの「メモを追加」ボタンを押す
+      fireEvent.click(screen.getByRole('button', { name: 'I のメモを追加' }));
+
+      // textarea が開く
+      const textarea = screen.getByRole('textbox', { name: 'I のメモ' });
+      expect(textarea).toBeInTheDocument();
+
+      // メモを入力して保存
+      fireEvent.change(textarea, { target: { value: 'これは私のメモです' } });
+      fireEvent.click(screen.getByRole('button', { name: 'I のメモを保存' }));
+
+      // カードにメモ本文が表示される
+      expect(screen.getByText('これは私のメモです')).toBeInTheDocument();
+      // 追加ボタンは消え、編集ボタンが出る
+      expect(
+        screen.queryByRole('button', { name: 'I のメモを追加' }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'I のメモを編集' }),
+      ).toBeInTheDocument();
+
+      // localStorage にも保存されている
+      const stored = JSON.parse(localStorage.getItem(WORD_NOTES_KEY) ?? '{}');
+      expect(stored['dict-basic-1']).toBe('これは私のメモです');
+    });
+
+    it('編集ボタンを押すと textarea に既存メモが初期表示される', () => {
+      localStorage.setItem(
+        WORD_NOTES_KEY,
+        JSON.stringify({ 'dict-basic-1': '既存メモ' }),
+      );
+      renderWithRouter(<Dictionary />);
+
+      // シードされたメモが表示されている
+      expect(screen.getByText('既存メモ')).toBeInTheDocument();
+
+      // 編集ボタンを押す
+      fireEvent.click(screen.getByRole('button', { name: 'I のメモを編集' }));
+
+      // textarea に既存メモが入っている
+      const textarea = screen.getByRole('textbox', { name: 'I のメモ' });
+      expect(textarea).toHaveValue('既存メモ');
+    });
+
+    it('削除ボタンを押すとメモが消える', () => {
+      localStorage.setItem(
+        WORD_NOTES_KEY,
+        JSON.stringify({ 'dict-basic-1': '消されるメモ' }),
+      );
+      renderWithRouter(<Dictionary />);
+
+      expect(screen.getByText('消されるメモ')).toBeInTheDocument();
+
+      // 編集を開いて削除
+      fireEvent.click(screen.getByRole('button', { name: 'I のメモを編集' }));
+      fireEvent.click(screen.getByRole('button', { name: 'I のメモを削除' }));
+
+      // メモが消える
+      expect(screen.queryByText('消されるメモ')).not.toBeInTheDocument();
+      // 追加ボタンに戻る
+      expect(
+        screen.getByRole('button', { name: 'I のメモを追加' }),
+      ).toBeInTheDocument();
+      // localStorage からも消える
+      const stored = JSON.parse(localStorage.getItem(WORD_NOTES_KEY) ?? '{}');
+      expect(stored['dict-basic-1']).toBeUndefined();
+    });
+
+    it('localStorage にシードしたメモが初期表示でカードに出る', () => {
+      localStorage.setItem(
+        WORD_NOTES_KEY,
+        JSON.stringify({ 'dict-basic-1': 'シードメモ' }),
+      );
+      renderWithRouter(<Dictionary />);
+
+      expect(screen.getByText('シードメモ')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'I のメモを編集' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'I のメモを追加' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('キャンセルボタンを押すと編集が破棄され元の表示に戻る', () => {
+      localStorage.setItem(
+        WORD_NOTES_KEY,
+        JSON.stringify({ 'dict-basic-1': '元のメモ' }),
+      );
+      renderWithRouter(<Dictionary />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'I のメモを編集' }));
+      const textarea = screen.getByRole('textbox', { name: 'I のメモ' });
+      fireEvent.change(textarea, { target: { value: '書き換え' } });
+      fireEvent.click(
+        screen.getByRole('button', { name: 'I のメモ編集をキャンセル' }),
+      );
+
+      // 元のメモが表示される(書き換えは破棄)
+      expect(screen.getByText('元のメモ')).toBeInTheDocument();
+      expect(screen.queryByText('書き換え')).not.toBeInTheDocument();
     });
   });
 });
