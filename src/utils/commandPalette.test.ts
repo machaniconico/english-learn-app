@@ -13,9 +13,9 @@ const sample: PaletteCommand[] = [
 ];
 
 describe('PALETTE_COMMANDS', () => {
-  it('仕様の全目的地(30件)を定義している', () => {
-    // メイン3 + 練習8 + リスニング4 + 学習管理8 + ツール7 = 30
-    expect(PALETTE_COMMANDS.length).toBe(30);
+  it('仕様の全目的地(31件)を定義している', () => {
+    // メイン3 + 練習8 + リスニング4 + 学習管理8 + ツール8 = 31
+    expect(PALETTE_COMMANDS.length).toBe(31);
   });
 
   it('全コマンドが必須フィールドを持つ', () => {
@@ -74,6 +74,7 @@ describe('PALETTE_COMMANDS', () => {
       '/score',
       '/achievements',
       '/backup',
+      '/settings',
     ];
     for (const p of expected) {
       expect(paths).toContain(p);
@@ -141,6 +142,17 @@ describe('filterCommands', () => {
 
   it('該当なしは空配列を返す', () => {
     expect(filterCommands('zzzzzznotexist')).toEqual([]);
+  });
+
+  it('設定ページが日本語/英語クエリでヒットする (US-003)', () => {
+    // 日本語ラベル + ローマ字/英語キーワード両方で settings に絞り込めること。
+    const byJapanese = filterCommands('設定');
+    expect(byJapanese.some((c) => c.id === 'settings')).toBe(true);
+    const byEnglish = filterCommands('settings');
+    expect(byEnglish.some((c) => c.id === 'settings')).toBe(true);
+    // ローマ字読み(せってい)でもヒットすること。
+    const byRomaji = filterCommands('せってい');
+    expect(byRomaji.some((c) => c.id === 'settings')).toBe(true);
   });
 
   it('同ランクは元の定義順を維持する(安定ソート)', () => {

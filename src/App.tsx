@@ -39,6 +39,8 @@ const CustomDeckEditPage = lazy(() => import('./pages/CustomDeckEditPage'))
 const CustomDeckStudyPage = lazy(() => import('./pages/CustomDeckStudyPage'))
 const BackupPage = lazy(() => import('./pages/BackupPage'))
 const StudyPlanPage = lazy(() => import('./pages/StudyPlanPage'))
+// 設定ページ(US-002)。テーマ/文字サイズ/リマインダー/バックアップを集約。
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 
 export default function App() {
   return (
@@ -84,6 +86,7 @@ export default function App() {
         <Route path="/daily" element={<DailyChallengePage />} />
         <Route path="/review" element={<DailyReviewPage />} />
         <Route path="/plan" element={<StudyPlanPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/section/:sectionId" element={<CategoryList />} />
         <Route path="/section/:sectionId/:categoryId" element={<LessonList />} />
         <Route path="/section/:sectionId/:categoryId/:lessonId" element={<LessonPage />} />

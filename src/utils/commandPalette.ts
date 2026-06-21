@@ -61,6 +61,8 @@ export const PALETTE_COMMANDS: PaletteCommand[] = [
   { id: 'score', label: 'スコア予測', path: '/score', group: 'ツール', keywords: ['score', 'sukoa', 'スコア予測'] },
   { id: 'achievements', label: '実績', path: '/achievements', group: 'ツール', keywords: ['achievement', 'jisseki', '実績'] },
   { id: 'backup', label: 'バックアップ', path: '/backup', group: 'ツール', keywords: ['backup', 'バックアップ'] },
+  // 設定ページ(US-003): テーマ/文字サイズ/リマインダー等の集約先。
+  { id: 'settings', label: '設定', path: '/settings', group: 'ツール', keywords: ['settings', 'setting', 'config', '設定', 'せってい'] },
 ];
 
 /** label と keywords を小文字化して1本の文字列に連結した検索用ベース */

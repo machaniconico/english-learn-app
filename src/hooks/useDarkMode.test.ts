@@ -226,6 +226,34 @@ describe('useDarkMode — document class effect', () => {
   });
 });
 
+describe('useDarkMode — mode export', () => {
+  it('返り値に mode が含まれ、既定は "system"、setMode で更新される', () => {
+    stubMatchMedia(false);
+    const { result } = renderHook(() => useDarkMode());
+
+    // localStorage 無しの既定は system
+    expect(result.current.mode).toBe('system');
+
+    act(() => {
+      result.current.setMode('dark');
+    });
+
+    expect(result.current.mode).toBe('dark');
+  });
+
+  it('mode 型として light/dark/system の3値すべてが返り値に出る', () => {
+    stubMatchMedia(false);
+    const { result } = renderHook(() => useDarkMode());
+
+    for (const m of ['light', 'dark', 'system'] as const) {
+      act(() => {
+        result.current.setMode(m);
+      });
+      expect(result.current.mode).toBe(m);
+    }
+  });
+});
+
 describe('useDarkMode — localStorage persistence round-trip', () => {
   it('value written in one hook instance is read back by a second instance', () => {
     stubMatchMedia(false);
