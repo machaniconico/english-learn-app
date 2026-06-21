@@ -53,6 +53,14 @@ describe('Dictionary page', () => {
     ).toBeInTheDocument();
   });
 
+  it('単語メモ一覧ページ(/my-notes)への導線リンクを表示する', () => {
+    renderWithRouter(<Dictionary />);
+
+    const link = screen.getByRole('link', { name: '単語メモ一覧を見る' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/my-notes');
+  });
+
   it('narrows the list to matching entries after the debounce when typing a query', async () => {
     renderWithRouter(<Dictionary />);
 
