@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { Clock, X } from 'lucide-react';
 import { dictionary } from '../data/dictionary';
 import type { DictionaryEntry } from '../data/types';
 import { filterDictionary } from './dictionaryFilter';
 import AudioButton from '../components/AudioButton';
+import { useRecentWords } from '../hooks/useRecentWords';
 
 const ITEMS_PER_PAGE = 20;
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -42,6 +44,9 @@ export default function Dictionary() {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 発音再生をトリガーに記録する最近調べた単語(localStorage に保持)。
+  const { recent, addWord, clear } = useRecentWords();
 
   // Debounce search input
   useEffect(() => {
@@ -93,6 +98,14 @@ export default function Dictionary() {
 
   const visibleEntries = filteredEntries.slice(0, visibleCount);
   const hasMore = visibleCount < filteredEntries.length;
+
+  // デフォルト表示: 検索・カテゴリ・レベル・頭文字がすべて未選択の状態。
+  // 最近調べた単語セクションはこのときだけ表示する。
+  const isDefaultView =
+    debouncedQuery === '' &&
+    selectedCategory === 'すべて' &&
+    selectedLevel === 'すべて' &&
+    selectedLetter === null;
 
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
@@ -211,6 +224,41 @@ export default function Dictionary() {
         ))}
       </div>
 
+      {/* 最近調べた単語: デフォルト表示のときだけ出す。履歴が空なら何も表示しない。 */}
+      {isDefaultView && recent.length > 0 && (
+        <section className="mb-4" aria-label="最近調べた単語">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+              <Clock className="w-4 h-4" aria-hidden="true" />
+              最近調べた単語
+            </h2>
+            <button
+              type="button"
+              onClick={clear}
+              className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 rounded px-1"
+              aria-label="最近調べた単語をクリア"
+            >
+              <X className="w-3 h-3" aria-hidden="true" />
+              クリア
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {recent.map((w) => (
+              <button
+                key={w.id}
+                type="button"
+                onClick={() => setSearchQuery(w.english)}
+                className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-700 dark:hover:text-indigo-300 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                aria-label={`${w.english} を検索`}
+              >
+                <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                <span>{w.english}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Results Count */}
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 font-medium" role="status" aria-live="polite">
         {filteredEntries.length} 件の結果
@@ -234,7 +282,18 @@ export default function Dictionary() {
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {entry.english}
                 </h2>
-                <AudioButton text={entry.english} size="sm" />
+                {/* 発音を再生した単語を『最近調べた単語』へ記録する */}
+                <AudioButton
+                  text={entry.english}
+                  size="sm"
+                  onPlayed={() =>
+                    addWord({
+                      id: entry.id,
+                      english: entry.english,
+                      japanese: entry.japanese,
+                    })
+                  }
+                />
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                   {entry.partOfSpeech}
                 </span>
