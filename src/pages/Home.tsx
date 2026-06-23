@@ -36,6 +36,7 @@ import {
   ListChecks,
   ArrowRight,
   X,
+  Brain,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import StreakBanner from '../components/StreakBanner';
@@ -121,6 +122,20 @@ export default function Home() {
       }
     } catch { /* ignore */ }
     return 0;
+  });
+
+  // デイリー10問クイズの今日の状態(完了したか)を localStorage から一度だけ読む。
+  const [dailyQuizFinished] = useState(() => {
+    try {
+      const d = new Date();
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const raw = localStorage.getItem(`english-learn-daily-quiz-${dateKey}`);
+      if (raw) {
+        const data = JSON.parse(raw);
+        return data?.finished === true;
+      }
+    } catch { /* ignore */ }
+    return false;
   });
 
   return (
@@ -287,6 +302,41 @@ export default function Home() {
             </span>
           )}
           <span className="text-sm font-medium text-orange-500 group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors hidden sm:block">
+            挑戦する &rarr;
+          </span>
+        </div>
+      </Link>
+
+      {/* Daily Quiz Card — デイリー5タスクとは別の、難易度選択式10問クイズ */}
+      <Link
+        to="/daily-quiz"
+        className="animate-fade-in-up group mb-6 flex items-center gap-4 rounded-2xl border border-violet-200 dark:border-violet-800 bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-950/50 dark:to-fuchsia-950/50 p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        style={{ '--stagger': '0ms' } as React.CSSProperties}
+      >
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 shadow-sm shrink-0">
+          <Brain className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">
+            デイリー10問クイズ
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            {dailyQuizFinished
+              ? '今日のクイズは完了！別の難易度にも挑戦できます'
+              : '難易度を選んで、毎日入れ替わる10問に挑戦しよう！'}
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-2">
+          {dailyQuizFinished ? (
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white">
+              <Check className="w-4 h-4" />
+            </span>
+          ) : (
+            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 text-xs font-bold">
+              10問
+            </span>
+          )}
+          <span className="text-sm font-medium text-violet-500 group-hover:text-violet-700 dark:text-violet-400 transition-colors hidden sm:block">
             挑戦する &rarr;
           </span>
         </div>

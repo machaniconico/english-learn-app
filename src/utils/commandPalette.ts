@@ -50,6 +50,8 @@ export const PALETTE_COMMANDS: PaletteCommand[] = [
   { id: 'my-notes', label: '単語メモ', path: '/my-notes', group: '学習管理', keywords: ['word notes', 'memo', 'note', 'tango memo', '単語メモ', 'メモ', 'ノート'] },
   { id: 'srs', label: 'SRS復習', path: '/srs', group: '学習管理', keywords: ['srs', 'spaced repetition', 'fukushu', '復習'] },
   { id: 'daily', label: 'デイリーチャレンジ', path: '/daily', group: '学習管理', keywords: ['daily', 'challenge', 'デイリー', 'チャレンジ'] },
+  // デイリー10問クイズ: 難易度を選んで毎日入れ替わる10問に挑戦する(5タスクとは別カテゴリ)。
+  { id: 'daily-quiz', label: 'デイリー10問クイズ', path: '/daily-quiz', group: '学習管理', keywords: ['daily quiz', 'quiz', '10', 'デイリークイズ', 'クイズ', '10問'] },
   { id: 'review', label: 'デイリー復習', path: '/review', group: '学習管理', keywords: ['daily review', 'review', '復習'] },
   { id: 'plan', label: '学習プラン', path: '/plan', group: '学習管理', keywords: ['plan', 'gakushu plan', '学習プラン'] },
   { id: 'study-guide', label: 'ロードマップ', path: '/study-guide', group: '学習管理', keywords: ['roadmap', 'guide', 'study guide', 'ロードマップ'] },
