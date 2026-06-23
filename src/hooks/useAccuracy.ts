@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react';
 // --- Types ---
 
 export interface QuizResult {
-  type: 'fill-in-blank' | 'error-correction' | 'part1' | 'part2' | 'dictation' | 'reorder' | 'listening-quiz' | 'reading';
+  type: 'fill-in-blank' | 'error-correction' | 'part1' | 'part2' | 'dictation' | 'reorder' | 'listening-quiz' | 'reading' | 'daily-quiz';
   setId: string;
   score: number;
   total: number;

@@ -20,6 +20,7 @@ const MatchingGamePage = lazy(() => import('./pages/MatchingGamePage'))
 const ReorderPage = lazy(() => import('./pages/ReorderPage'))
 const BookmarksPage = lazy(() => import('./pages/BookmarksPage'))
 const DailyChallengePage = lazy(() => import('./pages/DailyChallengePage'))
+const DailyQuizPage = lazy(() => import('./pages/DailyQuizPage'))
 const Part1Page = lazy(() => import('./pages/Part1Page'))
 const Part2Page = lazy(() => import('./pages/Part2Page'))
 const Part3Page = lazy(() => import('./pages/Part3Page'))
@@ -88,6 +89,7 @@ export default function App() {
         <Route path="/my-notes" element={<MyNotesPage />} />
         <Route path="/backup" element={<BackupPage />} />
         <Route path="/daily" element={<DailyChallengePage />} />
+        <Route path="/daily-quiz" element={<DailyQuizPage />} />
         <Route path="/review" element={<DailyReviewPage />} />
         <Route path="/plan" element={<StudyPlanPage />} />
         <Route path="/settings" element={<SettingsPage />} />

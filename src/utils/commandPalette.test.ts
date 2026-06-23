@@ -13,9 +13,9 @@ const sample: PaletteCommand[] = [
 ];
 
 describe('PALETTE_COMMANDS', () => {
-  it('仕様の全目的地(32件)を定義している', () => {
-    // メイン3 + 練習8 + リスニング4 + 学習管理9(my-notes追加) + ツール8 = 32
-    expect(PALETTE_COMMANDS.length).toBe(32);
+  it('仕様の全目的地(33件)を定義している', () => {
+    // メイン3 + 練習8 + リスニング4 + 学習管理10(my-notes/daily-quiz追加) + ツール8 = 33
+    expect(PALETTE_COMMANDS.length).toBe(33);
   });
 
   it('全コマンドが必須フィールドを持つ', () => {
@@ -42,6 +42,14 @@ describe('PALETTE_COMMANDS', () => {
     expect(cmd?.path).toBe('/my-notes');
     expect(cmd?.group).toBe('学習管理');
     expect(cmd?.label).toBe('単語メモ');
+  });
+
+  it('daily-quiz が 学習管理グループに存在する', () => {
+    const cmd = PALETTE_COMMANDS.find((c) => c.id === 'daily-quiz');
+    expect(cmd).toBeDefined();
+    expect(cmd?.path).toBe('/daily-quiz');
+    expect(cmd?.group).toBe('学習管理');
+    expect(cmd?.label).toBe('デイリー10問クイズ');
   });
 
   it('path が一意', () => {
@@ -71,6 +79,7 @@ describe('PALETTE_COMMANDS', () => {
       '/bookmarks',
       '/srs',
       '/daily',
+      '/daily-quiz',
       '/review',
       '/plan',
       '/study-guide',
