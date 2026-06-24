@@ -2,20 +2,25 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   QUIZ_DIFFICULTIES,
+  MIXED_SELECTION_META,
+  DAILY_QUIZ_COUNT_OPTIONS,
   type DailyQuizQuestion,
-  type QuizDifficulty,
+  type QuizSelectionMode,
 } from '../data/dailyQuiz';
-import { selectDailyQuiz, getTodayString } from '../utils/dailyQuizSelect';
+import { selectDailyQuiz, getTodayString, DAILY_QUIZ_COUNT } from '../utils/dailyQuizSelect';
 import { useAccuracy } from '../hooks/useAccuracy';
 
 // =====================================================================
 // localStorage 永続化
 // =====================================================================
-// その日のクイズ状態を保存する。リロードしても難易度・現在位置・完了状態と
-// 解答が復元される(同じ問題セットは selectDailyQuiz が決定的に再現する)。
+// その日のクイズ状態を保存する。リロードしても出題モード・出題数・現在位置・
+// 完了状態と解答が復元される(同じ問題セットは selectDailyQuiz が決定的に再現する)。
 
 interface SavedQuizState {
-  difficulty: QuizDifficulty;
+  /** 出題モード(難易度 or 'mixed') */
+  selection: QuizSelectionMode;
+  /** その日の出題数 */
+  count: number;
   /** 各問の選択肢インデックス(未解答は null) */
   answers: (number | null)[];
   /** 表示中の問題インデックス。回答直後に離脱した場合も同じ問題へ戻す。 */
@@ -28,8 +33,54 @@ function storageKey(date: string): string {
   return `english-learn-daily-quiz-${date}`;
 }
 
-function isQuizDifficulty(value: unknown): value is QuizDifficulty {
-  return value === 'beginner' || value === 'intermediate' || value === 'advanced';
+/** 出題数・出題モードの既定値を覚えておくための prefs キー。 */
+const PREFS_KEY = 'english-learn-daily-quiz-prefs';
+
+interface QuizPrefs {
+  count: number;
+  selection: QuizSelectionMode | null;
+}
+
+function isQuizSelection(value: unknown): value is QuizSelectionMode {
+  return (
+    value === 'beginner' ||
+    value === 'intermediate' ||
+    value === 'advanced' ||
+    value === 'mixed'
+  );
+}
+
+function isValidCount(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    (DAILY_QUIZ_COUNT_OPTIONS as readonly number[]).includes(value)
+  );
+}
+
+function loadPrefs(): QuizPrefs {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          count: isValidCount(parsed.count) ? parsed.count : DAILY_QUIZ_COUNT,
+          selection: isQuizSelection(parsed.selection) ? parsed.selection : null,
+        };
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return { count: DAILY_QUIZ_COUNT, selection: null };
+}
+
+function savePrefs(prefs: QuizPrefs): void {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    // storage full or unavailable
+  }
 }
 
 function normalizeAnswers(answers: unknown[]): (number | null)[] {
@@ -46,13 +97,19 @@ function loadSaved(date: string): SavedQuizState | null {
     const raw = localStorage.getItem(storageKey(date));
     if (!raw) return null;
     const parsed = JSON.parse(raw);
+    // 後方互換: 旧データは difficulty フィールドのみで count を持たない。
+    const selection = parsed?.selection ?? parsed?.difficulty;
     if (
       parsed &&
       typeof parsed === 'object' &&
       Array.isArray(parsed.answers) &&
-      isQuizDifficulty(parsed.difficulty)
+      isQuizSelection(selection)
     ) {
       const answers = normalizeAnswers(parsed.answers);
+      const count =
+        typeof parsed.count === 'number' && parsed.count > 0
+          ? parsed.count
+          : answers.length;
       const currentIndex =
         Number.isInteger(parsed.currentIndex) &&
         parsed.currentIndex >= 0 &&
@@ -60,7 +117,8 @@ function loadSaved(date: string): SavedQuizState | null {
           ? parsed.currentIndex
           : answers.findIndex((a) => a === null);
       return {
-        difficulty: parsed.difficulty,
+        selection,
+        count,
         answers,
         currentIndex: currentIndex === -1 ? 0 : currentIndex,
         finished: parsed.finished === true,
@@ -88,6 +146,12 @@ function clearSaved(date: string): void {
   }
 }
 
+/** 出題モードの日本語ラベルを解決する。 */
+function selectionLabel(selection: QuizSelectionMode | null): string {
+  if (selection === 'mixed') return MIXED_SELECTION_META.label;
+  return QUIZ_DIFFICULTIES.find((d) => d.id === selection)?.label ?? '';
+}
+
 // =====================================================================
 // 画面のフェーズ
 // =====================================================================
@@ -104,19 +168,25 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
 
   // 既存の保存があれば、その続き(または結果)から復元する。
   const saved = useMemo(() => loadSaved(dateStr), [dateStr]);
+  // 出題数・出題モードの既定値(前回の選択を記憶)。
+  const prefs = useMemo(() => loadPrefs(), []);
 
   const [phase, setPhase] = useState<Phase>(() => {
     if (!saved) return 'select';
     return saved.finished ? 'result' : 'quiz';
   });
-  const [difficulty, setDifficulty] = useState<QuizDifficulty | null>(
-    saved?.difficulty ?? null,
+  const [selection, setSelection] = useState<QuizSelectionMode | null>(
+    saved?.selection ?? null,
+  );
+  // 出題数。保存中なら保存値、なければ prefs の既定値。
+  const [count, setCount] = useState<number>(
+    () => saved?.count ?? prefs.count,
   );
 
-  // 選んだ難易度の「その日の10問」。決定的なので毎回同じ。
+  // 選んだモード・出題数の「その日の問題」。決定的なので毎回同じ。
   const questions: DailyQuizQuestion[] = useMemo(
-    () => (difficulty ? selectDailyQuiz(difficulty, dateStr) : []),
-    [difficulty, dateStr],
+    () => (selection ? selectDailyQuiz(selection, dateStr, count) : []),
+    [selection, dateStr, count],
   );
 
   const [answers, setAnswers] = useState<(number | null)[]>(
@@ -134,34 +204,46 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
     (a, i) => a !== null && questions[i] && a === questions[i].correctIndex,
   ).length;
 
-  // --- 難易度選択 ---
-  const handleSelectDifficulty = useCallback(
-    (id: QuizDifficulty) => {
-      const picked = selectDailyQuiz(id, dateStr);
+  // --- 出題数の変更(prefs に記憶) ---
+  const handleSelectCount = useCallback(
+    (next: number) => {
+      setCount(next);
+      savePrefs({ count: next, selection });
+    },
+    [selection],
+  );
+
+  // --- 出題モード選択(開始) ---
+  const handleStart = useCallback(
+    (id: QuizSelectionMode) => {
+      const picked = selectDailyQuiz(id, dateStr, count);
       const initialAnswers: (number | null)[] = new Array(picked.length).fill(null);
-      setDifficulty(id);
+      setSelection(id);
       setAnswers(initialAnswers);
       setCurrent(0);
       setPhase('quiz');
+      savePrefs({ count, selection: id });
       saveState(dateStr, {
-        difficulty: id,
+        selection: id,
+        count,
         answers: initialAnswers,
         currentIndex: 0,
         finished: false,
       });
     },
-    [dateStr],
+    [dateStr, count],
   );
 
   // --- 回答 ---
   const handleAnswer = useCallback(
     (optionIndex: number) => {
-      if (answered || !difficulty) return;
+      if (answered || !selection) return;
       setAnswers((prev) => {
         const next = [...prev];
         next[current] = optionIndex;
         saveState(dateStr, {
-          difficulty,
+          selection,
+          count,
           answers: next,
           currentIndex: current,
           finished: false,
@@ -169,12 +251,12 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
         return next;
       });
     },
-    [answered, current, dateStr, difficulty],
+    [answered, current, dateStr, selection, count],
   );
 
   // --- 次へ / 結果へ ---
   const handleNext = useCallback(() => {
-    if (!difficulty) return;
+    if (!selection) return;
     const isLast = current + 1 >= questions.length;
     if (isLast) {
       const finalScore = answers.filter(
@@ -182,14 +264,15 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
       ).length;
       logResult({
         type: 'daily-quiz',
-        setId: `daily-quiz-${dateStr}-${difficulty}`,
+        setId: `daily-quiz-${dateStr}-${selection}-${count}`,
         score: finalScore,
         total: questions.length,
         correct: finalScore,
-        level: difficulty,
+        level: selection,
       });
       saveState(dateStr, {
-        difficulty,
+        selection,
+        count,
         answers,
         currentIndex: current,
         finished: true,
@@ -198,19 +281,20 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
     } else {
       const nextIndex = current + 1;
       saveState(dateStr, {
-        difficulty,
+        selection,
+        count,
         answers,
         currentIndex: nextIndex,
         finished: false,
       });
       setCurrent(nextIndex);
     }
-  }, [answers, current, dateStr, difficulty, logResult, questions]);
+  }, [answers, current, dateStr, selection, count, logResult, questions]);
 
-  // --- 保存済みの状態を消して難易度選択へ戻る ---
+  // --- 保存済みの状態を消して選択画面へ戻る ---
   const handleRetry = useCallback(() => {
     clearSaved(dateStr);
-    setDifficulty(null);
+    setSelection(null);
     setAnswers([]);
     setCurrent(0);
     setPhase('select');
@@ -227,17 +311,52 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
             デイリー10問クイズ
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            毎日入れ替わる10問に挑戦しよう。まずは難易度を選んでください。
+            毎日入れ替わる問題に挑戦しよう。出題数と難易度を選んでください。
           </p>
         </div>
 
+        {/* 出題数の選択 */}
+        <div className="mb-6">
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            出題数
+          </p>
+          <div
+            className="grid grid-cols-4 gap-2"
+            role="group"
+            aria-label="出題数を選ぶ"
+          >
+            {DAILY_QUIZ_COUNT_OPTIONS.map((opt) => {
+              const active = opt === count;
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  aria-pressed={active}
+                  aria-label={`出題数 ${opt} 問`}
+                  onClick={() => handleSelectCount(opt)}
+                  className={`px-3 py-2.5 rounded-xl border-2 text-sm font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 cursor-pointer active:scale-[0.98] ${
+                    active
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-700'
+                  }`}
+                >
+                  {opt}問
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          難易度
+        </p>
         <div className="space-y-3" role="group" aria-label="難易度を選ぶ">
           {QUIZ_DIFFICULTIES.map((d) => (
             <button
               key={d.id}
               type="button"
               aria-label={`難易度 ${d.label}（${d.labelEn}）を選んで開始`}
-              onClick={() => handleSelectDifficulty(d.id)}
+              onClick={() => handleStart(d.id)}
               className="w-full text-left rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 transition-all duration-200 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 cursor-pointer active:scale-[0.99]"
             >
               <div className="flex items-center justify-between gap-3">
@@ -258,10 +377,35 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
               </div>
             </button>
           ))}
+
+          {/* おまかせ(Mixed) */}
+          <button
+            type="button"
+            aria-label={`${MIXED_SELECTION_META.label}（${MIXED_SELECTION_META.labelEn}）を選んで開始`}
+            onClick={() => handleStart('mixed')}
+            className="w-full text-left rounded-2xl border-2 border-violet-200 dark:border-violet-800 bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-950/40 dark:to-fuchsia-950/40 p-5 transition-all duration-200 hover:border-violet-400 dark:hover:border-violet-600 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2 cursor-pointer active:scale-[0.99]"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  {MIXED_SELECTION_META.label}
+                  <span className="ml-2 text-sm font-medium text-gray-400 dark:text-gray-500">
+                    {MIXED_SELECTION_META.labelEn}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+                  {MIXED_SELECTION_META.description}
+                </p>
+              </div>
+              <span className="shrink-0 inline-flex items-center rounded-full bg-violet-100 dark:bg-violet-900/40 px-3 py-1 text-xs font-semibold text-violet-600 dark:text-violet-300">
+                {MIXED_SELECTION_META.hint}
+              </span>
+            </div>
+          </button>
         </div>
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
-          ※ 5つのデイリーチャレンジとは別の、独立した10問クイズです。
+          ※ 5つのデイリーチャレンジとは別の、独立したクイズです。
         </p>
       </div>
     );
@@ -277,8 +421,7 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
     ).length;
     const pct = total > 0 ? Math.round((finalScore / total) * 100) : 0;
     const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪';
-    const difficultyLabel =
-      QUIZ_DIFFICULTIES.find((d) => d.id === difficulty)?.label ?? '';
+    const difficultyLabel = selectionLabel(selection);
 
     return (
       <div className="w-full max-w-2xl mx-auto">

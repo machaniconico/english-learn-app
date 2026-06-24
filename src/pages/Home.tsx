@@ -323,7 +323,7 @@ export default function Home() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             {dailyQuizFinished
               ? '今日のクイズは完了！別の難易度にも挑戦できます'
-              : '難易度を選んで、毎日入れ替わる10問に挑戦しよう！'}
+              : '出題数と難易度を選んで、毎日入れ替わる問題に挑戦しよう！'}
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-2">

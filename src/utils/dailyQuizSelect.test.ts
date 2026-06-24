@@ -118,6 +118,50 @@ describe('selectDailyQuiz', () => {
     const result = selectDailyQuiz('beginner', '2026-06-23', 10, []);
     expect(result).toEqual([]);
   });
+
+  it('count を指定するとその数だけ返す(5/15/20)', () => {
+    const pool = makePool('p', 20);
+    expect(selectDailyQuiz('beginner', '2026-06-23', 5, pool)).toHaveLength(5);
+    expect(selectDailyQuiz('beginner', '2026-06-23', 15, pool)).toHaveLength(15);
+    expect(selectDailyQuiz('beginner', '2026-06-23', 20, pool)).toHaveLength(20);
+  });
+});
+
+describe('selectDailyQuiz — mixed(おまかせ)', () => {
+  it("selection='mixed' のとき全60問プールから選ぶ", () => {
+    // pool 未指定なら getMixedQuestions()=全60問が使われ、count=60 で全部返る
+    const result = selectDailyQuiz('mixed', '2026-06-23', 60);
+    expect(result).toHaveLength(60);
+    expect(result).toHaveLength(dailyQuizQuestions.length);
+  });
+
+  it("mixed は count 指定でその数だけ返る", () => {
+    expect(selectDailyQuiz('mixed', '2026-06-23', 10)).toHaveLength(10);
+    expect(selectDailyQuiz('mixed', '2026-06-23', 5)).toHaveLength(5);
+  });
+
+  it('同じ日付・mixed なら毎回同じ問題・同じ並び(決定的)', () => {
+    const a = selectDailyQuiz('mixed', '2026-06-23', 10).map((q) => q.id);
+    const b = selectDailyQuiz('mixed', '2026-06-23', 10).map((q) => q.id);
+    expect(a).toEqual(b);
+  });
+
+  it('日付が変わると mixed の並びも変わりうる', () => {
+    const day1 = selectDailyQuiz('mixed', '2026-06-23', 20).map((q) => q.id);
+    const day2 = selectDailyQuiz('mixed', '2026-06-24', 20).map((q) => q.id);
+    expect(day1).not.toEqual(day2);
+  });
+
+  it('mixed は難易度別シードと別の並びになる', () => {
+    const mixed = selectDailyQuiz('mixed', '2026-06-23', 10).map((q) => q.id);
+    const beginner = selectDailyQuiz('beginner', '2026-06-23', 10).map((q) => q.id);
+    expect(mixed).not.toEqual(beginner);
+  });
+
+  it('count がプール数を超えてもプール数で頭打ちになる', () => {
+    const result = selectDailyQuiz('mixed', '2026-06-23', 999);
+    expect(result).toHaveLength(dailyQuizQuestions.length);
+  });
 });
 
 describe('getTodayString', () => {

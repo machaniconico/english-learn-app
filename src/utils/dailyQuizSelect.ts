@@ -6,8 +6,8 @@
 //    → 一日の途中でリロードしても問題が入れ替わらない。
 //  - 翌日になれば自動的に別の10問が出る(日付がシードに入るため)。
 
-import type { DailyQuizQuestion, QuizDifficulty } from '../data/dailyQuiz';
-import { getQuestionsByDifficulty } from '../data/dailyQuiz';
+import type { DailyQuizQuestion, QuizSelectionMode } from '../data/dailyQuiz';
+import { getQuestionsByDifficulty, getMixedQuestions } from '../data/dailyQuiz';
 
 /** 1回のデイリークイズで出題する問題数。 */
 export const DAILY_QUIZ_COUNT = 10;
@@ -45,21 +45,24 @@ export function shuffleWith<T>(arr: readonly T[], rand: () => number): T[] {
 }
 
 /**
- * 指定した日付・難易度の「その日の10問」を決定的に選んで返す。
+ * 指定した日付・出題モードの「その日の問題」を決定的に選んで返す。
  *
- * @param difficulty 難易度
- * @param dateStr    日付文字列(例 "2026-06-23")。シードの一部に使う。
- * @param count      出題数(既定 10)。プールが少なければプール数まで。
- * @param pool       テスト用に差し替え可能な問題プール(既定は難易度別の全問)
+ * @param selection 出題モード(難易度 or 'mixed')
+ * @param dateStr   日付文字列(例 "2026-06-23")。シードの一部に使う。
+ * @param count     出題数(既定 10)。プールが少なければプール数まで。
+ * @param pool      テスト用に差し替え可能な問題プール。
+ *                  既定は selection==='mixed' なら全60問、それ以外は難易度別の全問。
  */
 export function selectDailyQuiz(
-  difficulty: QuizDifficulty,
+  selection: QuizSelectionMode,
   dateStr: string,
   count: number = DAILY_QUIZ_COUNT,
-  pool: DailyQuizQuestion[] = getQuestionsByDifficulty(difficulty),
+  pool: DailyQuizQuestion[] = selection === 'mixed'
+    ? getMixedQuestions()
+    : getQuestionsByDifficulty(selection),
 ): DailyQuizQuestion[] {
   if (pool.length === 0) return [];
-  const rand = seededRandom(`${dateStr}-${difficulty}`);
+  const rand = seededRandom(`${dateStr}-${selection}`);
   const shuffled = shuffleWith(pool, rand);
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
