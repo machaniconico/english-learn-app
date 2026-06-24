@@ -264,6 +264,71 @@ describe('DailyQuiz', () => {
     expect(screen.queryByText(/日連続/)).toBeNull();
   });
 
+  // === Round 41: 難易度ランプ提案バナー ===
+
+  /** english-learn-accuracy に timestamp 付きの daily-quiz 結果を仕込む。 */
+  function seedAccuracyWithTime(
+    rows: { date: string; score: number; total?: number; level?: string; ts: number }[],
+  ) {
+    const results = rows.map((r) => {
+      const level = r.level ?? 'intermediate';
+      const total = r.total ?? 10;
+      return {
+        type: 'daily-quiz',
+        setId: `daily-quiz-${r.date}-${level}-${total}`,
+        score: r.score,
+        total,
+        correct: r.score,
+        level,
+        timestamp: r.ts,
+      };
+    });
+    localStorage.setItem('english-learn-accuracy', JSON.stringify(results));
+  }
+
+  it('中級高得点なら推薦バナーと「上級で始める」ボタンが出て、押すと上級が始まる', () => {
+    seedAccuracyWithTime([
+      { date: '2026-06-21', score: 9, level: 'intermediate', ts: 1 }, // 90%
+      { date: '2026-06-22', score: 9, level: 'intermediate', ts: 2 }, // 90%
+      { date: '2026-06-23', score: 9, level: 'intermediate', ts: 3 }, // 90%
+    ]);
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    // 推薦バナーの文言とボタン
+    expect(screen.getByText('挑戦してみませんか', { exact: false })).toBeTruthy();
+    const startBtn = screen.getByLabelText('おすすめの難易度 上級でクイズを始める');
+    expect(startBtn).toBeTruthy();
+    fireEvent.click(startBtn);
+    // 上級のクイズが開始される
+    const advanced = selectDailyQuiz('advanced', TODAY, 10);
+    expect(screen.getByText('第 1 問 / 10')).toBeTruthy();
+    expect(screen.getByText(advanced[0].question)).toBeTruthy();
+  });
+
+  it('中級低得点なら基礎固めバナーと「初級で始める」ボタンが出る', () => {
+    seedAccuracyWithTime([
+      { date: '2026-06-22', score: 4, level: 'intermediate', ts: 1 }, // 40%
+      { date: '2026-06-23', score: 3, level: 'intermediate', ts: 2 }, // 30%
+    ]);
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    expect(screen.getByText('基礎を固めましょう', { exact: false })).toBeTruthy();
+    expect(screen.getByLabelText('おすすめの難易度 初級でクイズを始める')).toBeTruthy();
+  });
+
+  it('データ不足(1試行のみ)では推薦バナーを出さない', () => {
+    seedAccuracyWithTime([
+      { date: '2026-06-23', score: 10, level: 'intermediate', ts: 1 },
+    ]);
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    expect(screen.queryByText('挑戦してみませんか', { exact: false })).toBeNull();
+    expect(screen.queryByText('基礎を固めましょう', { exact: false })).toBeNull();
+  });
+
+  it('履歴がゼロのとき推薦バナーを出さない', () => {
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    expect(screen.queryByText('挑戦してみませんか', { exact: false })).toBeNull();
+    expect(screen.queryByText('基礎を固めましょう', { exact: false })).toBeNull();
+  });
+
   it('旧形式(difficulty のみ・count なし)でも後方互換で復元できる', () => {
     const questions = selectDailyQuiz('beginner', TODAY, 10);
     const answers = new Array(questions.length).fill(null);
