@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { renderWithRouter, screen, fireEvent, within } from '../test/test-utils';
@@ -181,5 +181,98 @@ describe('BookmarksPage search & sort (round 42)', () => {
 
     const status = screen.getByRole('status');
     expect(within(status).getByText(/1 件の結果/)).toBeInTheDocument();
+  });
+});
+
+// Round 47: CSV エクスポート。MyNotesPage.test の流儀(createObjectURL /
+// revokeObjectURL / anchor.click をモック)を踏襲する。
+describe('BookmarksPage CSV export (round 47)', () => {
+  it('ブックマークがあるとき『CSVでエクスポート』ボタンが表示される', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+    renderWithRouter(<BookmarksPage />, { route: '/bookmarks' });
+
+    expect(
+      screen.getByRole('button', { name: /ブックマークをCSVでエクスポート/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('ブックマーク0件(空状態)のときはエクスポートボタンが出ない', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    renderWithRouter(<BookmarksPage />, { route: '/bookmarks' });
+
+    expect(
+      screen.queryByRole('button', { name: /ブックマークをCSVでエクスポート/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('クリックすると URL.createObjectURL / a.click / revokeObjectURL が呼ばれる', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+
+    // jsdom は createObjectURL / revokeObjectURL を持たないのでモックする。
+    // HTMLAnchorElement.prototype.click も jsdom では何もしないので明示モックし
+    // ダウンロードトリガを検証できるようにする。
+    const createObjectURL = vi.fn().mockReturnValue('blob:fake-url');
+    const revokeObjectURL = vi.fn();
+    const clickSpy = vi.fn();
+    const createObjectURLDesc = Object.getOwnPropertyDescriptor(
+      URL,
+      'createObjectURL',
+    );
+    const revokeObjectURLDesc = Object.getOwnPropertyDescriptor(
+      URL,
+      'revokeObjectURL',
+    );
+    const clickDesc = Object.getOwnPropertyDescriptor(
+      HTMLAnchorElement.prototype,
+      'click',
+    );
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+    Object.defineProperty(HTMLAnchorElement.prototype, 'click', {
+      configurable: true,
+      value: clickSpy,
+    });
+
+    try {
+      renderWithRouter(<BookmarksPage />, { route: '/bookmarks' });
+
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /ブックマークをCSVでエクスポート/,
+        }),
+      );
+
+      // createObjectURL が 1 回呼ばれ、Blob から URL を作る。
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      expect(createObjectURL.mock.calls[0][0]).toBeInstanceOf(Blob);
+      // a.click() も呼ばれる(ダウンロードトリガ)。
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+      // revokeObjectURL も呼ばれる(クリーンアップ)。
+      expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+    } finally {
+      if (createObjectURLDesc) {
+        Object.defineProperty(URL, 'createObjectURL', createObjectURLDesc);
+      } else {
+        delete (URL as Partial<typeof URL>).createObjectURL;
+      }
+      if (revokeObjectURLDesc) {
+        Object.defineProperty(URL, 'revokeObjectURL', revokeObjectURLDesc);
+      } else {
+        delete (URL as Partial<typeof URL>).revokeObjectURL;
+      }
+      if (clickDesc) {
+        Object.defineProperty(HTMLAnchorElement.prototype, 'click', clickDesc);
+      } else {
+        delete (HTMLAnchorElement.prototype as Partial<
+          typeof HTMLAnchorElement.prototype
+        >).click;
+      }
+    }
   });
 });
