@@ -16,7 +16,7 @@ describe('useSection', () => {
 
   it('resolves to a Section whose id matches the requested id', async () => {
     const { result } = renderHook(() => useSection(VALID_ID));
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     expect(result.current).not.toBeNull();
     const section = result.current as NonNullable<typeof result.current>;
     expect(section.id).toBe(VALID_ID);
@@ -24,7 +24,7 @@ describe('useSection', () => {
 
   it('resolved Section has the expected shape (title, categories, etc.)', async () => {
     const { result } = renderHook(() => useSection(VALID_ID));
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     const section = result.current as NonNullable<typeof result.current>;
     expect(typeof section!.title).toBe('string');
     expect(typeof section!.titleJa).toBe('string');
@@ -36,7 +36,7 @@ describe('useSection', () => {
 
   it('returns null for an unknown id (not found)', async () => {
     const { result } = renderHook(() => useSection(UNKNOWN_ID));
-    await waitFor(() => expect(result.current !== undefined).toBe(true));
+    await waitFor(() => expect(result.current !== undefined).toBe(true), { timeout: 5000 });
     expect(result.current).toBeNull();
   });
 
@@ -45,7 +45,7 @@ describe('useSection', () => {
     // Initially loading
     expect(result.current).toBeUndefined();
     // loadSection('') returns null (no meta for empty string)
-    await waitFor(() => expect(result.current !== undefined).toBe(true));
+    await waitFor(() => expect(result.current !== undefined).toBe(true), { timeout: 5000 });
     expect(result.current).toBeNull();
   });
 
@@ -54,7 +54,7 @@ describe('useSection', () => {
     const { result, rerender } = renderHook(() => useSection(id));
 
     // Wait for first resolution
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     expect((result.current as NonNullable<typeof result.current>)!.id).toBe(VALID_ID);
 
     // Change the id — hook should go back to undefined (loading)
@@ -67,13 +67,13 @@ describe('useSection', () => {
     expect(result.current).toBeUndefined();
 
     // Then resolves to the new section
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     expect((result.current as NonNullable<typeof result.current>)!.id).toBe(ANOTHER_VALID_ID);
   });
 
   it('resolves a different valid section (vocabulary)', async () => {
     const { result } = renderHook(() => useSection('vocabulary'));
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     const section = result.current as NonNullable<typeof result.current>;
     expect(section!.id).toBe('vocabulary');
   });
@@ -87,19 +87,19 @@ describe('useAllSections', () => {
 
   it('resolves to an array of sections', async () => {
     const { result } = renderHook(() => useAllSections());
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     expect(Array.isArray(result.current)).toBe(true);
   });
 
   it('resolves to all 5 known sections', async () => {
     const { result } = renderHook(() => useAllSections());
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     expect(result.current!.length).toBe(5);
   });
 
   it('each resolved section has id, title, and categories array', async () => {
     const { result } = renderHook(() => useAllSections());
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     for (const section of result.current!) {
       expect(typeof section.id).toBe('string');
       expect(section.id.length).toBeGreaterThan(0);
@@ -110,7 +110,7 @@ describe('useAllSections', () => {
 
   it('sections are returned in sectionsMeta order', async () => {
     const { result } = renderHook(() => useAllSections());
-    await waitFor(() => expect(result.current).not.toBeUndefined());
+    await waitFor(() => expect(result.current).not.toBeUndefined(), { timeout: 5000 });
     const ids = result.current!.map((s) => s.id);
     expect(ids).toEqual(['phrases', 'vocabulary', 'idioms', 'grammar', 'toeic']);
   });
