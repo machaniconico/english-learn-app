@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Download } from 'lucide-react';
 import { useBookmarks, type BookmarkedItem } from '../hooks/useBookmarks';
 import AudioButton from '../components/AudioButton';
 import Flashcard from '../components/Flashcard';
@@ -8,6 +9,7 @@ import {
   BOOKMARK_SORT_OPTIONS,
   type BookmarkSortKey,
 } from './bookmarksFilter';
+import { bookmarksToCsv, buildBookmarksCsvFilename } from './bookmarksCsv';
 
 export default function BookmarksPage() {
   const { bookmarks, removeBookmark, clearAll } = useBookmarks();
@@ -48,6 +50,34 @@ export default function BookmarksPage() {
     clearAll();
     setShowClearConfirm(false);
     setShowFlashcard(false);
+  };
+
+  // Round 47: 全ブックマークを CSV でダウンロードする。
+  // 検索絞り込みには依存せず常に全件を出す(予測しやすさ優先)。BOM を先頭に付け
+  // Excel での文字化けを防ぐ。SSR や URL.createObjectURL 非対応環境では何もしない安全策。
+  const handleExportCsv = () => {
+    try {
+      if (
+        typeof document === 'undefined' ||
+        typeof URL?.createObjectURL !== 'function'
+      ) {
+        return;
+      }
+      const csv = bookmarksToCsv(bookmarks);
+      const blob = new Blob(['﻿' + csv], {
+        type: 'text/csv;charset=utf-8;',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = buildBookmarksCsvFilename(new Date());
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // SSR / 非対応環境では黙って無視する
+    }
   };
 
   // Flashcard view
@@ -187,6 +217,17 @@ export default function BookmarksPage() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm"
           >
             🃏 フラッシュカードで復習
+          </button>
+
+          {/* Round 47: 全ブックマークを CSV でエクスポート(検索絞り込みに依存しない) */}
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            aria-label="ブックマークをCSVでエクスポート"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          >
+            <Download aria-hidden="true" className="h-3.5 w-3.5" />
+            CSVでエクスポート
           </button>
 
           {!showClearConfirm ? (
