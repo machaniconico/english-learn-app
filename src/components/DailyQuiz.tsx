@@ -8,8 +8,9 @@ import {
   type QuizSelectionMode,
 } from '../data/dailyQuiz';
 import { selectDailyQuiz, getTodayString, DAILY_QUIZ_COUNT } from '../utils/dailyQuizSelect';
-import { getDailyQuizSummary, recommendDifficulty } from '../utils/dailyQuizStats';
+import { getDailyQuizSummary, recommendDifficulty, getWrongQuestions } from '../utils/dailyQuizStats';
 import { useAccuracy } from '../hooks/useAccuracy';
+import DailyQuizReview from './DailyQuizReview';
 
 // =====================================================================
 // localStorage 永続化
@@ -226,6 +227,10 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
     if (!saved || saved.finished) return 0;
     return saved.currentIndex;
   });
+
+  // Round 49: 結果画面から一時的に「間違えた問題だけ」解き直す復習モード。
+  // 永続化せず・logResult も呼ばない ephemeral 切替フラグ。
+  const [reviewing, setReviewing] = useState(false);
 
   // 現在の問題で選択済みか(回答後は解説を表示)
   const currentAnswer = answers[current] ?? null;
@@ -542,6 +547,18 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
     const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪';
     const difficultyLabel = selectionLabel(selection);
 
+    // Round 49: 間違えた問題だけを一時的に復習(ephemeral)。保存済み結果には触れない。
+    const wrongQuestions = getWrongQuestions(questions, answers);
+
+    if (reviewing) {
+      return (
+        <DailyQuizReview
+          questions={wrongQuestions}
+          onClose={() => setReviewing(false)}
+        />
+      );
+    }
+
     return (
       <div className="w-full max-w-2xl mx-auto">
         {/* スコアサマリ */}
@@ -634,6 +651,16 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
         </ol>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+          {wrongQuestions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setReviewing(true)}
+              aria-label={`間違えた ${wrongQuestions.length} 問をもう一度復習する`}
+              className="px-6 py-3 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors cursor-pointer shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
+            >
+              間違えた {wrongQuestions.length}問をもう一度
+            </button>
+          )}
           <button
             type="button"
             onClick={handleRetry}

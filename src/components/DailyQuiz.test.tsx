@@ -347,4 +347,47 @@ describe('DailyQuiz', () => {
     // answers.length(=10) が count として使われる
     expect(screen.getByText('第 2 問 / 10')).toBeTruthy();
   });
+
+  // === Round 49: 間違えた問題の復習 ===
+
+  /** 各問を correct で回答しながら結果画面まで進める。 */
+  function finishQuiz(questions: ReturnType<typeof selectDailyQuiz>, correctness: boolean[]) {
+    for (let i = 0; i < questions.length; i++) {
+      answerCurrent(questions, i, correctness[i] ?? true);
+      const nextLabel = i + 1 >= questions.length ? '結果を見る' : '次の問題 →';
+      fireEvent.click(screen.getByText(nextLabel));
+    }
+  }
+
+  it('誤答ありで結果到達時に「間違えた…もう一度」ボタンが出る', () => {
+    const questions = selectDailyQuiz('beginner', TODAY);
+    startBeginner();
+    // 1問目と3問目を誤答(計2問間違える)
+    const correctness = questions.map((_, i) => i !== 0 && i !== 2);
+    finishQuiz(questions, correctness);
+    expect(screen.getByText('クイズ完了!')).toBeTruthy();
+    expect(screen.getByLabelText('間違えた 2 問をもう一度復習する')).toBeTruthy();
+    expect(screen.getByText('間違えた 2問をもう一度')).toBeTruthy();
+  });
+
+  it('全問正解時は「間違えた…もう一度」ボタンが出ない', () => {
+    const questions = selectDailyQuiz('beginner', TODAY);
+    startBeginner();
+    finishQuiz(questions, questions.map(() => true));
+    expect(screen.getByText('クイズ完了!')).toBeTruthy();
+    expect(screen.queryByText(/間違えた .*もう一度/)).toBeNull();
+  });
+
+  it('ボタン押下で復習UI(DailyQuizReview)に入る', () => {
+    const questions = selectDailyQuiz('beginner', TODAY);
+    startBeginner();
+    const correctness = questions.map((_, i) => i !== 1);
+    finishQuiz(questions, correctness);
+    fireEvent.click(screen.getByLabelText('間違えた 1 問をもう一度復習する'));
+    // 復習UIの目印
+    expect(screen.getByText('間違えた問題の復習')).toBeTruthy();
+    expect(screen.getByText('第 1 問 / 1')).toBeTruthy();
+    // 間違えた問題(Q2 = index 1)が出題されている
+    expect(screen.getByText(questions[1].question)).toBeTruthy();
+  });
 });

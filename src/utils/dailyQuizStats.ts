@@ -8,7 +8,7 @@
 //  - 日付は setId(`daily-quiz-YYYY-MM-DD-...`)から抽出する(timestamp ではなくローカル暦日基準)。
 
 import type { QuizResult } from '../hooks/useAccuracy';
-import type { QuizDifficulty } from '../data/dailyQuiz';
+import type { QuizDifficulty, DailyQuizQuestion } from '../data/dailyQuiz';
 
 /** setId 例: `daily-quiz-2026-06-24-beginner-10` から日付部分 `2026-06-24` を取り出す。 */
 const DAILY_QUIZ_SETID_DATE = /^daily-quiz-(\d{4}-\d{2}-\d{2})-/;
@@ -253,4 +253,22 @@ export function recommendDifficulty(
   }
 
   return null;
+}
+
+/**
+ * 採点済みの answers から、間違えた(未回答=null または correctIndex と不一致)問題だけを
+ * 元の順序で抽出する。questions と answers の長さが違っても min 長で安全に処理。入力非破壊。
+ */
+export function getWrongQuestions(
+  questions: DailyQuizQuestion[],
+  answers: (number | null)[],
+): DailyQuizQuestion[] {
+  const n = Math.min(questions.length, answers.length);
+  const wrong: DailyQuizQuestion[] = [];
+  for (let i = 0; i < n; i++) {
+    const q = questions[i];
+    const a = answers[i];
+    if (a === null || a !== q.correctIndex) wrong.push(q);
+  }
+  return wrong;
 }
