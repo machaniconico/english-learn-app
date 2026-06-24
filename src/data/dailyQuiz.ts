@@ -760,3 +760,29 @@ export const dailyQuizQuestions: DailyQuizQuestion[] = [
 export function getQuestionsByDifficulty(difficulty: QuizDifficulty): DailyQuizQuestion[] {
   return dailyQuizQuestions.filter((q) => q.difficulty === difficulty);
 }
+
+// =====================================================================
+// 出題数・出題モード(Round 37: 出題数可変＋おまかせ難易度)
+// =====================================================================
+
+/** 選べる出題数の選択肢。「10問程度」を中心に前後を用意する。 */
+export const DAILY_QUIZ_COUNT_OPTIONS = [5, 10, 15, 20] as const;
+
+/**
+ * 出題モード。3段階の難易度に加えて、全レベルをまぜた 'mixed'(おまかせ)を選べる。
+ */
+export type QuizSelectionMode = QuizDifficulty | 'mixed';
+
+/** 全難易度をまぜた問題プール(おまかせ用)。全60問を返す。 */
+export function getMixedQuestions(): DailyQuizQuestion[] {
+  return dailyQuizQuestions;
+}
+
+/** 「おまかせ(Mixed)」カードの表示用メタ情報。 */
+export const MIXED_SELECTION_META = {
+  id: 'mixed',
+  label: 'おまかせ',
+  labelEn: 'Mixed',
+  description: '初級〜上級をまぜた全レベルから出題。',
+  hint: '腕試し',
+} as const;

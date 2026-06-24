@@ -137,7 +137,7 @@ describe('DailyQuiz', () => {
       fireEvent.click(screen.getByText(nextLabel));
     }
     fireEvent.click(screen.getByText('別の難易度に挑戦'));
-    expect(screen.getByText('まずは難易度を選んでください。', { exact: false })).toBeTruthy();
+    expect(screen.getByText('出題数と難易度を選んでください。', { exact: false })).toBeTruthy();
   });
 
   it('難易度選択画面にアクセシビリティ違反がない', async () => {
@@ -149,5 +149,89 @@ describe('DailyQuiz', () => {
     const { container } = renderWithRouter(<DailyQuiz today={TODAY} />);
     fireEvent.click(screen.getByText('初級'));
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  // === Round 37: 出題数可変 + おまかせ + 設定記憶 ===
+
+  it('選択画面に出題数 5/10/15/20 と おまかせ カードが表示される', () => {
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    const group = screen.getByRole('group', { name: '出題数を選ぶ' });
+    expect(group).toBeTruthy();
+    expect(screen.getByLabelText('出題数 5 問')).toBeTruthy();
+    expect(screen.getByLabelText('出題数 10 問')).toBeTruthy();
+    expect(screen.getByLabelText('出題数 15 問')).toBeTruthy();
+    expect(screen.getByLabelText('出題数 20 問')).toBeTruthy();
+    expect(screen.getByText('おまかせ')).toBeTruthy();
+  });
+
+  it('出題数 5 を選んで難易度カードを押すと 5 問になる', () => {
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    fireEvent.click(screen.getByLabelText('出題数 5 問'));
+    fireEvent.click(screen.getByText('初級'));
+    expect(screen.getByText('第 1 問 / 5')).toBeTruthy();
+  });
+
+  it('おまかせを選ぶと開始でき、最後まで到達できる', () => {
+    const questions = selectDailyQuiz('mixed', TODAY, 10);
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    fireEvent.click(screen.getByText('おまかせ'));
+    expect(screen.getByText('第 1 問 / 10')).toBeTruthy();
+    for (let i = 0; i < questions.length; i++) {
+      answerCurrent(questions, i, true);
+      const nextLabel = i + 1 >= questions.length ? '結果を見る' : '次の問題 →';
+      fireEvent.click(screen.getByText(nextLabel));
+    }
+    expect(screen.getByText('クイズ完了!')).toBeTruthy();
+    expect(screen.getByText('難易度: おまかせ', { exact: false })).toBeTruthy();
+  });
+
+  it('出題数の選択が記憶され、再マウント時の既定になる', () => {
+    const first = renderWithRouter(<DailyQuiz today={TODAY} />);
+    fireEvent.click(screen.getByLabelText('出題数 15 問'));
+    expect(screen.getByLabelText('出題数 15 問').getAttribute('aria-pressed')).toBe('true');
+    first.unmount();
+    // 別日(保存済みクイズ状態が無い状態)でも prefs の既定が反映される
+    renderWithRouter(<DailyQuiz today="2026-07-01" />);
+    expect(screen.getByLabelText('出題数 15 問').getAttribute('aria-pressed')).toBe('true');
+    // 実際に開始すると 15 問になる
+    fireEvent.click(screen.getByText('初級'));
+    expect(screen.getByText('第 1 問 / 15')).toBeTruthy();
+  });
+
+  it('count=15 の途中状態を保存後マウントすると同じ問題数で復元する', () => {
+    const questions = selectDailyQuiz('intermediate', TODAY, 15);
+    const answers = new Array(15).fill(null);
+    answers[0] = questions[0].correctIndex;
+    localStorage.setItem(
+      `english-learn-daily-quiz-${TODAY}`,
+      JSON.stringify({
+        selection: 'intermediate',
+        count: 15,
+        answers,
+        currentIndex: 1,
+        finished: false,
+      }),
+    );
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    expect(screen.getByText('第 2 問 / 15')).toBeTruthy();
+  });
+
+  it('旧形式(difficulty のみ・count なし)でも後方互換で復元できる', () => {
+    const questions = selectDailyQuiz('beginner', TODAY, 10);
+    const answers = new Array(questions.length).fill(null);
+    answers[0] = questions[0].correctIndex;
+    // count フィールド無し / selection ではなく difficulty
+    localStorage.setItem(
+      `english-learn-daily-quiz-${TODAY}`,
+      JSON.stringify({
+        difficulty: 'beginner',
+        answers,
+        currentIndex: 1,
+        finished: false,
+      }),
+    );
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    // answers.length(=10) が count として使われる
+    expect(screen.getByText('第 2 問 / 10')).toBeTruthy();
   });
 });
