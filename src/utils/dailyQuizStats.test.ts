@@ -4,6 +4,7 @@ import {
   getDailyQuizHistory,
   computeDailyQuizStreak,
   getDailyQuizSummary,
+  recommendDifficulty,
 } from './dailyQuizStats';
 import type { QuizResult } from '../hooks/useAccuracy';
 
@@ -199,6 +200,140 @@ describe('getDailyQuizSummary', () => {
     const results = [daily('2026-06-24', 7), daily('2026-06-23', 5)];
     const snapshot = JSON.parse(JSON.stringify(results));
     getDailyQuizSummary(results, today, 5);
+    expect(results).toEqual(snapshot);
+  });
+});
+
+describe('recommendDifficulty', () => {
+  it('中級で直近平均>=85% なら上級を提案する(up)', () => {
+    const results = [
+      daily('2026-06-22', 9, 10, 'intermediate', 10, 1), // 90%
+      daily('2026-06-23', 9, 10, 'intermediate', 10, 2), // 90%
+      daily('2026-06-24', 8, 10, 'intermediate', 10, 3), // 80%  平均 86.6→87
+    ];
+    const rec = recommendDifficulty(results);
+    expect(rec).not.toBeNull();
+    expect(rec!.direction).toBe('up');
+    expect(rec!.suggested).toBe('advanced');
+    expect(rec!.basedOn).toBe('intermediate');
+    expect(rec!.avgPct).toBe(87);
+    expect(rec!.attempts).toBe(3);
+  });
+
+  it('上級で平均>=85% でも端なので提案しない(null)', () => {
+    const results = [
+      daily('2026-06-23', 10, 10, 'advanced', 10, 1), // 100%
+      daily('2026-06-24', 9, 10, 'advanced', 10, 2), // 90%
+    ];
+    expect(recommendDifficulty(results)).toBeNull();
+  });
+
+  it('中級で平均<50% なら初級を提案する(down)', () => {
+    const results = [
+      daily('2026-06-23', 4, 10, 'intermediate', 10, 1), // 40%
+      daily('2026-06-24', 3, 10, 'intermediate', 10, 2), // 30%  平均 35
+    ];
+    const rec = recommendDifficulty(results);
+    expect(rec).not.toBeNull();
+    expect(rec!.direction).toBe('down');
+    expect(rec!.suggested).toBe('beginner');
+    expect(rec!.basedOn).toBe('intermediate');
+    expect(rec!.avgPct).toBe(35);
+  });
+
+  it('初級で平均<50% でも端なので提案しない(null)', () => {
+    const results = [
+      daily('2026-06-23', 3, 10, 'beginner', 10, 1), // 30%
+      daily('2026-06-24', 2, 10, 'beginner', 10, 2), // 20%
+    ];
+    expect(recommendDifficulty(results)).toBeNull();
+  });
+
+  it('中級でちょうど良い成績(50<=avg<85)なら提案しない(null)', () => {
+    const results = [
+      daily('2026-06-23', 7, 10, 'intermediate', 10, 1), // 70%
+      daily('2026-06-24', 6, 10, 'intermediate', 10, 2), // 60%  平均 65
+    ];
+    expect(recommendDifficulty(results)).toBeNull();
+  });
+
+  it('attempts < minAttempts(既定2)なら提案しない(null)', () => {
+    const results = [daily('2026-06-24', 10, 10, 'intermediate', 10, 1)]; // 1件のみ
+    expect(recommendDifficulty(results)).toBeNull();
+  });
+
+  it('データが無ければ null', () => {
+    expect(recommendDifficulty([])).toBeNull();
+  });
+
+  it('mixed の結果は判定対象外(mixed だけなら null)', () => {
+    const results = [
+      daily('2026-06-23', 10, 10, 'mixed', 10, 1),
+      daily('2026-06-24', 10, 10, 'mixed', 10, 2),
+    ];
+    expect(recommendDifficulty(results)).toBeNull();
+  });
+
+  it('mixed が混在しても具体難易度のみで判定する', () => {
+    const results = [
+      daily('2026-06-21', 0, 10, 'mixed', 10, 1), // 除外
+      daily('2026-06-22', 9, 10, 'intermediate', 10, 2), // 90%
+      daily('2026-06-23', 0, 10, 'mixed', 10, 3), // 除外(timestamp 最大でも mixed は無視)
+      daily('2026-06-24', 9, 10, 'intermediate', 10, 4), // 90%
+    ];
+    const rec = recommendDifficulty(results);
+    expect(rec).not.toBeNull();
+    expect(rec!.basedOn).toBe('intermediate');
+    expect(rec!.direction).toBe('up');
+    expect(rec!.avgPct).toBe(90);
+    expect(rec!.attempts).toBe(2);
+  });
+
+  it('現在レベルは最新試行の level で決まる(レベルを跨いだ履歴で最新が中級なら中級基準)', () => {
+    const results = [
+      daily('2026-06-20', 2, 10, 'advanced', 10, 1), // 上級(古い)
+      daily('2026-06-23', 9, 10, 'intermediate', 10, 2), // 中級 90%
+      daily('2026-06-24', 8, 10, 'intermediate', 10, 3), // 中級 80%(最新)
+    ];
+    const rec = recommendDifficulty(results);
+    expect(rec).not.toBeNull();
+    expect(rec!.basedOn).toBe('intermediate');
+    expect(rec!.direction).toBe('up');
+    expect(rec!.avgPct).toBe(85); // (90+80)/2
+    expect(rec!.attempts).toBe(2);
+  });
+
+  it('平均は直近 window 件(既定3)のみで計算する', () => {
+    const results = [
+      daily('2026-06-20', 0, 10, 'intermediate', 10, 1), // 0% 古い→除外される
+      daily('2026-06-22', 9, 10, 'intermediate', 10, 2), // 90%
+      daily('2026-06-23', 9, 10, 'intermediate', 10, 3), // 90%
+      daily('2026-06-24', 9, 10, 'intermediate', 10, 4), // 90%
+    ];
+    const rec = recommendDifficulty(results);
+    expect(rec).not.toBeNull();
+    expect(rec!.avgPct).toBe(90); // 直近3件のみ→90、古い0%は含まない
+    expect(rec!.attempts).toBe(3);
+  });
+
+  it('閾値はオプションで上書きできる', () => {
+    const results = [
+      daily('2026-06-23', 7, 10, 'beginner', 10, 1), // 70%
+      daily('2026-06-24', 8, 10, 'beginner', 10, 2), // 80%  平均 75
+    ];
+    const rec = recommendDifficulty(results, { upThreshold: 70 });
+    expect(rec).not.toBeNull();
+    expect(rec!.direction).toBe('up');
+    expect(rec!.suggested).toBe('intermediate');
+  });
+
+  it('入力 results を破壊しない', () => {
+    const results = [
+      daily('2026-06-23', 9, 10, 'intermediate', 10, 1),
+      daily('2026-06-24', 9, 10, 'intermediate', 10, 2),
+    ];
+    const snapshot = JSON.parse(JSON.stringify(results));
+    recommendDifficulty(results);
     expect(results).toEqual(snapshot);
   });
 });

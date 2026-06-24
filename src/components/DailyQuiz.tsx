@@ -8,7 +8,7 @@ import {
   type QuizSelectionMode,
 } from '../data/dailyQuiz';
 import { selectDailyQuiz, getTodayString, DAILY_QUIZ_COUNT } from '../utils/dailyQuizSelect';
-import { getDailyQuizSummary } from '../utils/dailyQuizStats';
+import { getDailyQuizSummary, recommendDifficulty } from '../utils/dailyQuizStats';
 import { useAccuracy } from '../hooks/useAccuracy';
 
 // =====================================================================
@@ -184,6 +184,14 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
   const summary = useMemo(
     () => getDailyQuizSummary(getResultsByType('daily-quiz'), dateStr, 5),
     // getResultsByType は localStorage を都度読む安定参照。dateStr 変化で再計算。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dateStr],
+  );
+
+  // 難易度ランプ提案(直近成績に応じて次に挑戦すべき難易度をやさしく推薦)。
+  const recommendation = useMemo(
+    () => recommendDifficulty(getResultsByType('daily-quiz')),
+    // summary と同じ results を都度読む。dateStr 変化で再計算。
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [dateStr],
   );
@@ -368,6 +376,45 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
             })}
           </div>
         </div>
+
+        {/* 難易度ランプ提案バナー(直近成績に応じて次の難易度を推薦) */}
+        {recommendation &&
+          (() => {
+            const suggestedLabel = selectionLabel(recommendation.suggested);
+            const basedOnLabel = selectionLabel(recommendation.basedOn);
+            const isUp = recommendation.direction === 'up';
+            const message = isUp
+              ? `${basedOnLabel}で平均${recommendation.avgPct}%！ ${suggestedLabel}に挑戦してみませんか？`
+              : `まずは${suggestedLabel}で基礎を固めましょう（${basedOnLabel}は平均${recommendation.avgPct}%）`;
+            return (
+              <div
+                role="note"
+                aria-label={message}
+                className={`mb-4 rounded-2xl border-2 p-4 ${
+                  isUp
+                    ? 'border-emerald-300 dark:border-emerald-800 bg-gradient-to-r from-emerald-50 to-indigo-50 dark:from-emerald-950/40 dark:to-indigo-950/40'
+                    : 'border-amber-300 dark:border-amber-800 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40'
+                }`}
+              >
+                <p className="flex items-start gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 leading-relaxed">
+                  <span aria-hidden="true">{isUp ? '🚀' : '🌱'}</span>
+                  <span>{message}</span>
+                </p>
+                <button
+                  type="button"
+                  aria-label={`おすすめの難易度 ${suggestedLabel}でクイズを始める`}
+                  onClick={() => handleStart(recommendation.suggested)}
+                  className={`mt-3 inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    isUp
+                      ? 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-400'
+                      : 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-400'
+                  }`}
+                >
+                  {suggestedLabel}で始める
+                </button>
+              </div>
+            );
+          })()}
 
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
           難易度
