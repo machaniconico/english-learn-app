@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWeakPoints, type WeakPoint } from '../hooks/useWeakPoints';
+import {
+  filterAndSortWeakPoints,
+  isMastered,
+  WEAKPOINT_SORT_OPTIONS,
+  type WeakPointSortKey,
+} from './weakPointsSort';
 
 const TYPE_LABELS: Record<WeakPoint['type'], string> = {
   'fill-in-blank': 'TOEIC模試',
@@ -54,6 +60,8 @@ function getQuestionDisplay(wp: WeakPoint): string {
 export default function WeakPointsPage() {
   const { weakPoints, removeWeakPoint, clearAll } = useWeakPoints();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [sortKey, setSortKey] = useState<WeakPointSortKey>('newest');
+  const [unmasteredOnly, setUnmasteredOnly] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showClearMasteredConfirm, setShowClearMasteredConfirm] = useState(false);
 
@@ -63,11 +71,11 @@ export default function WeakPointsPage() {
     return Array.from(types) as WeakPoint['type'][];
   }, [weakPoints]);
 
-  // Filtered list
-  const filtered = useMemo(() => {
-    if (filter === 'all') return weakPoints;
-    return weakPoints.filter((wp) => wp.type === filter);
-  }, [weakPoints, filter]);
+  // Filtered + sorted list
+  const filtered = useMemo(
+    () => filterAndSortWeakPoints(weakPoints, { type: filter, unmasteredOnly, sort: sortKey }),
+    [weakPoints, filter, unmasteredOnly, sortKey],
+  );
 
   // Stats
   const stats = useMemo(() => {
@@ -75,16 +83,12 @@ export default function WeakPointsPage() {
     for (const wp of weakPoints) {
       byType[wp.type] = (byType[wp.type] || 0) + 1;
     }
-    const masteredCount = weakPoints.filter(
-      (wp) => wp.lastCorrect && wp.reviewCount >= 3,
-    ).length;
+    const masteredCount = weakPoints.filter(isMastered).length;
     return { total: weakPoints.length, byType, masteredCount };
   }, [weakPoints]);
 
   const handleClearMastered = () => {
-    const masteredIds = weakPoints
-      .filter((wp) => wp.lastCorrect && wp.reviewCount >= 3)
-      .map((wp) => wp.id);
+    const masteredIds = weakPoints.filter(isMastered).map((wp) => wp.id);
     for (const id of masteredIds) {
       removeWeakPoint(id);
     }
@@ -215,6 +219,40 @@ export default function WeakPointsPage() {
         </div>
       </div>
 
+      {/* Sort + unmastered filter */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <label className="inline-flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span>{'並べ替え'}</span>
+          <select
+            aria-label={'並べ替え'}
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as WeakPointSortKey)}
+            className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-medium cursor-pointer"
+          >
+            {WEAKPOINT_SORT_OPTIONS.map((opt) => (
+              <option key={opt.key} value={opt.key}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label
+          htmlFor="unmastered-only"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer"
+        >
+          <input
+            id="unmastered-only"
+            type="checkbox"
+            checked={unmasteredOnly}
+            onChange={(e) => setUnmasteredOnly(e.target.checked)}
+            aria-label={'未習得のみ表示'}
+            className="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 cursor-pointer"
+          />
+          {'未習得のみ表示'}
+        </label>
+      </div>
+
       {/* Action Buttons */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {stats.masteredCount > 0 && (
@@ -339,7 +377,7 @@ export default function WeakPointsPage() {
                       {wp.lastCorrect ? '\u{2705} \u524D\u56DE\u6B63\u89E3' : '\u{274C} \u524D\u56DE\u4E0D\u6B63\u89E3'}
                     </span>
                   )}
-                  {wp.lastCorrect && wp.reviewCount >= 3 && (
+                  {isMastered(wp) && (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
                       {'\u{1F451}'} {'\u30DE\u30B9\u30BF\u30FC'}
                     </span>
@@ -359,12 +397,12 @@ export default function WeakPointsPage() {
         })}
       </div>
 
-      {/* Empty filtered state */}
-      {filtered.length === 0 && filter !== 'all' && (
+      {/* Empty filtered state (weakPoints > 0 here; this means filters matched nothing) */}
+      {filtered.length === 0 && (
         <div className="text-center py-12">
           <p className="text-3xl mb-2">{'\u{1F389}'}</p>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {'\u3053\u306E\u30BF\u30A4\u30D7\u306E\u5F31\u70B9\u306F\u3042\u308A\u307E\u305B\u3093\uFF01'}
+            {'\u6761\u4EF6\u306B\u5408\u3046\u5F31\u70B9\u304C\u3042\u308A\u307E\u305B\u3093'}
           </p>
         </div>
       )}
