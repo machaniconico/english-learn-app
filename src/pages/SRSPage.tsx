@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useSpacedRepetition } from '../hooks/useSpacedRepetition';
+import { useSpacedRepetition, sortDueCardsByUrgency } from '../hooks/useSpacedRepetition';
 import type { SRSCard } from '../hooks/useSpacedRepetition';
 import AudioButton from '../components/AudioButton';
 
@@ -35,6 +35,18 @@ export default function SRSPage() {
     const diffMs = new Date(next + 'T00:00:00').getTime() - new Date(today + 'T00:00:00').getTime();
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     return diffDays;
+  }, [cards]);
+
+  // Card list ordered by urgency: due cards first (most overdue at the top),
+  // then not-yet-due cards by nearest nextReview. Does not mutate `cards`.
+  const sortedCards = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const due = cards.filter((c) => c.nextReview <= today);
+    const notDue = cards.filter((c) => c.nextReview > today);
+    return [
+      ...sortDueCardsByUrgency(due, today),
+      ...[...notDue].sort((a, b) => a.nextReview.localeCompare(b.nextReview)),
+    ];
   }, [cards]);
 
   const currentCard: SRSCard | undefined = dueCards[currentIndex];
@@ -254,9 +266,14 @@ export default function SRSPage() {
             SRSカード一覧
           </h2>
           <div className="space-y-2">
-            {cards.map((card) => {
+            {sortedCards.map((card) => {
               const today = new Date().toISOString().slice(0, 10);
               const isDue = card.nextReview <= today;
+              // Days overdue = max(0, today - nextReview) in calendar days.
+              const overdueMs =
+                new Date(today + 'T00:00:00').getTime() -
+                new Date(card.nextReview + 'T00:00:00').getTime();
+              const overdueDays = Math.max(0, Math.round(overdueMs / 86400000));
               return (
                 <div
                   key={card.id}
@@ -273,7 +290,7 @@ export default function SRSPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                       {card.japanese}
                     </p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-gray-500 dark:text-gray-400">
                       <span>間隔: {card.interval}日</span>
                       <span>反復: {card.repetitions}回</span>
                       <span>
@@ -283,6 +300,11 @@ export default function SRSPage() {
                           <>次回: {card.nextReview}</>
                         )}
                       </span>
+                      {isDue && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-medium">
+                          {overdueDays === 0 ? '今日' : `${overdueDays}日超過`}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">

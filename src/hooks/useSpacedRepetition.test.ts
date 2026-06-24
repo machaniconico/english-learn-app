@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { scheduleSRSCard, useSpacedRepetition, type SRSCard } from './useSpacedRepetition';
+import {
+  scheduleSRSCard,
+  sortDueCardsByUrgency,
+  useSpacedRepetition,
+  type SRSCard,
+} from './useSpacedRepetition';
 
 const TODAY = '2026-06-19';
 
@@ -184,6 +189,135 @@ describe('scheduleSRSCard (SM-2)', () => {
       expect(result.pronunciation).toBe(card.pronunciation);
       expect(result.source).toBe(card.source);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Round 38: 緊急度ソート (sortDueCardsByUrgency / getDueCards の順序保証)
+// ---------------------------------------------------------------------------
+describe('sortDueCardsByUrgency (Round 38)', () => {
+  it('期日が早いカードが先頭に来る (nextReview 昇順)', () => {
+    const cards = [
+      makeCard({ id: 'late', nextReview: '2026-06-20' }),
+      makeCard({ id: 'early', nextReview: '2026-06-10' }),
+      makeCard({ id: 'mid', nextReview: '2026-06-15' }),
+    ];
+    const sorted = sortDueCardsByUrgency(cards, TODAY);
+    expect(sorted.map((c) => c.id)).toEqual(['early', 'mid', 'late']);
+  });
+
+  it('同一 nextReview なら repetitions が小さいカードが先', () => {
+    const cards = [
+      makeCard({ id: 'r5', nextReview: '2026-06-15', repetitions: 5 }),
+      makeCard({ id: 'r0', nextReview: '2026-06-15', repetitions: 0 }),
+      makeCard({ id: 'r2', nextReview: '2026-06-15', repetitions: 2 }),
+    ];
+    const sorted = sortDueCardsByUrgency(cards, TODAY);
+    expect(sorted.map((c) => c.id)).toEqual(['r0', 'r2', 'r5']);
+  });
+
+  it('同一 nextReview・同一 repetitions なら easeFactor が小さいカードが先', () => {
+    const cards = [
+      makeCard({ id: 'ef-high', nextReview: '2026-06-15', repetitions: 1, easeFactor: 2.8 }),
+      makeCard({ id: 'ef-low', nextReview: '2026-06-15', repetitions: 1, easeFactor: 1.4 }),
+      makeCard({ id: 'ef-mid', nextReview: '2026-06-15', repetitions: 1, easeFactor: 2.0 }),
+    ];
+    const sorted = sortDueCardsByUrgency(cards, TODAY);
+    expect(sorted.map((c) => c.id)).toEqual(['ef-low', 'ef-mid', 'ef-high']);
+  });
+
+  it('さらに同一なら interval → id で決定的にタイブレークする', () => {
+    const base = { nextReview: '2026-06-15', repetitions: 1, easeFactor: 2.5 };
+    // interval で先に分かれるケース
+    const byInterval = sortDueCardsByUrgency(
+      [
+        makeCard({ id: 'i30', ...base, interval: 30 }),
+        makeCard({ id: 'i1', ...base, interval: 1 }),
+        makeCard({ id: 'i10', ...base, interval: 10 }),
+      ],
+      TODAY,
+    );
+    expect(byInterval.map((c) => c.id)).toEqual(['i1', 'i10', 'i30']);
+
+    // interval も同一なら id の localeCompare 昇順
+    const byId = sortDueCardsByUrgency(
+      [
+        makeCard({ id: 'zeta', ...base, interval: 5 }),
+        makeCard({ id: 'alpha', ...base, interval: 5 }),
+        makeCard({ id: 'mu', ...base, interval: 5 }),
+      ],
+      TODAY,
+    );
+    expect(byId.map((c) => c.id)).toEqual(['alpha', 'mu', 'zeta']);
+  });
+
+  it('入力配列を破壊しない (元配列の順序が不変・新しい配列を返す)', () => {
+    const cards = [
+      makeCard({ id: 'b', nextReview: '2026-06-20' }),
+      makeCard({ id: 'a', nextReview: '2026-06-10' }),
+    ];
+    const before = cards.map((c) => c.id);
+    const sorted = sortDueCardsByUrgency(cards, TODAY);
+    expect(cards.map((c) => c.id)).toEqual(before); // 元配列は不変
+    expect(sorted).not.toBe(cards); // 別インスタンス
+    expect(sorted.map((c) => c.id)).toEqual(['a', 'b']);
+  });
+
+  it('getDueCards() は緊急度順で返す (due 集合は不変・順序のみ変化)', () => {
+    vi.useFakeTimers();
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(-540);
+    vi.setSystemTime(new Date('2026-06-15T03:00:00Z')); // 2026-06-15 12:00 JST
+
+    // localStorage 格納順は緊急度の逆 (期日が遅い順) にしておく。
+    const stored: SRSCard[] = [
+      {
+        id: 'd-late',
+        english: 'late',
+        japanese: '',
+        pronunciation: '',
+        source: 'test',
+        interval: 5,
+        easeFactor: 2.5,
+        repetitions: 3,
+        nextReview: '2026-06-15',
+        lastReview: '',
+      },
+      {
+        id: 'd-early',
+        english: 'early',
+        japanese: '',
+        pronunciation: '',
+        source: 'test',
+        interval: 5,
+        easeFactor: 2.5,
+        repetitions: 3,
+        nextReview: '2026-06-10',
+        lastReview: '',
+      },
+      {
+        // 未 due (将来) → due 集合に含まれない
+        id: 'not-due',
+        english: 'future',
+        japanese: '',
+        pronunciation: '',
+        source: 'test',
+        interval: 5,
+        easeFactor: 2.5,
+        repetitions: 3,
+        nextReview: '2026-06-30',
+        lastReview: '',
+      },
+    ];
+    localStorage.setItem('english-learn-srs', JSON.stringify(stored));
+
+    const { result } = renderHook(() => useSpacedRepetition());
+    const due = result.current.getDueCards();
+    // due 集合は従来通り {d-late, d-early}、順序は期日の早い d-early が先頭。
+    expect(due.map((c) => c.id)).toEqual(['d-early', 'd-late']);
+
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    localStorage.clear();
   });
 });
 
