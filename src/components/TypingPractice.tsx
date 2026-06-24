@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PhraseItem } from '../data/types';
 import { checkSpelling } from '../utils/spellCheck';
+import { useTypingRecords } from '../hooks/useTypingRecords';
+import { isNewTypingBest } from '../utils/typingRecords';
 import AudioButton from './AudioButton';
 
 interface TypingPracticeProps {
@@ -14,10 +16,25 @@ export default function TypingPractice({ items }: TypingPracticeProps) {
   const [reveal, setReveal] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [beaten, setBeaten] = useState(false);
+
+  const { record, addAttempt } = useTypingRecords();
+  const recordedRef = useRef(false);
 
   const current = items[index];
   const total = items.length;
   const isCorrect = checked && !reveal && checkSpelling(current.english, typed);
+  const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+  // Record the finished run exactly once on entering the results screen.
+  useEffect(() => {
+    if (finished && !recordedRef.current) {
+      recordedRef.current = true;
+      // Compare against the pre-update best so the "new best" celebration is accurate.
+      setBeaten(isNewTypingBest(record, pct));
+      addAttempt(pct, correctCount, total);
+    }
+  }, [finished, pct, correctCount, total, record, addAttempt]);
 
   function submit() {
     if (checked || typed.trim().length === 0) return;
@@ -51,12 +68,13 @@ export default function TypingPractice({ items }: TypingPracticeProps) {
     setReveal(false);
     setCorrectCount(0);
     setFinished(false);
+    setBeaten(false);
+    recordedRef.current = false;
   }
 
   if (!current) return null;
 
   if (finished) {
-    const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
     const emoji = pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '💪';
     return (
       <div className="w-full max-w-lg mx-auto text-center">
@@ -67,6 +85,43 @@ export default function TypingPractice({ items }: TypingPracticeProps) {
             <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{correctCount}</span>
             <span className="text-lg"> / {total} 正解</span>
           </p>
+
+          {/* New-best celebration vs. quiet best display */}
+          {beaten ? (
+            <p
+              role="status"
+              className="mt-2 mb-1 inline-block rounded-full bg-amber-100 dark:bg-amber-900/40 px-4 py-1.5 text-base font-bold text-amber-700 dark:text-amber-300"
+            >
+              🎉 自己ベスト更新！ {record.bestPct}%
+            </p>
+          ) : (
+            <p className="mt-2 mb-1 text-sm text-gray-500 dark:text-gray-400">
+              自己ベスト {record.bestPct}%
+            </p>
+          )}
+
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            プレイ回数: <span className="font-semibold text-gray-700 dark:text-gray-200">{record.plays}</span> 回
+          </p>
+
+          {record.history.length > 1 && (
+            <div className="mt-4 text-left">
+              <p className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold mb-2 text-center">
+                直近の記録
+              </p>
+              <ul className="flex flex-wrap justify-center gap-1.5">
+                {record.history.slice(0, 5).map((a, i) => (
+                  <li
+                    key={a.timestamp + '-' + i}
+                    className="rounded-md bg-gray-100 dark:bg-gray-700 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300"
+                  >
+                    {a.pct}%
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={restart}
