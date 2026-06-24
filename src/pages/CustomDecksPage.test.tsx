@@ -122,6 +122,120 @@ describe('CustomDecksPage', () => {
     });
   });
 
+  describe('search and sort', () => {
+    const deckA: CustomDeck = {
+      id: 'd-a',
+      name: 'Apple Words',
+      description: 'りんご',
+      items: [
+        { id: 'i1', english: 'apple', japanese: 'りんご', pronunciation: 'æpl' },
+      ],
+      createdAt: 1_700_000_000_000,
+      updatedAt: 1_700_000_000_000,
+    };
+    const deckB: CustomDeck = {
+      id: 'd-b',
+      name: 'Zebra Words',
+      description: 'しましま',
+      items: [
+        { id: 'i1', english: 'zebra', japanese: '縞馬', pronunciation: 'z' },
+        { id: 'i2', english: 'zoo', japanese: '動物園', pronunciation: 'z' },
+      ],
+      createdAt: 1_700_000_001_000,
+      updatedAt: 1_700_000_002_000,
+    };
+    const deckC: CustomDeck = {
+      id: 'd-c',
+      name: 'Business Phrases',
+      description: 'TOEIC',
+      items: [
+        { id: 'i1', english: 'a', japanese: 'a', pronunciation: 'a' },
+        { id: 'i2', english: 'b', japanese: 'b', pronunciation: 'b' },
+        { id: 'i3', english: 'c', japanese: 'c', pronunciation: 'c' },
+      ],
+      createdAt: 1_700_000_003_000,
+      updatedAt: 1_700_000_003_000,
+    };
+
+    beforeEach(() => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([deckA, deckB, deckC]));
+    });
+
+    it('renders the search box and sort select when decks exist', () => {
+      renderWithRouter(<CustomDecksPage />, { route: '/decks' });
+
+      expect(
+        screen.getByRole('searchbox', { name: 'デッキを検索' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('combobox', { name: '並べ替え' }),
+      ).toBeInTheDocument();
+    });
+
+    it('filters decks by search query typing into the search box', () => {
+      renderWithRouter(<CustomDecksPage />, { route: '/decks' });
+
+      // 初期状態: 3 デッキすべて見えている
+      const initialHeadings = screen.getAllByRole('heading', { level: 2 });
+      expect(initialHeadings).toHaveLength(3);
+
+      const search = screen.getByRole('searchbox', { name: 'デッキを検索' });
+      fireEvent.change(search, { target: { value: 'Apple' } });
+
+      // Apple Words だけ残る
+      const after = screen.getAllByRole('heading', { level: 2 });
+      expect(after).toHaveLength(1);
+      expect(screen.getByText('Apple Words')).toBeInTheDocument();
+      // ヒットしなかった Zebra / Business は消える
+      expect(screen.queryByText('Zebra Words')).not.toBeInTheDocument();
+      expect(screen.queryByText('Business Phrases')).not.toBeInTheDocument();
+    });
+
+    it('shows the no-match empty state when search hits nothing', () => {
+      renderWithRouter(<CustomDecksPage />, { route: '/decks' });
+
+      const search = screen.getByRole('searchbox', { name: 'デッキを検索' });
+      fireEvent.change(search, { target: { value: 'zzzzzz' } });
+
+      expect(screen.getByText('該当するデッキがありません')).toBeInTheDocument();
+      expect(screen.queryByText('Apple Words')).not.toBeInTheDocument();
+      expect(screen.queryByText('Zebra Words')).not.toBeInTheDocument();
+      expect(screen.queryByText('Business Phrases')).not.toBeInTheDocument();
+    });
+
+    it('changes deck order when sort select is set to 名前順', () => {
+      renderWithRouter(<CustomDecksPage />, { route: '/decks' });
+
+      // 既定(newest)は createdAt 降順: deckC(3_000) > deckB(1_000) > deckA(0_000)
+      const before = screen
+        .getAllByRole('heading', { level: 2 })
+        .map((h) => h.textContent);
+      expect(before).toEqual(['Business Phrases', 'Zebra Words', 'Apple Words']);
+
+      const select = screen.getByRole('combobox', { name: '並べ替え' });
+      fireEvent.change(select, { target: { value: 'name' } });
+
+      // 名前昇順 localeCompare: Apple Words, Business Phrases, Zebra Words
+      const after = screen
+        .getAllByRole('heading', { level: 2 })
+        .map((h) => h.textContent);
+      expect(after).toEqual(['Apple Words', 'Business Phrases', 'Zebra Words']);
+    });
+
+    it('changes deck order when sort select is set to カード数が多い順', () => {
+      renderWithRouter(<CustomDecksPage />, { route: '/decks' });
+
+      const select = screen.getByRole('combobox', { name: '並べ替え' });
+      fireEvent.change(select, { target: { value: 'size' } });
+
+      // size 降順: deckC(3) > deckB(2) > deckA(1)
+      const after = screen
+        .getAllByRole('heading', { level: 2 })
+        .map((h) => h.textContent);
+      expect(after).toEqual(['Business Phrases', 'Zebra Words', 'Apple Words']);
+    });
+  });
+
   describe('create form', () => {
     it('shows validation error when submitting with empty name', () => {
       renderWithRouter(<CustomDecksPage />, { route: '/decks' });
