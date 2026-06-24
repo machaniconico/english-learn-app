@@ -8,6 +8,7 @@
 //  - 日付は setId(`daily-quiz-YYYY-MM-DD-...`)から抽出する(timestamp ではなくローカル暦日基準)。
 
 import type { QuizResult } from '../hooks/useAccuracy';
+import type { QuizDifficulty } from '../data/dailyQuiz';
 
 /** setId 例: `daily-quiz-2026-06-24-beginner-10` から日付部分 `2026-06-24` を取り出す。 */
 const DAILY_QUIZ_SETID_DATE = /^daily-quiz-(\d{4}-\d{2}-\d{2})-/;
@@ -148,4 +149,108 @@ export function getDailyQuizSummary(
   const allDays = getDailyQuizHistory(results, Number.MAX_SAFE_INTEGER);
   const bestPct = allDays.reduce((max, d) => (d.pct > max ? d.pct : max), 0);
   return { streak, daysPlayed, bestPct, history };
+}
+
+// =====================================================================
+// Round 41: 難易度ランプ提案(直近成績に応じて次の難易度をやさしく推薦)
+// =====================================================================
+
+/** 難易度のやさしい→難しい順。up/down はこの並びに沿って1段ずらす。 */
+const DIFFICULTY_ORDER: QuizDifficulty[] = ['beginner', 'intermediate', 'advanced'];
+
+/** ある level 文字列が具体難易度(beginner/intermediate/advanced)か判定する。 */
+function isQuizDifficulty(level: string | undefined): level is QuizDifficulty {
+  return level === 'beginner' || level === 'intermediate' || level === 'advanced';
+}
+
+/** 難易度の推薦結果。次に挑戦すべき難易度を1段だけ提案する。 */
+export interface DifficultyRecommendation {
+  /** 'up' = 一つ上を提案 / 'down' = 一つ下を提案 */
+  direction: 'up' | 'down';
+  /** 推薦する難易度 */
+  suggested: QuizDifficulty;
+  /** 判定の元になった現在レベル(最新の具体難易度試行の level) */
+  basedOn: QuizDifficulty;
+  /** 判定に使った直近試行の平均 pct(整数) */
+  avgPct: number;
+  /** 判定に使った試行数 */
+  attempts: number;
+}
+
+/**
+ * デイリークイズの直近成績から、次に挑戦すべき難易度をやさしく推薦する。
+ *
+ * 判定方針:
+ *  - 対象は daily-quiz かつ level が具体難易度(mixed や未設定は除外)の結果のみ。
+ *  - 「現在レベル」= 最新(timestamp 最大)の具体難易度試行の level。該当が無ければ null。
+ *  - そのレベルでの直近 window 件(timestamp 降順で上位)を取り平均 pct を出す。
+ *  - attempts < minAttempts ならデータ不足として null(うるさく勧めない)。
+ *  - avgPct >= upThreshold かつ advanced でなければ up(一つ上を提案)。
+ *  - avgPct < downThreshold かつ beginner でなければ down(一つ下を提案)。
+ *  - それ以外(ちょうど良い / 端で上下不可)は null。
+ *
+ * pct は total>0 のとき round(score/total*100)、total<=0 は 0 として扱う(除外しない)。
+ * 入力 results は破壊しない。決定的。
+ */
+export function recommendDifficulty(
+  results: QuizResult[],
+  opts?: {
+    window?: number;
+    upThreshold?: number;
+    downThreshold?: number;
+    minAttempts?: number;
+  },
+): DifficultyRecommendation | null {
+  const window = opts?.window ?? 3;
+  const upThreshold = opts?.upThreshold ?? 85;
+  const downThreshold = opts?.downThreshold ?? 50;
+  const minAttempts = opts?.minAttempts ?? 2;
+
+  // 対象=具体難易度の daily-quiz 試行のみ。入力は破壊せずコピーして扱う。
+  const specific = results.filter(
+    (r) => r.type === 'daily-quiz' && isQuizDifficulty(r.level),
+  );
+  if (specific.length === 0) return null;
+
+  // 最新(timestamp 最大)の試行の level を現在レベルとする。
+  // timestamp が同値の場合は入力順で後勝ち(reduce で後の要素を採用)。
+  const latest = specific.reduce((acc, r) => (r.timestamp >= acc.timestamp ? r : acc));
+  const basedOn = latest.level as QuizDifficulty;
+
+  // 現在レベルの試行を timestamp 降順で並べ、上位 window 件で平均 pct を出す。
+  const sameLevel = specific
+    .filter((r) => r.level === basedOn)
+    .slice()
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, Math.max(0, window));
+
+  const attempts = sameLevel.length;
+  if (attempts < minAttempts) return null;
+
+  const sumPct = sameLevel.reduce((sum, r) => sum + pctOf(r.score, r.total), 0);
+  const avgPct = Math.round(sumPct / attempts);
+
+  const idx = DIFFICULTY_ORDER.indexOf(basedOn);
+
+  if (avgPct >= upThreshold && idx < DIFFICULTY_ORDER.length - 1) {
+    return {
+      direction: 'up',
+      suggested: DIFFICULTY_ORDER[idx + 1],
+      basedOn,
+      avgPct,
+      attempts,
+    };
+  }
+
+  if (avgPct < downThreshold && idx > 0) {
+    return {
+      direction: 'down',
+      suggested: DIFFICULTY_ORDER[idx - 1],
+      basedOn,
+      avgPct,
+      attempts,
+    };
+  }
+
+  return null;
 }
