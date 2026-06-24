@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCustomDecks } from '../hooks/useCustomDecks';
 import type { CustomDeck } from '../data/types';
+import {
+  filterAndSortDecks,
+  DECK_SORT_OPTIONS,
+  type DeckSortKey,
+} from './customDecksFilter';
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString('ja-JP', {
@@ -187,6 +192,15 @@ function DeckCard({ deck, onDelete }: { deck: CustomDeck; onDelete: (id: string)
 export default function CustomDecksPage() {
   const { decks, createDeck, deleteDeck } = useCustomDecks();
   const [showForm, setShowForm] = useState(false);
+  // 検索文字列(初期 '')。並べ替えキー(初期 'newest'=作成が新しい順)。
+  const [query, setQuery] = useState('');
+  const [sortKey, setSortKey] = useState<DeckSortKey>('newest');
+
+  // 検索 + 並べ替えを通した表示用デッキ。
+  const visibleDecks = useMemo(
+    () => filterAndSortDecks(decks, query, sortKey),
+    [decks, query, sortKey],
+  );
 
   const handleCreate = (name: string, description: string) => {
     createDeck(name, description || undefined);
@@ -270,12 +284,44 @@ export default function CustomDecksPage() {
         />
       )}
 
-      {/* Deck list */}
-      <div className="space-y-4">
-        {decks.map((deck) => (
-          <DeckCard key={deck.id} deck={deck} onDelete={deleteDeck} />
-        ))}
-      </div>
+      {/* 検索 + 並べ替え(デッキ1件以上のときだけ表示) */}
+      {decks.length > 0 && (
+        <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:items-center">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="デッキを検索"
+            placeholder="名前・説明で検索"
+            className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+          />
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as DeckSortKey)}
+            aria-label="並べ替え"
+            className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+          >
+            {DECK_SORT_OPTIONS.map((opt) => (
+              <option key={opt.key} value={opt.key}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* デッキ一覧: 検索結果0件(デッキは存在する)のときは専用メッセージ */}
+      {decks.length > 0 && visibleDecks.length === 0 ? (
+        <p className="text-center text-gray-500 dark:text-gray-400 py-10">
+          該当するデッキがありません
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {visibleDecks.map((deck) => (
+            <DeckCard key={deck.id} deck={deck} onDelete={deleteDeck} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
