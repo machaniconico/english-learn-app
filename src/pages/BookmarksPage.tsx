@@ -3,39 +3,24 @@ import { Link } from 'react-router-dom';
 import { useBookmarks, type BookmarkedItem } from '../hooks/useBookmarks';
 import AudioButton from '../components/AudioButton';
 import Flashcard from '../components/Flashcard';
-
-type SortMode = 'newest' | 'alphabetical';
+import {
+  filterAndSortBookmarks,
+  BOOKMARK_SORT_OPTIONS,
+  type BookmarkSortKey,
+} from './bookmarksFilter';
 
 export default function BookmarksPage() {
   const { bookmarks, removeBookmark, clearAll } = useBookmarks();
-  const [sortMode, setSortMode] = useState<SortMode>('newest');
+  const [sortKey, setSortKey] = useState<BookmarkSortKey>('newest');
   const [search, setSearch] = useState('');
   const [showFlashcard, setShowFlashcard] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  const filtered = useMemo(() => {
-    let list = [...bookmarks];
-
-    // Search filter
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter(
-        (b) =>
-          b.english.toLowerCase().includes(q) ||
-          b.japanese.includes(q) ||
-          b.pronunciation.toLowerCase().includes(q),
-      );
-    }
-
-    // Sort
-    if (sortMode === 'newest') {
-      list.sort((a, b) => b.addedAt - a.addedAt);
-    } else {
-      list.sort((a, b) => a.english.localeCompare(b.english));
-    }
-
-    return list;
-  }, [bookmarks, search, sortMode]);
+  // 検索 + 並べ替えを通した表示用一覧(純粋関数 bookmarksFilter に委譲)。
+  const filtered = useMemo(
+    () => filterAndSortBookmarks(bookmarks, search, sortKey),
+    [bookmarks, search, sortKey],
+  );
 
   const flashcardItems = useMemo(
     () =>
@@ -156,11 +141,11 @@ export default function BookmarksPage() {
         {/* Search */}
         <div className="relative">
           <input
-            type="text"
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label="ブックマークを検索"
-            placeholder="検索... (英語・日本語・発音)"
+            placeholder="ブックマークを検索 (英語・日本語・発音・出典)"
             className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
           />
           <svg
@@ -180,30 +165,18 @@ export default function BookmarksPage() {
 
         {/* Sort + Actions */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
-            <button
-              type="button"
-              onClick={() => setSortMode('newest')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                sortMode === 'newest'
-                  ? 'bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              }`}
-            >
-              新しい順
-            </button>
-            <button
-              type="button"
-              onClick={() => setSortMode('alphabetical')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                sortMode === 'alphabetical'
-                  ? 'bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              }`}
-            >
-              アルファベット順
-            </button>
-          </div>
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as BookmarkSortKey)}
+            aria-label="並べ替え"
+            className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent cursor-pointer"
+          >
+            {BOOKMARK_SORT_OPTIONS.map((opt) => (
+              <option key={opt.key} value={opt.key}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
 
           <div className="flex-1" />
 
@@ -253,21 +226,16 @@ export default function BookmarksPage() {
         role="status"
         aria-live="polite"
       >
-        {search.trim() ? (
-          <>
-            {filtered.length} 件の結果
-            {filtered.length === 0 && (
-              <span className="ml-2 text-gray-400 dark:text-gray-500">
-                — 検索条件を変えてみてください
-              </span>
-            )}
-          </>
-        ) : (
-          ''
-        )}
+        {search.trim() ? <>{filtered.length} 件の結果</> : ''}
       </p>
 
-      {/* Bookmark cards */}
+      {/* Bookmark cards — 検索ヒット0件のときは専用メッセージ
+          (ブックマーク0件の空状態とは区別する) */}
+      {filtered.length === 0 ? (
+        <p className="text-center text-gray-500 dark:text-gray-400 py-10">
+          該当するブックマークがありません
+        </p>
+      ) : (
       <div className="space-y-3 mb-8">
         {filtered.map((item: BookmarkedItem) => (
           <div
@@ -276,9 +244,9 @@ export default function BookmarksPage() {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
                   {item.english}
-                </p>
+                </h2>
                 <p className="text-base text-gray-700 dark:text-gray-300 mt-1">
                   {item.japanese}
                 </p>
@@ -310,6 +278,7 @@ export default function BookmarksPage() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
