@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { screen, fireEvent } from '@testing-library/react';
@@ -96,5 +96,35 @@ describe('SRSPage urgency ordering (Round 38)', () => {
     // 4日超過 → 「4日超過」バッジ
     expect(screen.getByText('4日超過')).toBeTruthy();
     expect(screen.getByText(/超過/)).toBeTruthy();
+  });
+
+  // 回帰防止: ページの「今日」判定が UTC 暦日だと JST 早朝 (00:00-09:00) に
+  // nextReview==ローカル今日 のカードが一覧/バッジで not-due 扱いになり、実際の
+  // 復習キュー(hook はローカル暦日)と食い違っていた。todayStr() に統一したことで
+  // JST 早朝でもローカル今日のカードが「今日」バッジ・due として扱われることを固定する。
+  it('JST 早朝 (02:00 JST) でもローカル今日のカードが「今日」バッジ・due として扱われる', () => {
+    vi.useFakeTimers();
+    try {
+      // JST は UTC+9 → getTimezoneOffset() は -540
+      vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(-540);
+      // 2026-06-21 02:00 JST == 2026-06-20 17:00 UTC (UTC 暦日だと前日 06-20)
+      vi.setSystemTime(new Date('2026-06-20T17:00:00Z'));
+
+      // ローカル今日 = 2026-06-21 が期日のカード
+      const cards: SRSCard[] = [
+        makeStoredCard({ id: 'localtoday', english: 'localtoday-word', nextReview: '2026-06-21' }),
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+
+      renderWithRouter(<SRSPage />, { route: '/srs' });
+
+      // ローカル今日が期日 → 「今日」バッジ (UTC 判定なら「次回: 2026-06-21」になり失敗していた)
+      expect(screen.getByText('今日')).toBeTruthy();
+      expect(screen.queryByText(/次回:/)).toBeNull();
+      // due として復習対象 (1枚が復習待ち)
+      expect(screen.getByRole('button', { name: '復習を開始' })).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

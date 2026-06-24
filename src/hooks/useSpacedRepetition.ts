@@ -33,7 +33,7 @@ function toLocalDateStr(d: Date): string {
   return new Date(d.getTime() - off).toISOString().slice(0, 10);
 }
 
-function todayStr(): string {
+export function todayStr(): string {
   return toLocalDateStr(new Date());
 }
 
