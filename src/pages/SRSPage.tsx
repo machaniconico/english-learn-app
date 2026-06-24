@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useSpacedRepetition, sortDueCardsByUrgency } from '../hooks/useSpacedRepetition';
+import { useSpacedRepetition, sortDueCardsByUrgency, todayStr } from '../hooks/useSpacedRepetition';
 import type { SRSCard } from '../hooks/useSpacedRepetition';
 import AudioButton from '../components/AudioButton';
 
@@ -26,7 +26,7 @@ export default function SRSPage() {
   // Find the nearest next review date for display
   const nextReviewDate = useMemo(() => {
     if (cards.length === 0) return null;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayStr();
     const future = cards
       .filter((c) => c.nextReview > today)
       .sort((a, b) => a.nextReview.localeCompare(b.nextReview));
@@ -40,7 +40,7 @@ export default function SRSPage() {
   // Card list ordered by urgency: due cards first (most overdue at the top),
   // then not-yet-due cards by nearest nextReview. Does not mutate `cards`.
   const sortedCards = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayStr();
     const due = cards.filter((c) => c.nextReview <= today);
     const notDue = cards.filter((c) => c.nextReview > today);
     return [
@@ -267,7 +267,7 @@ export default function SRSPage() {
           </h2>
           <div className="space-y-2">
             {sortedCards.map((card) => {
-              const today = new Date().toISOString().slice(0, 10);
+              const today = todayStr();
               const isDue = card.nextReview <= today;
               // Days overdue = max(0, today - nextReview) in calendar days.
               const overdueMs =
