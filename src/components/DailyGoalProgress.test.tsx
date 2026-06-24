@@ -40,6 +40,35 @@ function seedTodaySession(durationSeconds: number): void {
   );
 }
 
+// 指定した日付オフセット(0=今日, 1=昨日…)の分数リストから複数セッションをシードする。
+// getDailyBreakdown は session.startTime と session.date を使うため両方を整合させる。
+function seedSessions(byOffset: { offsetDays: number; minutes: number }[]): void {
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const sessions = byOffset
+    .filter((s) => s.minutes > 0)
+    .map(({ offsetDays, minutes }) => {
+      const ts = now - offsetDays * dayMs;
+      const duration = minutes * 60;
+      return {
+        date: toDateStr(new Date(ts)),
+        startTime: ts,
+        endTime: ts + duration * 1000,
+        duration,
+        activity: 'reading',
+      };
+    });
+  localStorage.setItem(
+    TIMER_STORAGE_KEY,
+    JSON.stringify({
+      sessions,
+      currentActivity: null,
+      currentStart: null,
+      lastInteraction: null,
+    }),
+  );
+}
+
 describe('DailyGoalProgress', () => {
   it('目標10分・今日8分のとき 80% で進捗バーを表示する', () => {
     seedGoal(10);
@@ -85,5 +114,55 @@ describe('DailyGoalProgress', () => {
     const bar = screen.getByRole('progressbar');
     expect(bar).toHaveAttribute('aria-valuenow', '100');
     expect(screen.getByText(/目標達成/)).toBeTruthy();
+  });
+
+  it('直近7日の履歴ストリップを role="img" で描画する', () => {
+    seedGoal(10);
+    seedTodaySession(480); // 今日8分(未達)
+
+    renderWithRouter(<DailyGoalProgress />);
+
+    const strip = screen.getByRole('img');
+    expect(strip.getAttribute('aria-label')).toContain('達成');
+    expect(strip.getAttribute('aria-label')).toContain('直近7日');
+    expect(screen.getByText('直近7日')).toBeTruthy();
+  });
+
+  it('複数日のセッションで「{n}/7日 達成」サマリを表示する', () => {
+    seedGoal(10);
+    // 今日(0)・2日前(2)・5日前(5)で目標達成、ほかは未達/無し
+    seedSessions([
+      { offsetDays: 0, minutes: 12 },
+      { offsetDays: 1, minutes: 3 },
+      { offsetDays: 2, minutes: 10 },
+      { offsetDays: 5, minutes: 15 },
+    ]);
+
+    renderWithRouter(<DailyGoalProgress />);
+
+    expect(screen.getByText('3/7日 達成')).toBeTruthy();
+  });
+
+  it('連続達成が2日以上のとき 🔥連続バッジを表示する', () => {
+    seedGoal(10);
+    // 今日と昨日が達成 → currentStreak = 2
+    seedSessions([
+      { offsetDays: 0, minutes: 10 },
+      { offsetDays: 1, minutes: 11 },
+    ]);
+
+    renderWithRouter(<DailyGoalProgress />);
+
+    expect(screen.getByText(/🔥2日連続/)).toBeTruthy();
+  });
+
+  it('連続達成が無い(最新日未達)ときは連続バッジを出さない', () => {
+    seedGoal(10);
+    seedTodaySession(180); // 今日3分(未達)
+
+    renderWithRouter(<DailyGoalProgress />);
+
+    expect(screen.queryByText(/日連続/)).toBeNull();
+    expect(screen.getByText('0/7日 達成')).toBeTruthy();
   });
 });
