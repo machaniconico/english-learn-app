@@ -5,8 +5,24 @@ import {
   computeDailyQuizStreak,
   getDailyQuizSummary,
   recommendDifficulty,
+  getWrongQuestions,
 } from './dailyQuizStats';
 import type { QuizResult } from '../hooks/useAccuracy';
+import type { DailyQuizQuestion } from '../data/dailyQuiz';
+
+/** テスト用の DailyQuizQuestion を作るヘルパー。 */
+function q(id: string, correctIndex: number): DailyQuizQuestion {
+  return {
+    id,
+    difficulty: 'beginner',
+    question: `Q ${id}`,
+    questionJa: `問 ${id}`,
+    options: ['A', 'B', 'C', 'D'],
+    correctIndex,
+    explanation: `解説 ${id}`,
+    category: '語彙',
+  };
+}
 
 /** daily-quiz の結果を簡単に作るヘルパー。 */
 function daily(
@@ -335,5 +351,57 @@ describe('recommendDifficulty', () => {
     const snapshot = JSON.parse(JSON.stringify(results));
     recommendDifficulty(results);
     expect(results).toEqual(snapshot);
+  });
+});
+
+describe('getWrongQuestions', () => {
+  it('未回答(null)と誤答の問題だけを抽出する', () => {
+    const questions = [q('a', 0), q('b', 1), q('c', 2), q('d', 3)];
+    // a: 正解 / b: 誤答 / c: 未回答 / d: 正解
+    const answers: (number | null)[] = [0, 0, null, 3];
+    const wrong = getWrongQuestions(questions, answers);
+    expect(wrong.map((w) => w.id)).toEqual(['b', 'c']);
+  });
+
+  it('全問正解なら空配列を返す', () => {
+    const questions = [q('a', 0), q('b', 1), q('c', 2)];
+    const answers: (number | null)[] = [0, 1, 2];
+    expect(getWrongQuestions(questions, answers)).toEqual([]);
+  });
+
+  it('元の順序を保持する', () => {
+    const questions = [q('a', 0), q('b', 1), q('c', 2), q('d', 3), q('e', 0)];
+    // b, d を誤答にする(間に正解を挟む)
+    const answers: (number | null)[] = [0, 0, 2, 0, 0];
+    const wrong = getWrongQuestions(questions, answers);
+    expect(wrong.map((w) => w.id)).toEqual(['b', 'd']);
+  });
+
+  it('入力の questions / answers を破壊しない', () => {
+    const questions = [q('a', 0), q('b', 1)];
+    const answers: (number | null)[] = [1, 1];
+    const qSnapshot = JSON.parse(JSON.stringify(questions));
+    const aSnapshot = [...answers];
+    getWrongQuestions(questions, answers);
+    expect(questions).toEqual(qSnapshot);
+    expect(answers).toEqual(aSnapshot);
+  });
+
+  it('answers が questions より短くても min 長で安全に処理する', () => {
+    const questions = [q('a', 0), q('b', 1), q('c', 2)];
+    const answers: (number | null)[] = [1]; // a のみ(誤答)
+    const wrong = getWrongQuestions(questions, answers);
+    expect(wrong.map((w) => w.id)).toEqual(['a']);
+  });
+
+  it('answers が questions より長くても min 長で安全に処理する', () => {
+    const questions = [q('a', 0)];
+    const answers: (number | null)[] = [1, 2, 3];
+    const wrong = getWrongQuestions(questions, answers);
+    expect(wrong.map((w) => w.id)).toEqual(['a']);
+  });
+
+  it('空入力なら空配列', () => {
+    expect(getWrongQuestions([], [])).toEqual([]);
   });
 });
