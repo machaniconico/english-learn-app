@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
+import { vi } from 'vitest';
 import { fireEvent } from '@testing-library/react';
 import { renderWithRouter, screen, within } from '../test/test-utils';
 import WeakPointsPage from './WeakPointsPage';
@@ -164,5 +165,81 @@ describe('WeakPointsPage sort + unmastered filter', () => {
     fireEvent.click(toggle);
 
     expect(within(container).getByText('条件に合う弱点がありません')).toBeTruthy();
+  });
+});
+
+describe('WeakPointsPage CSV エクスポート', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('弱点が1件以上あるとき『CSVでエクスポート』ボタンが表示される', () => {
+    seedWeakPoints();
+    renderWithRouter(<WeakPointsPage />, { route: '/weak-points' });
+    const btn = screen.getByRole('button', { name: '弱点をCSVでエクスポート' });
+    expect(btn).toBeTruthy();
+  });
+
+  it('弱点0件(空状態)のときはエクスポートボタンが出ない', () => {
+    // localStorage は空 → early return の空状態。
+    renderWithRouter(<WeakPointsPage />, { route: '/weak-points' });
+    expect(screen.queryByRole('button', { name: '弱点をCSVでエクスポート' })).toBeNull();
+  });
+
+  it('クリックで createObjectURL/anchor click/revokeObjectURL が呼ばれる', () => {
+    seedWeakPoints();
+
+    // jsdom は createObjectURL / revokeObjectURL を持たないのでモックする。
+    const createObjectURL = vi.fn().mockReturnValue('blob:fake-url');
+    const revokeObjectURL = vi.fn();
+    const clickSpy = vi.fn();
+    const createObjectURLDesc = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
+    const revokeObjectURLDesc = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL');
+    const clickDesc = Object.getOwnPropertyDescriptor(HTMLAnchorElement.prototype, 'click');
+
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      writable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      writable: true,
+      value: revokeObjectURL,
+    });
+    Object.defineProperty(HTMLAnchorElement.prototype, 'click', {
+      configurable: true,
+      writable: true,
+      value: clickSpy,
+    });
+
+    try {
+      renderWithRouter(<WeakPointsPage />, { route: '/weak-points' });
+      fireEvent.click(screen.getByRole('button', { name: '弱点をCSVでエクスポート' }));
+
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      // 渡された Blob は BOM 付き CSV(text/csv)。
+      const blobArg = createObjectURL.mock.calls[0][0] as Blob;
+      expect(blobArg).toBeInstanceOf(Blob);
+      expect(blobArg.type).toContain('text/csv');
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+      expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+    } finally {
+      if (createObjectURLDesc) {
+        Object.defineProperty(URL, 'createObjectURL', createObjectURLDesc);
+      } else {
+        delete (URL as Partial<typeof URL>).createObjectURL;
+      }
+      if (revokeObjectURLDesc) {
+        Object.defineProperty(URL, 'revokeObjectURL', revokeObjectURLDesc);
+      } else {
+        delete (URL as Partial<typeof URL>).revokeObjectURL;
+      }
+      if (clickDesc) {
+        Object.defineProperty(HTMLAnchorElement.prototype, 'click', clickDesc);
+      } else {
+        delete (HTMLAnchorElement.prototype as Partial<typeof HTMLAnchorElement.prototype>).click;
+      }
+    }
   });
 });

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Download } from 'lucide-react';
 import { useWeakPoints, type WeakPoint } from '../hooks/useWeakPoints';
 import {
   filterAndSortWeakPoints,
@@ -7,6 +8,11 @@ import {
   WEAKPOINT_SORT_OPTIONS,
   type WeakPointSortKey,
 } from './weakPointsSort';
+import {
+  buildWeakPointsCsvFilename,
+  getWeakPointQuestionText,
+  weakPointsToCsv,
+} from './weakPointsCsv';
 
 const TYPE_LABELS: Record<WeakPoint['type'], string> = {
   'fill-in-blank': 'TOEIC模試',
@@ -35,26 +41,6 @@ function formatDate(ts: number): string {
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   return `${month}/${day} ${hours}:${minutes}`;
-}
-
-function getQuestionDisplay(wp: WeakPoint): string {
-  const q = wp.question as Record<string, unknown>;
-  if (!q) return '';
-
-  // fill-in-blank: sentence with blank
-  if (typeof q.sentence === 'string') return q.sentence;
-  // error-correction: sentence with error
-  if (typeof q.errorSentence === 'string') return q.errorSentence;
-  // part1/part2: question text or description
-  if (typeof q.question === 'string') return q.question;
-  if (typeof q.description === 'string') return q.description;
-  // dictation: the text to hear
-  if (typeof q.text === 'string') return q.text;
-  // reorder: japanese hint or english answer
-  if (typeof q.japanese === 'string') return q.japanese;
-  if (typeof q.english === 'string') return q.english;
-
-  return '';
 }
 
 export default function WeakPointsPage() {
@@ -98,6 +84,34 @@ export default function WeakPointsPage() {
   const handleClearAll = () => {
     clearAll();
     setShowClearConfirm(false);
+  };
+
+  // 全弱点(絞り込みに依存しない)を CSV でダウンロードする。
+  // BOM を先頭に付け Excel 文字化けを防ぐ。
+  // SSR や非対応環境(typeof document / URL.createObjectURL が無い)では何もしない安全策。
+  const handleExportCsv = () => {
+    try {
+      if (
+        typeof document === 'undefined' ||
+        typeof URL?.createObjectURL !== 'function'
+      ) {
+        return;
+      }
+      const csv = weakPointsToCsv(weakPoints, TYPE_LABELS);
+      const blob = new Blob(['﻿' + csv], {
+        type: 'text/csv;charset=utf-8;',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = buildWeakPointsCsvFilename(new Date());
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // SSR / 非対応環境では黙って無視する
+    }
   };
 
   // Empty state
@@ -255,6 +269,17 @@ export default function WeakPointsPage() {
 
       {/* Action Buttons */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
+        {/* CSV エクスポート: 全弱点(絞り込みに依存しない)をダウンロード。 */}
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          aria-label={'弱点をCSVでエクスポート'}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition-colors cursor-pointer shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
+        >
+          <Download aria-hidden="true" className="h-3.5 w-3.5" />
+          {'CSVでエクスポート'}
+        </button>
+
         {stats.masteredCount > 0 && (
           <>
             {!showClearMasteredConfirm ? (
@@ -319,7 +344,7 @@ export default function WeakPointsPage() {
       {/* Weak Point Cards */}
       <div className="space-y-3 mb-8">
         {filtered.map((wp) => {
-          const questionText = getQuestionDisplay(wp);
+          const questionText = getWeakPointQuestionText(wp);
           return (
             <div
               key={wp.id}
