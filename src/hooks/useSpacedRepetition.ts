@@ -103,6 +103,34 @@ export function scheduleSRSCard(
   };
 }
 
+/**
+ * Pure urgency sort for due SRS cards. Returns a NEW array (does not mutate
+ * the input); callers can sort freely without disturbing storage order.
+ *
+ * Ordering keys (ascending priority, most urgent first):
+ *  1) nextReview asc — earlier due date / more overdue comes first.
+ *     YYYY-MM-DD sorts lexicographically the same as chronologically, so
+ *     localeCompare is sufficient.
+ *  2) repetitions asc — fewer consecutive successes (freshly failed / early
+ *     learning cards) are prioritised.
+ *  3) easeFactor asc — harder-to-remember cards first.
+ *  4) interval asc — shorter intervals (less consolidated) first.
+ *  5) id asc — fully deterministic, stable tie-break.
+ *
+ * `today` is accepted for forward compatibility but the ordering above is
+ * deterministic and does not depend on it.
+ */
+export function sortDueCardsByUrgency(cards: SRSCard[], _today: string): SRSCard[] {
+  return [...cards].sort((a, b) => {
+    const byNext = a.nextReview.localeCompare(b.nextReview);
+    if (byNext !== 0) return byNext;
+    if (a.repetitions !== b.repetitions) return a.repetitions - b.repetitions;
+    if (a.easeFactor !== b.easeFactor) return a.easeFactor - b.easeFactor;
+    if (a.interval !== b.interval) return a.interval - b.interval;
+    return a.id.localeCompare(b.id);
+  });
+}
+
 export function useSpacedRepetition() {
   const [cards, setCards] = useState<SRSCard[]>(loadCards);
 
@@ -155,7 +183,8 @@ export function useSpacedRepetition() {
 
   const getDueCards = useCallback((): SRSCard[] => {
     const today = todayStr();
-    return cards.filter((c) => c.nextReview <= today);
+    const due = cards.filter((c) => c.nextReview <= today);
+    return sortDueCardsByUrgency(due, today);
   }, [cards]);
 
   const getStats = useCallback((): SRSStats => {
