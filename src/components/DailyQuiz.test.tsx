@@ -216,6 +216,54 @@ describe('DailyQuiz', () => {
     expect(screen.getByText('第 2 問 / 15')).toBeTruthy();
   });
 
+  // === Round 40: 達成ストリーク + 直近成績履歴 ===
+
+  /** english-learn-accuracy に daily-quiz 結果を仕込む。 */
+  function seedAccuracy(
+    rows: { date: string; score: number; total?: number; level?: string }[],
+  ) {
+    const results = rows.map((r) => {
+      const level = r.level ?? 'beginner';
+      const total = r.total ?? 10;
+      return {
+        type: 'daily-quiz',
+        setId: `daily-quiz-${r.date}-${level}-${total}`,
+        score: r.score,
+        total,
+        correct: r.score,
+        level,
+        timestamp: 0,
+      };
+    });
+    localStorage.setItem('english-learn-accuracy', JSON.stringify(results));
+  }
+
+  it('select 画面にストリークバッジと直近の成績が表示される', () => {
+    // TODAY=2026-06-23 を含む連続3日
+    seedAccuracy([
+      { date: '2026-06-21', score: 5 }, // 50%
+      { date: '2026-06-22', score: 7 }, // 70%
+      { date: '2026-06-23', score: 9 }, // 90%
+    ]);
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    // 🔥 3日連続 バッジ
+    expect(screen.getByLabelText('デイリークイズ 3日連続達成中')).toBeTruthy();
+    expect(screen.getByText('3日連続')).toBeTruthy();
+    // 直近の成績見出しと pct
+    expect(screen.getByText('直近の成績')).toBeTruthy();
+    expect(screen.getByText('90%')).toBeTruthy();
+    expect(screen.getByText('70%')).toBeTruthy();
+    expect(screen.getByText('50%')).toBeTruthy();
+    // 日付 M/D 表記(新しい順で先頭が 6/23)
+    expect(screen.getByText('6/23')).toBeTruthy();
+  });
+
+  it('履歴がゼロのとき成績カードを出さない', () => {
+    renderWithRouter(<DailyQuiz today={TODAY} />);
+    expect(screen.queryByText('直近の成績')).toBeNull();
+    expect(screen.queryByText(/日連続/)).toBeNull();
+  });
+
   it('旧形式(difficulty のみ・count なし)でも後方互換で復元できる', () => {
     const questions = selectDailyQuiz('beginner', TODAY, 10);
     const answers = new Array(questions.length).fill(null);

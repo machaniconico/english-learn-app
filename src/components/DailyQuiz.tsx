@@ -8,6 +8,7 @@ import {
   type QuizSelectionMode,
 } from '../data/dailyQuiz';
 import { selectDailyQuiz, getTodayString, DAILY_QUIZ_COUNT } from '../utils/dailyQuizSelect';
+import { getDailyQuizSummary } from '../utils/dailyQuizStats';
 import { useAccuracy } from '../hooks/useAccuracy';
 
 // =====================================================================
@@ -152,6 +153,19 @@ function selectionLabel(selection: QuizSelectionMode | null): string {
   return QUIZ_DIFFICULTIES.find((d) => d.id === selection)?.label ?? '';
 }
 
+/** 履歴の level 文字列(難易度 or 'mixed')を日本語ラベルへ。未知は空。 */
+function levelLabel(level: string | undefined): string {
+  if (!level) return '';
+  return selectionLabel(isQuizSelection(level) ? level : null);
+}
+
+/** 'YYYY-MM-DD' を 'M/D' 表記へ。 */
+function shortDate(dateStr: string): string {
+  const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) return dateStr;
+  return `${Number(m[1])}/${Number(m[2])}`;
+}
+
 // =====================================================================
 // 画面のフェーズ
 // =====================================================================
@@ -164,7 +178,15 @@ interface DailyQuizProps {
 
 export default function DailyQuiz({ today }: DailyQuizProps) {
   const dateStr = useMemo(() => today ?? getTodayString(), [today]);
-  const { logResult } = useAccuracy();
+  const { logResult, getResultsByType } = useAccuracy();
+
+  // 達成ストリーク + 直近成績(select 画面でのみ表示)。
+  const summary = useMemo(
+    () => getDailyQuizSummary(getResultsByType('daily-quiz'), dateStr, 5),
+    // getResultsByType は localStorage を都度読む安定参照。dateStr 変化で再計算。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dateStr],
+  );
 
   // 既存の保存があれば、その続き(または結果)から復元する。
   const saved = useMemo(() => loadSaved(dateStr), [dateStr]);
@@ -403,6 +425,56 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
             </div>
           </button>
         </div>
+
+        {/* 達成ストリーク + 直近成績(履歴がある時だけ表示) */}
+        {summary.history.length > 0 && (
+          <div className="mt-6 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+            {summary.streak >= 1 && (
+              <div className="mb-4 flex justify-center">
+                <span
+                  aria-label={`デイリークイズ ${summary.streak}日連続達成中`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-1.5 text-sm font-bold text-white shadow-sm"
+                >
+                  <span aria-hidden="true">🔥</span>
+                  {summary.streak}日連続
+                </span>
+              </div>
+            )}
+
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              直近の成績
+            </p>
+            <ul className="space-y-2">
+              {summary.history.map((day) => {
+                const tone =
+                  day.pct >= 80
+                    ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+                    : day.pct >= 60
+                      ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300'
+                      : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
+                return (
+                  <li
+                    key={day.date}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 px-3 py-2"
+                  >
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 tabular-nums">
+                      {shortDate(day.date)}
+                    </span>
+                    <span className="flex-1 truncate text-xs text-gray-500 dark:text-gray-400">
+                      {levelLabel(day.level)}
+                    </span>
+                    <span
+                      className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-bold tabular-nums ${tone}`}
+                      aria-label={`${day.pct}パーセント正解`}
+                    >
+                      {day.pct}%
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
           ※ 5つのデイリーチャレンジとは別の、独立したクイズです。
