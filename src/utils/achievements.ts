@@ -16,6 +16,12 @@ export interface AchievementInput {
   totalStudyMinutes: number;
   /** has the user completed the level diagnostic */
   hasDiagnosed: boolean;
+  /** consecutive daily-quiz day streak */
+  dailyQuizStreak: number;
+  /** best typing-practice accuracy reached, 0-100 (0 if never played) */
+  typingBestPct: number;
+  /** total typing-practice plays (gates the typing-perfect badge) */
+  typingPlays: number;
 }
 
 export interface Achievement {
@@ -61,6 +67,17 @@ const DEFS: AchievementDef[] = [
   { id: 'time-60', icon: '⏱️', title: '1時間達成', description: '累計60分学習', target: 60, current: (i) => i.totalStudyMinutes },
   { id: 'time-300', icon: '⏰', title: '5時間達成', description: '累計300分学習', target: 300, current: (i) => i.totalStudyMinutes },
   { id: 'diagnosed', icon: '🧭', title: 'スタート地点', description: 'レベル診断テストを完了', target: 1, current: (i) => (i.hasDiagnosed ? 1 : 0) },
+  { id: 'dq-streak-3', icon: '📅', title: 'デイリー3日', description: 'デイリークイズ3日連続', target: 3, current: (i) => i.dailyQuizStreak },
+  { id: 'dq-streak-7', icon: '🗓️', title: 'デイリー皆勤', description: 'デイリークイズ7日連続', target: 7, current: (i) => i.dailyQuizStreak },
+  {
+    id: 'typing-perfect',
+    icon: '⌨️',
+    title: '完璧タイピング',
+    description: 'タイピングで正確率100%達成',
+    target: 100,
+    current: (i) => i.typingBestPct,
+    gate: (i) => i.typingPlays >= 1,
+  },
 ];
 
 export function evaluateAchievements(input: AchievementInput): Achievement[] {

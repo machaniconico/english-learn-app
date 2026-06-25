@@ -4,8 +4,10 @@ import { useSpacedRepetition } from '../hooks/useSpacedRepetition';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useUserLevel } from '../hooks/useUserLevel';
 import { useStudyTimer } from '../hooks/useStudyTimer';
+import { useTypingRecords } from '../hooks/useTypingRecords';
 import { useDailyGoal, goalProgressPct, GOAL_PRESETS } from '../hooks/useDailyGoal';
 import { evaluateAchievements, countUnlocked, type AchievementInput } from '../utils/achievements';
+import { getDailyQuizSummary } from '../utils/dailyQuizStats';
 
 function todayString(): string {
   const d = new Date();
@@ -15,9 +17,10 @@ function todayString(): string {
 export default function AchievementsPage() {
   const { getOverallStats } = useProgress();
   const { getStats: getSrsStats } = useSpacedRepetition();
-  const { getOverallAccuracy, getAccuracyByType } = useAccuracy();
+  const { getOverallAccuracy, getAccuracyByType, getResultsByType } = useAccuracy();
   const { hasDiagnosed } = useUserLevel();
   const { getTotalTime, getDailyBreakdown } = useStudyTimer();
+  const { record: typingRecord } = useTypingRecords();
   const { goalMinutes, setGoalMinutes } = useDailyGoal();
 
   const stats = getOverallStats();
@@ -25,6 +28,7 @@ export default function AchievementsPage() {
   // Only today's calendar-day minutes (the breakdown can include a still-within-24h
   // session from yesterday evening, so filter by today's date rather than summing).
   const todayMinutes = getDailyBreakdown(1).find((d) => d.date === todayString())?.minutes ?? 0;
+  const dailyQuizStreak = getDailyQuizSummary(getResultsByType('daily-quiz'), todayString(), 5).streak;
 
   const input: AchievementInput = {
     streak: stats.streak,
@@ -34,6 +38,9 @@ export default function AchievementsPage() {
     accuracyAttempts,
     totalStudyMinutes: getTotalTime(36500), // ~all-time (last 100 years)
     hasDiagnosed,
+    dailyQuizStreak,
+    typingBestPct: typingRecord.bestPct,
+    typingPlays: typingRecord.plays,
   };
 
   const achievements = evaluateAchievements(input);
