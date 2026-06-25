@@ -9,6 +9,9 @@ const zero: AchievementInput = {
   accuracyAttempts: 0,
   totalStudyMinutes: 0,
   hasDiagnosed: false,
+  dailyQuizStreak: 0,
+  typingBestPct: 0,
+  typingPlays: 0,
 };
 
 function find(input: AchievementInput, id: string) {
@@ -61,8 +64,35 @@ describe('evaluateAchievements', () => {
       accuracyAttempts: 30,
       totalStudyMinutes: 65,
       hasDiagnosed: true,
+      dailyQuizStreak: 0,
+      typingBestPct: 0,
+      typingPlays: 0,
     });
     // streak-3, streak-7, items-10, items-50, srs-10, accuracy-80, time-60, diagnosed = 8
     expect(countUnlocked(all)).toBe(8);
+  });
+
+  it('unlocks dq-streak-3 at 3-day daily-quiz streak and shows partial progress below', () => {
+    expect(find({ ...zero, dailyQuizStreak: 3 }, 'dq-streak-3').unlocked).toBe(true);
+    const locked = find({ ...zero, dailyQuizStreak: 2 }, 'dq-streak-3');
+    expect(locked.unlocked).toBe(false);
+    expect(locked.progress).toEqual({ current: 2, target: 3 });
+  });
+
+  it('unlocks dq-streak-7 at 7-day daily-quiz streak', () => {
+    expect(find({ ...zero, dailyQuizStreak: 6 }, 'dq-streak-7').unlocked).toBe(false);
+    expect(find({ ...zero, dailyQuizStreak: 7 }, 'dq-streak-7').unlocked).toBe(true);
+    expect(find({ ...zero, dailyQuizStreak: 10 }, 'dq-streak-7').unlocked).toBe(true);
+  });
+
+  it('unlocks typing-perfect only with best 100% and at least one play', () => {
+    expect(find({ ...zero, typingBestPct: 100, typingPlays: 1 }, 'typing-perfect').unlocked).toBe(true);
+    expect(find({ ...zero, typingBestPct: 100, typingPlays: 0 }, 'typing-perfect').unlocked).toBe(false);
+  });
+
+  it('locks typing-perfect below 100% and reports progress', () => {
+    const a = find({ ...zero, typingBestPct: 80, typingPlays: 5 }, 'typing-perfect');
+    expect(a.unlocked).toBe(false);
+    expect(a.progress).toEqual({ current: 80, target: 100 });
   });
 });
