@@ -19,6 +19,14 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Honor the `_`-prefix convention for intentionally-unused identifiers
+      // (e.g. forward-compat params kept in a public signature).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
   },
   {
     // Test files and test utilities legitimately export non-components
