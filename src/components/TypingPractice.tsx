@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { PhraseItem } from '../data/types';
 import { checkSpelling } from '../utils/spellCheck';
 import { useTypingRecords } from '../hooks/useTypingRecords';
@@ -26,16 +26,6 @@ export default function TypingPractice({ items }: TypingPracticeProps) {
   const isCorrect = checked && !reveal && checkSpelling(current.english, typed);
   const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
-  // Record the finished run exactly once on entering the results screen.
-  useEffect(() => {
-    if (finished && !recordedRef.current) {
-      recordedRef.current = true;
-      // Compare against the pre-update best so the "new best" celebration is accurate.
-      setBeaten(isNewTypingBest(record, pct));
-      addAttempt(pct, correctCount, total);
-    }
-  }, [finished, pct, correctCount, total, record, addAttempt]);
-
   function submit() {
     if (checked || typed.trim().length === 0) return;
     setChecked(true);
@@ -52,6 +42,14 @@ export default function TypingPractice({ items }: TypingPracticeProps) {
 
   function next() {
     if (index + 1 >= total) {
+      // Record the finished run exactly once, in the event handler (not an
+      // effect). Compare against the pre-update best so the "new best"
+      // celebration is accurate before addAttempt mutates the record.
+      if (!recordedRef.current) {
+        recordedRef.current = true;
+        setBeaten(isNewTypingBest(record, pct));
+        addAttempt(pct, correctCount, total);
+      }
       setFinished(true);
     } else {
       setIndex((i) => i + 1);
