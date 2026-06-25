@@ -90,3 +90,24 @@ describe('Home デイリー目標の進捗表示 (US-002)', () => {
     expect(screen.getByText('今日の目標')).toBeInTheDocument();
   });
 });
+
+describe('Home ストリーク保護チップ (Round 52)', () => {
+  it('renders the freeze chip when progress.freezeTokens > 0', () => {
+    // english-learn-progress に freezeTokens=2 と学習済みアイテムを入れて
+    // hasProgress を成立させ、Progress Summary カードを表示させる。
+    const seeded = {
+      lessons: { l1: { lessonId: 'l1', completedItems: ['i1'], lastAccessed: 0 } },
+      fillInBlankScores: {},
+      readingScores: {},
+      totalStudyTime: 0,
+      streak: 5,
+      lastStudyDate: '2026-01-01',
+      freezeTokens: 2,
+    };
+    localStorage.setItem('english-learn-progress', JSON.stringify(seeded));
+
+    renderWithRouter(<Home />, { route: '/' });
+
+    expect(screen.getByText('❄️ ストリーク保護 ×2')).toBeInTheDocument();
+  });
+});

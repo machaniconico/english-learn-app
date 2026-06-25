@@ -15,9 +15,13 @@ export interface ProgressData {
   totalStudyTime: number;
   streak: number;
   lastStudyDate: string;
+  freezeTokens: number;
 }
 
 const STORAGE_KEY = 'english-learn-progress';
+
+export const MAX_FREEZE_TOKENS = 3;
+export const FREEZE_EARN_INTERVAL = 7;
 
 function getToday(): string {
   const d = new Date();
@@ -33,6 +37,16 @@ export function daysBetween(dateA: string, dateB: string): number {
   return Math.round(Math.abs(a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+/** Pure: shift a YYYY-MM-DD date by `delta` days (local-midnight parse to avoid TZ off-by-one). */
+export function addDays(dateStr: string, delta: number): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 /**
  * Pure streak transition. Drop-in for the original inline `touchStudyDate`
  * body: same-day is a no-op (returns prev unchanged), a consecutive day
@@ -42,12 +56,16 @@ export function daysBetween(dateA: string, dateB: string): number {
 export function applyStudyDate(prev: ProgressData, today: string): ProgressData {
   if (prev.lastStudyDate === today) return prev;
   let streak = prev.streak;
+  let freezeTokens = prev.freezeTokens;
   if (prev.lastStudyDate && daysBetween(prev.lastStudyDate, today) === 1) {
     streak += 1;
+    if (streak > 0 && streak % FREEZE_EARN_INTERVAL === 0) {
+      freezeTokens = Math.min(MAX_FREEZE_TOKENS, freezeTokens + 1);
+    }
   } else if (prev.lastStudyDate !== today) {
     streak = 1;
   }
-  return { ...prev, streak, lastStudyDate: today };
+  return { ...prev, streak, lastStudyDate: today, freezeTokens };
 }
 
 /**
@@ -58,11 +76,17 @@ export function applyStudyDate(prev: ProgressData, today: string): ProgressData 
 export function applyStreakBreak(prev: ProgressData, today: string): ProgressData {
   if (!prev.lastStudyDate) return prev;
   const diff = daysBetween(prev.lastStudyDate, today);
-  if (diff > 1) {
-    // streak broken
-    return { ...prev, streak: 0 };
+  if (diff <= 1) return prev;
+  const missedDays = diff - 1;
+  if (prev.streak > 0 && prev.freezeTokens >= missedDays) {
+    // 保護で穴埋め: lastStudyDate を前日へブリッジし streak を維持
+    return {
+      ...prev,
+      freezeTokens: prev.freezeTokens - missedDays,
+      lastStudyDate: addDays(today, -1),
+    };
   }
-  return prev;
+  return { ...prev, streak: 0 };
 }
 
 function createDefaultProgress(): ProgressData {
@@ -73,6 +97,7 @@ function createDefaultProgress(): ProgressData {
     totalStudyTime: 0,
     streak: 0,
     lastStudyDate: '',
+    freezeTokens: 0,
   };
 }
 
@@ -96,6 +121,10 @@ function loadProgress(): ProgressData {
       streak: typeof parsed.streak === 'number' ? parsed.streak : 0,
       lastStudyDate:
         typeof parsed.lastStudyDate === 'string' ? parsed.lastStudyDate : '',
+      freezeTokens:
+        typeof parsed.freezeTokens === 'number' && parsed.freezeTokens >= 0
+          ? Math.min(MAX_FREEZE_TOKENS, Math.floor(parsed.freezeTokens))
+          : 0,
     };
   } catch {
     return createDefaultProgress();

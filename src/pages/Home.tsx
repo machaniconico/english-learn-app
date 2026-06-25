@@ -393,6 +393,11 @@ export default function Home() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 達成率 {completionPct}% / {stats.totalItems} アイテム学習済み
               </p>
+              {progress.freezeTokens > 0 && (
+                <span className="inline-flex items-center gap-1 mt-1 text-xs font-medium text-sky-600 dark:text-sky-400">
+                  ❄️ ストリーク保護 ×{progress.freezeTokens}
+                </span>
+              )}
             </div>
           </div>
           <div className="shrink-0 flex items-center gap-2">
