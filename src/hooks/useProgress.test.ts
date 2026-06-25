@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   applyStudyDate,
   applyStreakBreak,
+  addDays,
   daysBetween,
   type ProgressData,
 } from './useProgress';
@@ -14,6 +15,7 @@ function baseProgress(overrides: Partial<ProgressData> = {}): ProgressData {
     totalStudyTime: 0,
     streak: 0,
     lastStudyDate: '',
+    freezeTokens: 0,
     ...overrides,
   };
 }
@@ -86,6 +88,27 @@ describe('applyStudyDate', () => {
     expect(next.totalStudyTime).toBe(120);
     expect(next.fillInBlankScores).toEqual({ setA: 80 });
   });
+
+  it('earns a freeze token when streak reaches a multiple of 7 (6→7)', () => {
+    const prev = baseProgress({ streak: 6, lastStudyDate: '2026-01-01', freezeTokens: 0 });
+    const next = applyStudyDate(prev, '2026-01-02');
+    expect(next.streak).toBe(7);
+    expect(next.freezeTokens).toBe(1);
+  });
+
+  it('caps freeze tokens at MAX (3): already-full + streak 13→14 stays 3', () => {
+    const prev = baseProgress({ streak: 13, lastStudyDate: '2026-01-01', freezeTokens: 3 });
+    const next = applyStudyDate(prev, '2026-01-02');
+    expect(next.streak).toBe(14);
+    expect(next.freezeTokens).toBe(3);
+  });
+
+  it('does NOT earn a freeze token on a reset path (gap > 1)', () => {
+    const prev = baseProgress({ streak: 7, lastStudyDate: '2026-01-01', freezeTokens: 0 });
+    const next = applyStudyDate(prev, '2026-01-05');
+    expect(next.streak).toBe(1);
+    expect(next.freezeTokens).toBe(0);
+  });
 });
 
 describe('applyStreakBreak', () => {
@@ -114,5 +137,45 @@ describe('applyStreakBreak', () => {
     const next = applyStreakBreak(prev, '2026-01-02');
     expect(next).toBe(prev);
     expect(next.streak).toBe(5);
+  });
+
+  it('bridges a 1-day miss with a freeze token: streak kept, tokens-1, lastStudyDate=yesterday', () => {
+    const prev = baseProgress({ streak: 5, lastStudyDate: '2026-01-01', freezeTokens: 1 });
+    const next = applyStreakBreak(prev, '2026-01-03'); // diff=2 → missedDays=1
+    expect(next.streak).toBe(5);
+    expect(next.freezeTokens).toBe(0);
+    expect(next.lastStudyDate).toBe('2026-01-02');
+  });
+
+  it('resets streak to 0 when freezeTokens=0 and diff=2 (no protection)', () => {
+    const prev = baseProgress({ streak: 5, lastStudyDate: '2026-01-01', freezeTokens: 0 });
+    const next = applyStreakBreak(prev, '2026-01-03');
+    expect(next.streak).toBe(0);
+    expect(next.freezeTokens).toBe(0);
+  });
+
+  it('resets streak to 0 when freezeTokens insufficient (missed=2, tokens=1) and keeps tokens', () => {
+    const prev = baseProgress({ streak: 5, lastStudyDate: '2026-01-01', freezeTokens: 1 });
+    const next = applyStreakBreak(prev, '2026-01-04'); // diff=3 → missedDays=2
+    expect(next.streak).toBe(0);
+    expect(next.freezeTokens).toBe(1);
+  });
+
+  it('bridges a 2-day miss when freezeTokens>=2: streak kept, tokens→0', () => {
+    const prev = baseProgress({ streak: 5, lastStudyDate: '2026-01-01', freezeTokens: 2 });
+    const next = applyStreakBreak(prev, '2026-01-04'); // diff=3 → missedDays=2
+    expect(next.streak).toBe(5);
+    expect(next.freezeTokens).toBe(0);
+    expect(next.lastStudyDate).toBe('2026-01-03');
+  });
+});
+
+describe('addDays', () => {
+  it('shifts backward across a month boundary (2026-03-01 → 2026-02-28)', () => {
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+  });
+
+  it('shifts backward across a year boundary (2026-01-01 → 2025-12-31)', () => {
+    expect(addDays('2026-01-01', -1)).toBe('2025-12-31');
   });
 });
