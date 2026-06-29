@@ -1,61 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DictationItem } from '../data/types';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
+import { normalize, gradeResult, type ResultGrade } from '../utils/dictationSimilarity';
 
 interface DictationProps {
   items: DictationItem[];
 }
-
-type ResultGrade = 'perfect' | 'close' | 'wrong';
 
 interface ItemResult {
   item: DictationItem;
   typed: string;
   grade: ResultGrade;
   similarity: number;
-}
-
-function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function calcSimilarity(a: string, b: string): number {
-  const na = normalize(a);
-  const nb = normalize(b);
-  if (na === nb) return 1;
-  if (na.length === 0 || nb.length === 0) return 0;
-
-  const len = Math.max(na.length, nb.length);
-  const dist = levenshtein(na, nb);
-  return Math.max(0, (len - dist) / len);
-}
-
-function levenshtein(a: string, b: string): number {
-  const m = a.length;
-  const n = b.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] =
-        a[i - 1] === b[j - 1]
-          ? dp[i - 1][j - 1]
-          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-    }
-  }
-  return dp[m][n];
-}
-
-function gradeResult(typed: string, correct: string): { grade: ResultGrade; similarity: number } {
-  const similarity = calcSimilarity(typed, correct);
-  if (similarity === 1) return { grade: 'perfect', similarity };
-  if (similarity > 0.8) return { grade: 'close', similarity };
-  return { grade: 'wrong', similarity };
 }
 
 function highlightDifferences(typed: string, correct: string): React.ReactNode {
