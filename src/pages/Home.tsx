@@ -41,6 +41,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import StreakBanner from '../components/StreakBanner';
 import DailyGoalProgress from '../components/DailyGoalProgress';
+import HomeQuiz from '../components/HomeQuiz';
 import { useLastActivity } from '../hooks/useLastActivity';
 
 const sectionMeta: Record<string, { icon: LucideIcon; color: string; gradient: string }> = {
@@ -341,6 +342,9 @@ export default function Home() {
           </span>
         </div>
       </Link>
+
+      {/* 練習クイズ: 難易度・出題数(10の倍数)を指定してその場で挑戦 */}
+      <HomeQuiz />
 
       {/* Weak Points Card (only shown if there are weak points) */}
       {weakPoints.length > 0 && (
