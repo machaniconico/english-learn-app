@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReadingPassage, ReadingQuestion } from '../data/types';
+import { estimateReadingMinutes } from '../utils/readingTime';
 import AudioButton from './AudioButton';
 
 interface ReadingComprehensionProps {
@@ -26,6 +27,7 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
 
   const currentQuestion = passage.questions[state.currentIndex];
   const correctCount = state.results.filter((r) => r.correct).length;
+  const readingMinutes = estimateReadingMinutes(passage.passage);
 
   const handleSelect = useCallback(
     (index: number) => {
@@ -252,7 +254,10 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
               {passage.title}
             </h2>
-            <p className="text-xs text-gray-400 dark:text-gray-400 mb-4">{passage.titleJa}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-400 mb-1">{passage.titleJa}</p>
+            {readingMinutes > 0 && (
+              <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">📖 推定読了 約{readingMinutes}分</p>
+            )}
 
             {/* Passage text */}
             <div className="max-h-[50vh] md:max-h-[60vh] overflow-y-auto pr-1">
