@@ -175,6 +175,21 @@ describe('HomeQuiz', () => {
     expect(saved.selection).toBe('advanced');
   });
 
+  it('結果画面に「分野別の正答」内訳が表示される', () => {
+    const picked = reproduceBeginnerPick('fixed-seed');
+    render(<HomeQuiz seedOverride="fixed-seed" />);
+    fireEvent.click(screen.getByRole('button', { name: /初級/ }));
+    fireEvent.click(screen.getByRole('button', { name: /初級 10問でスタート/ }));
+    for (let i = 0; i < 10; i++) answerAndAdvance();
+
+    expect(screen.getByRole('heading', { name: '分野別の正答' })).toBeTruthy();
+    // 出題された問題の最初のカテゴリ行(aria-label)が存在する。
+    const firstCategory = picked[0].category;
+    expect(
+      screen.getByLabelText(new RegExp(`^${firstCategory} \\d+問中\\d+問正解$`)),
+    ).toBeTruthy();
+  });
+
   it('設定画面に axe 違反がない', async () => {
     const { container } = render(<HomeQuiz />);
     expect(await axe(container)).toHaveNoViolations();
