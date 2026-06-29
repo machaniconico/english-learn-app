@@ -4,6 +4,7 @@ import { useProgress } from '../hooks/useProgress';
 import { useWeakPoints } from '../hooks/useWeakPoints';
 import { useSpacedRepetition } from '../hooks/useSpacedRepetition';
 import { buildReviewQueue } from '../utils/reviewQueue';
+import { getRecoverySuggestion } from '../utils/recoverySuggestion';
 import { useUserLevel } from '../hooks/useUserLevel';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useEffect, useState } from 'react';
@@ -70,6 +71,11 @@ const sectionMeta: Record<string, { icon: LucideIcon; color: string; gradient: s
 /** Total learnable items across all sections (from precomputed metadata). */
 const TOTAL_ITEMS = sectionsMeta.reduce((sum, s) => sum + s.itemCount, 0);
 
+function homeTodayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 /** Map weak point type to a recommended practice path */
 function getWeakPointRecommendation(type: string): { label: string; path: string } | null {
   switch (type) {
@@ -85,6 +91,7 @@ function getWeakPointRecommendation(type: string): { label: string; path: string
 
 export default function Home() {
   const { progress, getOverallStats, updateStreak } = useProgress();
+  const recovery = getRecoverySuggestion(progress.lastStudyDate, homeTodayStr());
   const { weakPoints } = useWeakPoints();
   const { getDueCards } = useSpacedRepetition();
   const { hasDiagnosed, level: userLevel, levelInfo } = useUserLevel();
@@ -486,6 +493,31 @@ export default function Home() {
       )}
 
       {/* ストリーク維持バナー: streakAtRisk のときだけ表示、それ以外は null */}
+      {recovery.show && (
+        <div
+          role="status"
+          className="animate-fade-in-up mb-6 flex items-center gap-4 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 p-4"
+          style={{ '--stagger': '0ms' } as React.CSSProperties}
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm shrink-0">
+            <RotateCcw className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              おかえりなさい！
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {recovery.daysAway}日ぶりの学習です。まずは5分の練習から再開しましょう。
+            </p>
+          </div>
+          <Link
+            to="/daily-quiz"
+            className="shrink-0 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:focus-visible:ring-offset-gray-900"
+          >
+            クイズで再開する &rarr;
+          </Link>
+        </div>
+      )}
       <StreakBanner />
 
       {/* 今日のデイリー目標の進捗(US-002): StreakBanner の直後に配置 */}

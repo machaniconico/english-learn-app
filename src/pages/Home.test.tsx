@@ -61,6 +61,49 @@ describe('Home 前回の続き card (US-002)', () => {
   });
 });
 
+describe('Home 復帰提案カード (round64)', () => {
+  const PROGRESS_KEY = 'english-learn-progress';
+  function seedLastStudy(daysAgo: number, extra: Record<string, unknown> = {}): void {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    const lastStudyDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    localStorage.setItem(
+      PROGRESS_KEY,
+      JSON.stringify({
+        lessons: {},
+        fillInBlankScores: {},
+        readingScores: {},
+        totalStudyTime: 0,
+        streak: 0,
+        lastStudyDate,
+        freezeTokens: 0,
+        ...extra,
+      }),
+    );
+  }
+
+  it('3日以上ぶりのとき「おかえりなさい」カードを表示する', () => {
+    seedLastStudy(5);
+    renderWithRouter(<Home />, { route: '/' });
+    expect(screen.getByText('おかえりなさい！')).toBeInTheDocument();
+    expect(screen.getByText(/5日ぶりの学習/)).toBeInTheDocument();
+    const link = screen.getByRole('link', { name: /クイズで再開する/ });
+    expect(link).toHaveAttribute('href', '/daily-quiz');
+  });
+
+  it('今日学習済み(離脱0日)のときは復帰カードを出さない', () => {
+    seedLastStudy(0, { streak: 1 });
+    renderWithRouter(<Home />, { route: '/' });
+    expect(screen.queryByText('おかえりなさい！')).not.toBeInTheDocument();
+  });
+
+  it('離脱が2日(threshold未満)なら復帰カードを出さない', () => {
+    seedLastStudy(2);
+    renderWithRouter(<Home />, { route: '/' });
+    expect(screen.queryByText('おかえりなさい！')).not.toBeInTheDocument();
+  });
+});
+
 describe('Home デイリー目標の進捗表示 (US-002)', () => {
   it('renders the daily-goal progressbar and 今日の目標 heading when goal & study-time are seeded', () => {
     // 目標分を 10 分に設定
