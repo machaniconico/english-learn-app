@@ -12,6 +12,8 @@ import {
   practiceCountOptions,
   pickPracticeQuestions,
 } from '../utils/practiceQuizSelect';
+import { getWrongQuestions } from '../utils/dailyQuizStats';
+import DailyQuizReview from './DailyQuizReview';
 
 // トップ画面の「練習クイズ」。
 // デイリークイズ(日替わり・1日1セット・完了追跡あり)とは別物で、
@@ -47,6 +49,7 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
   const [questions, setQuestions] = useState<DailyQuizQuestion[]>([]);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [current, setCurrent] = useState(0);
+  const [reviewing, setReviewing] = useState(false);
 
   // 選択中の難易度に応じた出題数の選択肢(10の倍数)。
   // 未選択時は最大プール(おまかせ=60)を基準にプレビュー表示する。
@@ -104,6 +107,7 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
 
   // --- もう一度(同じ設定で出題し直す) ---
   const handleRetry = useCallback(() => {
+    setReviewing(false);
     if (!selection) return;
     const pool = resolvePool(selection);
     const seed = seedOverride ?? `${Date.now()}-${selection}-${count}-retry`;
@@ -117,6 +121,7 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
 
   // --- 設定に戻る ---
   const handleReconfigure = useCallback(() => {
+    setReviewing(false);
     setPhase('config');
     setQuestions([]);
     setAnswers([]);
@@ -231,6 +236,16 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
     ).length;
     const pct = total > 0 ? Math.round((finalScore / total) * 100) : 0;
     const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪';
+    const wrongQuestions = getWrongQuestions(questions, answers);
+
+    if (reviewing) {
+      return (
+        <DailyQuizReview
+          questions={wrongQuestions}
+          onClose={() => setReviewing(false)}
+        />
+      );
+    }
 
     return (
       <section
@@ -269,6 +284,16 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {wrongQuestions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setReviewing(true)}
+              aria-label={`間違えた ${wrongQuestions.length} 問をもう一度復習する`}
+              className="px-6 py-3 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
+            >
+              間違えた {wrongQuestions.length}問をもう一度
+            </button>
+          )}
           <button
             type="button"
             onClick={handleRetry}
