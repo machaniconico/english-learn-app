@@ -253,6 +253,29 @@ export default function WeeklyReport() {
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">最長記録</div>
             </div>
           </div>
+          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                学習継続率（{reportData.activeDays}/{range.days}日）
+              </span>
+              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {reportData.consistencyPct}%
+              </span>
+            </div>
+            <div
+              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={reportData.consistencyPct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="学習継続率"
+            >
+              <div
+                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-300"
+                style={{ width: `${reportData.consistencyPct}%` }}
+              />
+            </div>
+          </div>
           {reportData.streak.current > 0 && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
               {reportData.streak.current >= 7

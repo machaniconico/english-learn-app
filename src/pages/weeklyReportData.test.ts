@@ -74,6 +74,9 @@ describe('buildReportData', () => {
     expect(result.activeDays).toBe(2);
     expect(result.prevActiveDays).toBe(1);
 
+    // Consistency: 2 active days out of a 7-day week -> round(2/7*100) = 29%.
+    expect(result.consistencyPct).toBe(29);
+
     // Completed items: 2 events this week; 1 previous.
     expect(result.completedItems).toBe(2);
     expect(result.prevCompletedItems).toBe(1);
@@ -97,6 +100,34 @@ describe('buildReportData', () => {
     expect(result.goals).toContain('毎日少しずつ学習して、4日以上の学習日数を目指しましょう');
     expect(result.goals).toContain('レッスンやクイズにもっと取り組んでみましょう');
     expect(result.goals).not.toContain('復習を重ねて平均スコア80%以上を目指しましょう');
+  });
+
+  it('computes consistencyPct and uses non-"連続" wording for distinct active days', () => {
+    // 5 distinct days studied in a 7-day week (Mon..Fri).
+    const sessions90 = [
+      session('2024-01-08', new Date(2024, 0, 8, 9).getTime(), 600),
+      session('2024-01-09', new Date(2024, 0, 9, 9).getTime(), 600),
+      session('2024-01-10', new Date(2024, 0, 10, 9).getTime(), 600),
+      session('2024-01-11', new Date(2024, 0, 11, 9).getTime(), 600),
+      session('2024-01-12', new Date(2024, 0, 12, 9).getTime(), 600),
+    ];
+
+    const result = buildReportData({
+      sessions90,
+      sessions180: [],
+      allEvents: [],
+      streak: { current: 0, longest: 0 },
+      range,
+      prevRange,
+      period: 'this-week',
+    });
+
+    expect(result.activeDays).toBe(5);
+    // 5 / 7 -> 71%.
+    expect(result.consistencyPct).toBe(71);
+    // Wording must not claim "連続"(consecutive) since activeDays counts distinct days.
+    expect(result.achievements).toContain('5日間学習しました');
+    expect(result.achievements.some((a) => a.includes('連続'))).toBe(false);
   });
 
   it('windows sessions/events strictly to the range (excludes out-of-range)', () => {
