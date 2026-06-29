@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeDailyGoalHistory } from './dailyGoalHistory';
+import { computeDailyGoalHistory, computeGoalStreak } from './dailyGoalHistory';
 
 function bd(...minutes: number[]): { date: string; minutes: number }[] {
   return minutes.map((m, i) => ({
@@ -72,5 +72,36 @@ describe('computeDailyGoalHistory', () => {
     const { days } = computeDailyGoalHistory(bd(8), 10);
     expect(days[0].date).toBe('2026-06-10');
     expect(days[0].minutes).toBe(8);
+  });
+});
+
+describe('computeGoalStreak', () => {
+  // bd(...) は date を 2026-06-10 から連番で振る。最終日の date を都度算出。
+  const lastDate = (n: number) => `2026-06-${String(10 + n - 1).padStart(2, '0')}`;
+
+  it('空配列なら streak=0, atRiskToday=false', () => {
+    expect(computeGoalStreak([], '2026-06-10')).toEqual({ streak: 0, atRiskToday: false });
+  });
+
+  it('今日も達成しているときは今日を含めて数え、atRisk は false', () => {
+    const { days } = computeDailyGoalHistory(bd(10, 10, 10), 10);
+    expect(computeGoalStreak(days, lastDate(3))).toEqual({ streak: 3, atRiskToday: false });
+  });
+
+  it('今日(最終日)が未達でも前日までの連続が生きていれば atRisk で継続', () => {
+    // met=[T,T,F]、最終日=今日が未達 → 今日を飛ばし前日から2連続。
+    const { days } = computeDailyGoalHistory(bd(10, 10, 5), 10);
+    expect(computeGoalStreak(days, lastDate(3))).toEqual({ streak: 2, atRiskToday: true });
+  });
+
+  it('最終日が未達かつ前日も未達なら streak=0(atRisk は streak>0 のときのみ)', () => {
+    const { days } = computeDailyGoalHistory(bd(10, 5, 5), 10);
+    expect(computeGoalStreak(days, lastDate(3))).toEqual({ streak: 0, atRiskToday: false });
+  });
+
+  it('最終日が today でないなら未達日もスキップせず数える(atRisk なし)', () => {
+    // 最終日が未達だが today 文字列と一致しない → スキップしないので streak=0。
+    const { days } = computeDailyGoalHistory(bd(10, 10, 5), 10);
+    expect(computeGoalStreak(days, '2099-01-01')).toEqual({ streak: 0, atRiskToday: false });
   });
 });
