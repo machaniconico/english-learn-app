@@ -108,6 +108,41 @@ describe('AchievementsPage', () => {
     expect(screen.getByText('0 / 3 個')).toBeTruthy();
   });
 
+  it('shows a countdown to the next freeze token when not maxed', () => {
+    // streak=5, tokens=1 → 次の獲得まで 7-5=2 日。
+    localStorage.setItem(
+      'english-learn-progress',
+      JSON.stringify({
+        lessons: {},
+        fillInBlankScores: {},
+        readingScores: {},
+        totalStudyTime: 0,
+        streak: 5,
+        lastStudyDate: '',
+        freezeTokens: 1,
+      }),
+    );
+    renderWithRouter(<AchievementsPage />);
+    expect(screen.getByText('あと2日連続でトークンを1つ獲得')).toBeTruthy();
+  });
+
+  it('shows a maxed message when freeze tokens are at the cap', () => {
+    localStorage.setItem(
+      'english-learn-progress',
+      JSON.stringify({
+        lessons: {},
+        fillInBlankScores: {},
+        readingScores: {},
+        totalStudyTime: 0,
+        streak: 30,
+        lastStudyDate: '',
+        freezeTokens: 3,
+      }),
+    );
+    renderWithRouter(<AchievementsPage />);
+    expect(screen.getByText('最大まで保有しています')).toBeTruthy();
+  });
+
   it('has no axe accessibility violations', async () => {
     const { container } = renderWithRouter(<AchievementsPage />);
     expect(await axe(container)).toHaveNoViolations();
