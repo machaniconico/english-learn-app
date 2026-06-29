@@ -165,4 +165,17 @@ describe('DailyGoalProgress', () => {
     expect(screen.queryByText(/日連続/)).toBeNull();
     expect(screen.getByText('0/7日 達成')).toBeTruthy();
   });
+
+  it('今日まだ未達でも前日まで連続達成なら「(今日まだ)」付きで継続表示する', () => {
+    seedGoal(10);
+    // 今日(offset0)は未シード=0分=未達。昨日・一昨日は達成。
+    seedSessions([
+      { offsetDays: 1, minutes: 10 },
+      { offsetDays: 2, minutes: 11 },
+    ]);
+
+    renderWithRouter(<DailyGoalProgress />);
+
+    expect(screen.getByText(/🔥2日連続\(今日まだ\)/)).toBeTruthy();
+  });
 });

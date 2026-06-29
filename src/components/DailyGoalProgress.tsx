@@ -1,6 +1,6 @@
 import { useDailyGoal, goalProgressPct } from '../hooks/useDailyGoal';
 import { useStudyTimer } from '../hooks/useStudyTimer';
-import { computeDailyGoalHistory } from '../utils/dailyGoalHistory';
+import { computeDailyGoalHistory, computeGoalStreak } from '../utils/dailyGoalHistory';
 
 const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const;
 
@@ -32,6 +32,8 @@ export default function DailyGoalProgress() {
   // 直近7日の達成傾向。getDailyBreakdown(7) は古い→新しい昇順、最後が今日。
   const history = computeDailyGoalHistory(getDailyBreakdown(7), goalMinutes);
   const lastIndex = history.days.length - 1;
+  const todayStr = history.days[lastIndex]?.date ?? '';
+  const goalStreak = computeGoalStreak(history.days, todayStr);
 
   return (
     <div className="mb-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
@@ -68,9 +70,15 @@ export default function DailyGoalProgress() {
             <span className="text-xs text-gray-600 dark:text-gray-300">
               {`${history.metCount}/7日 達成`}
             </span>
-            {history.currentStreak >= 2 && (
-              <span className="rounded-full bg-orange-100 dark:bg-orange-900/40 px-2 py-0.5 text-xs font-bold text-orange-600 dark:text-orange-400">
-                {`🔥${history.currentStreak}日連続`}
+            {goalStreak.streak >= 2 && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                  goalStreak.atRiskToday
+                    ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
+                    : 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400'
+                }`}
+              >
+                {`🔥${goalStreak.streak}日連続${goalStreak.atRiskToday ? '(今日まだ)' : ''}`}
               </span>
             )}
           </div>
