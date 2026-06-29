@@ -20,6 +20,12 @@ describe('ReadingPracticePage', () => {
     expect(screen.getByRole('button', { name: '上級' })).toBeTruthy();
   });
 
+  it('shows an estimated reading time on each passage card', () => {
+    renderWithRouter(<ReadingPracticePage />, { route: '/reading-practice' });
+    // 少なくとも1枚のカードに「📖 約N分」が出る。
+    expect(screen.getAllByText(/📖 約\d+分/).length).toBeGreaterThan(0);
+  });
+
   it('filters passages by level when a tab is clicked', () => {
     renderWithRouter(<ReadingPracticePage />, { route: '/reading-practice' });
 
