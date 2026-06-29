@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import type { PhraseItem } from '../data/types';
 import { checkSpelling } from '../utils/spellCheck';
 import { useTypingRecords } from '../hooks/useTypingRecords';
-import { isNewTypingBest } from '../utils/typingRecords';
+import { accuracyTrend, isNewTypingBest, recentAccuracyAverage } from '../utils/typingRecords';
 import AudioButton from './AudioButton';
 
 interface TypingPracticeProps {
@@ -74,6 +74,8 @@ export default function TypingPractice({ items }: TypingPracticeProps) {
 
   if (finished) {
     const emoji = pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '💪';
+    const avg = recentAccuracyAverage(record);
+    const trend = accuracyTrend(record);
     return (
       <div className="w-full max-w-lg mx-auto text-center">
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-8 sm:p-10">
@@ -104,6 +106,12 @@ export default function TypingPractice({ items }: TypingPracticeProps) {
 
           {record.history.length > 1 && (
             <div className="mt-4 text-left">
+              <p className="mb-2 text-center text-sm text-gray-500 dark:text-gray-400" role="status">
+                直近{record.history.length}回の平均 {avg}%
+                {trend > 0 && ` ・ 向上 +${trend}% 📈`}
+                {trend < 0 && ` ・ 低下 ${trend}% 📉`}
+                {trend === 0 && ' ・ 横ばい →'}
+              </p>
               <p className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold mb-2 text-center">
                 直近の記録
               </p>

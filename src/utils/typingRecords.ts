@@ -38,6 +38,29 @@ export function isNewTypingBest(prev: TypingRecord, pct: number): boolean {
 }
 
 /**
+ * 直近 limit 件の平均精度(%)を四捨五入で返す。履歴が無ければ 0。
+ */
+export function recentAccuracyAverage(
+  record: TypingRecord,
+  limit: number = TYPING_HISTORY_LIMIT,
+): number {
+  const slice = record.history.slice(0, Math.max(0, limit));
+  if (slice.length === 0) return 0;
+  const sum = slice.reduce((s, a) => s + a.pct, 0);
+  return Math.round(sum / slice.length);
+}
+
+/**
+ * 向上トレンド(%)。履歴ウィンドウ内で「最新の pct - 最古の pct」を返す。
+ * 履歴が2件未満なら 0(トレンド算出不可)。正なら上達、負なら低下。
+ */
+export function accuracyTrend(record: TypingRecord): number {
+  const h = record.history;
+  if (h.length < 2) return 0;
+  return h[0].pct - h[h.length - 1].pct;
+}
+
+/**
  * Pure (non-destructive, deterministic): fold a completed attempt into the record.
  * Does not call Date.now — the timestamp must come in on `attempt`.
  */
