@@ -143,6 +143,53 @@ describe('AchievementsPage', () => {
     expect(screen.getByText('最大まで保有しています')).toBeTruthy();
   });
 
+  it('shows the weekly goal section and persists weekly goal changes (default 60)', () => {
+    renderWithRouter(<AchievementsPage />);
+    expect(screen.getByRole('heading', { name: '今週の学習目標' })).toBeTruthy();
+    // 既定 60 分が選択済み(週用 aria-label で daily の 30分等と区別)。
+    expect(
+      screen.getByRole('button', { name: '今週の目標 60分' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+
+    const btn120 = screen.getByRole('button', { name: '今週の目標 120分' });
+    fireEvent.click(btn120);
+    expect(btn120.getAttribute('aria-pressed')).toBe('true');
+    expect(localStorage.getItem('english-learn-weekly-goal')).toBe('120');
+  });
+
+  it('sums the last 7 days into the weekly progress bar', () => {
+    const now = Date.now();
+    const dateStr = (t: number) => {
+      const d = new Date(t);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    localStorage.setItem('english-learn-weekly-goal', '60');
+    localStorage.setItem(
+      'english-learn-study-time',
+      JSON.stringify({
+        sessions: [
+          { date: dateStr(now), startTime: now - 1_800_000, endTime: now, duration: 1800, activity: 'lesson' }, // 30分
+          {
+            date: dateStr(now - 2 * 24 * 3600 * 1000),
+            startTime: now - 2 * 24 * 3600 * 1000,
+            endTime: now - 2 * 24 * 3600 * 1000 + 900_000,
+            duration: 900, // 15分
+            activity: 'lesson',
+          },
+        ],
+        currentActivity: null,
+        currentStart: null,
+        lastInteraction: null,
+      }),
+    );
+    renderWithRouter(<AchievementsPage />);
+    // 45分 / 60分 = 75%
+    expect(screen.getByRole('progressbar', { name: '今週の学習目標の進捗' })).toHaveAttribute(
+      'aria-valuenow',
+      '75',
+    );
+  });
+
   it('has no axe accessibility violations', async () => {
     const { container } = renderWithRouter(<AchievementsPage />);
     expect(await axe(container)).toHaveNoViolations();
