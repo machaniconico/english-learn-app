@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { render, screen, fireEvent } from '../test/test-utils';
@@ -36,6 +36,10 @@ function answerAndAdvance() {
 }
 
 describe('HomeQuiz', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('設定画面を表示し、難易度未選択のときスタートは無効', () => {
     render(<HomeQuiz />);
     expect(screen.getByRole('heading', { name: '練習クイズ' })).toBeTruthy();
@@ -134,6 +138,41 @@ describe('HomeQuiz', () => {
     expect(
       screen.queryByRole('button', { name: /もう一度復習する/ }),
     ).toBeNull();
+  });
+
+  it('前回の難易度・出題数を localStorage から復元する', () => {
+    localStorage.setItem(
+      'english-learn-practice-quiz-prefs',
+      JSON.stringify({ selection: 'intermediate', count: 20 }),
+    );
+    render(<HomeQuiz />);
+    // 復元されると開始ボタンが「中級 20問でスタート」になり、出題数20が選択済みになる。
+    // (難易度ボタンと開始ボタンの双方に「中級」が含まれ /中級/ は曖昧なので、
+    //  一意な開始ボタン文言と出題数チップの aria-pressed で検証する)
+    expect(screen.getByRole('button', { name: /中級 20問でスタート/ })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: '出題数 20 問' }).getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
+
+  it('復元した出題数がプール上限を超える場合は最大値にクランプする', () => {
+    // 初級はプール20問なので 10/20 のみ。保存値 60 は 20 にクランプされる。
+    localStorage.setItem(
+      'english-learn-practice-quiz-prefs',
+      JSON.stringify({ selection: 'beginner', count: 60 }),
+    );
+    render(<HomeQuiz />);
+    expect(screen.getByRole('button', { name: /初級 20問でスタート/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '出題数 60 問' })).toBeNull();
+  });
+
+  it('難易度を選ぶと設定が localStorage に保存される', () => {
+    render(<HomeQuiz />);
+    fireEvent.click(screen.getByRole('button', { name: /上級/ }));
+    const saved = JSON.parse(
+      localStorage.getItem('english-learn-practice-quiz-prefs') ?? '{}',
+    );
+    expect(saved.selection).toBe('advanced');
   });
 
   it('設定画面に axe 違反がない', async () => {

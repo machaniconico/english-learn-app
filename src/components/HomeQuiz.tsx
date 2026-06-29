@@ -13,12 +13,13 @@ import {
   pickPracticeQuestions,
 } from '../utils/practiceQuizSelect';
 import { getWrongQuestions } from '../utils/dailyQuizStats';
+import { loadPracticePrefs, savePracticePrefs } from '../utils/practiceQuizPrefs';
 import DailyQuizReview from './DailyQuizReview';
 
 // トップ画面の「練習クイズ」。
 // デイリークイズ(日替わり・1日1セット・完了追跡あり)とは別物で、
 // 難易度と出題数(10の倍数)を指定して何度でも挑戦できる練習用。
-// 状態は永続化しない(ephemeral)。
+// 難易度と出題数だけ保存し、出題中の状態は永続化しない(ephemeral)。
 
 type Phase = 'config' | 'play' | 'result';
 
@@ -41,9 +42,15 @@ interface HomeQuizProps {
 }
 
 export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
+  const prefs = useMemo(() => loadPracticePrefs(), []);
   const [phase, setPhase] = useState<Phase>('config');
-  const [selection, setSelection] = useState<QuizSelectionMode | null>(null);
-  const [count, setCount] = useState<number>(10);
+  const [selection, setSelection] = useState<QuizSelectionMode | null>(prefs.selection);
+  const [count, setCount] = useState<number>(() => {
+    if (!prefs.selection) return prefs.count;
+
+    const opts = practiceCountOptions(resolvePool(prefs.selection).length);
+    return opts.includes(prefs.count) ? prefs.count : (opts[opts.length - 1] ?? 10);
+  });
 
   // 出題中の問題セットと解答状況(開始時に確定)。
   const [questions, setQuestions] = useState<DailyQuizQuestion[]>([]);
@@ -62,8 +69,10 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
   const handleSelectDifficulty = useCallback((id: QuizSelectionMode) => {
     setSelection(id);
     const opts = practiceCountOptions(resolvePool(id).length);
-    setCount((prev) => (opts.includes(prev) ? prev : (opts[opts.length - 1] ?? 10)));
-  }, []);
+    const nextCount = opts.includes(count) ? count : (opts[opts.length - 1] ?? 10);
+    setCount(nextCount);
+    savePracticePrefs({ selection: id, count: nextCount });
+  }, [count]);
 
   // --- 開始 ---
   const handleStart = useCallback(() => {
@@ -195,7 +204,10 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
                 type="button"
                 aria-pressed={active}
                 aria-label={`出題数 ${opt} 問`}
-                onClick={() => setCount(opt)}
+                onClick={() => {
+                  setCount(opt);
+                  savePracticePrefs({ selection, count: opt });
+                }}
                 className={`px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 cursor-pointer active:scale-[0.98] ${
                   active
                     ? 'border-sky-500 bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 shadow-sm'
