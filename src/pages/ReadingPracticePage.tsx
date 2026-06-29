@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { readingPassages } from '../data/toeic/reading-passages';
 import ReadingComprehension from '../components/ReadingComprehension';
+import { estimateReadingMinutes } from '../utils/readingTime';
 
 const levelConfig = {
   beginner: {
@@ -167,6 +168,7 @@ export default function ReadingPracticePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-10">
         {filtered.map((passage) => {
           const config = levelConfig[passage.level];
+          const readingMinutes = estimateReadingMinutes(passage.passage);
 
           return (
             <Link
@@ -203,6 +205,7 @@ export default function ReadingPracticePage() {
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-400 dark:text-gray-400">
                   {passage.questions.length} 問
+                  {readingMinutes > 0 && ` · 📖 約${readingMinutes}分`}
                 </span>
                 <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
                   挑戦する &rarr;
