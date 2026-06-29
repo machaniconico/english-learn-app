@@ -13,6 +13,7 @@ import {
   pickPracticeQuestions,
 } from '../utils/practiceQuizSelect';
 import { getWrongQuestions } from '../utils/dailyQuizStats';
+import { quizCategoryBreakdown } from '../utils/quizCategoryBreakdown';
 import { loadPracticePrefs, savePracticePrefs } from '../utils/practiceQuizPrefs';
 import DailyQuizReview from './DailyQuizReview';
 
@@ -259,6 +260,8 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
       );
     }
 
+    const categoryStats = quizCategoryBreakdown(questions, answers);
+
     return (
       <section
         className="animate-fade-in-up mb-6 rounded-2xl border border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-800 p-6"
@@ -294,6 +297,40 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
           </div>
           <p className="text-sm text-gray-400 dark:text-gray-500 mb-5">{pct}% 正解</p>
         </div>
+
+        {categoryStats.length > 0 && (
+          <div className="mb-5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-3">
+              分野別の正答
+            </h3>
+            {categoryStats.map((stat) => {
+              const statPct = stat.total > 0 ? (stat.correct / stat.total) * 100 : 0;
+
+              return (
+                <div
+                  key={stat.category}
+                  aria-label={`${stat.category} ${stat.total}問中${stat.correct}問正解`}
+                  className="bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-2"
+                >
+                  <div className="flex justify-between items-center gap-3 mb-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {stat.category}
+                    </span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                      {stat.correct} / {stat.total}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-sky-500 dark:bg-sky-400 rounded-full"
+                      style={{ width: `${statPct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {wrongQuestions.length > 0 && (
