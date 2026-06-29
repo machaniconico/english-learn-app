@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { PhraseItem } from '../data/types';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
+import { shuffleArray } from '../utils/array';
+import { pickDistractors } from '../utils/listeningQuiz';
 
 interface ListeningQuizProps {
   items: PhraseItem[];
@@ -14,21 +16,6 @@ interface QuizState {
   selectedIndex: number | null;
   answered: boolean;
   results: boolean[];
-}
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-function pickDistractors(items: PhraseItem[], correctId: string, count: number): string[] {
-  const others = items.filter((item) => item.id !== correctId);
-  const shuffled = shuffleArray(others);
-  return shuffled.slice(0, count).map((item) => item.japanese);
 }
 
 const TOTAL_QUESTIONS = 10;
