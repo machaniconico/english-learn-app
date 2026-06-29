@@ -13,7 +13,7 @@ import {
   pickPracticeQuestions,
 } from '../utils/practiceQuizSelect';
 import { getWrongQuestions } from '../utils/dailyQuizStats';
-import { quizCategoryBreakdown } from '../utils/quizCategoryBreakdown';
+import { quizCategoryBreakdown, weakestCategory } from '../utils/quizCategoryBreakdown';
 import { loadPracticePrefs, savePracticePrefs } from '../utils/practiceQuizPrefs';
 import DailyQuizReview from './DailyQuizReview';
 
@@ -261,6 +261,7 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
     }
 
     const categoryStats = quizCategoryBreakdown(questions, answers);
+    const weakest = weakestCategory(categoryStats);
 
     return (
       <section
@@ -329,6 +330,12 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {weakest && (
+          <div role="status" className="rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-200 p-3 mb-5">
+            💡 苦手分野は「{weakest.category}」です。重点的に復習しましょう。
           </div>
         )}
 

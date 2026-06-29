@@ -113,6 +113,9 @@ describe('HomeQuiz', () => {
       chooseOptionAndAdvance(wrongIdx);
     }
 
+    // 全問不正解なので苦手分野コールアウトも出る。
+    expect(screen.getByText(/苦手分野は「.+」です/)).toBeTruthy();
+
     // 結果画面: 10問とも間違えたので復習ボタンが出る。
     const reviewBtn = screen.getByRole('button', {
       name: /間違えた 10 問をもう一度復習する/,
@@ -138,6 +141,8 @@ describe('HomeQuiz', () => {
     expect(
       screen.queryByRole('button', { name: /もう一度復習する/ }),
     ).toBeNull();
+    // 全問正解なので苦手分野コールアウトは出ない。
+    expect(screen.queryByText(/苦手分野は/)).toBeNull();
   });
 
   it('前回の難易度・出題数を localStorage から復元する', () => {
