@@ -10,6 +10,7 @@ import {
 import { selectDailyQuiz, getTodayString, DAILY_QUIZ_COUNT } from '../utils/dailyQuizSelect';
 import { getDailyQuizSummary, recommendDifficulty, getWrongQuestions } from '../utils/dailyQuizStats';
 import { quizCategoryBreakdown, weakestCategory } from '../utils/quizCategoryBreakdown';
+import { loadCategoryHistory, saveCategoryHistory, recordCategoryStats, topWeakCategories } from '../utils/categoryHistory';
 import { useAccuracy } from '../hooks/useAccuracy';
 import DailyQuizReview from './DailyQuizReview';
 
@@ -306,6 +307,9 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
         correct: finalScore,
         level: selection,
       });
+      saveCategoryHistory(
+        recordCategoryStats(loadCategoryHistory(), quizCategoryBreakdown(questions, answers)),
+      );
       saveState(dateStr, {
         selection,
         count,
@@ -340,6 +344,7 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
   // 難易度選択画面
   // =====================================================================
   if (phase === 'select') {
+    const weakHistory = topWeakCategories(loadCategoryHistory(), 3);
     return (
       <div className="w-full max-w-lg mx-auto">
         <div className="text-center mb-8">
@@ -525,6 +530,34 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
                   </li>
                 );
               })}
+            </ul>
+          </div>
+        )}
+
+        {weakHistory.length > 0 && (
+          <div
+            role="region"
+            aria-label="これまでの苦手分野"
+            className="mt-6 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5"
+          >
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              これまでの苦手分野
+            </p>
+            <ul className="space-y-2">
+              {weakHistory.map((item) => (
+                <li
+                  key={item.category}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 px-3 py-2"
+                  aria-label={`${item.category} ${item.total}問中${item.correct}問正解 ${item.pct}パーセント`}
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {item.category}
+                  </span>
+                  <span className="shrink-0 text-xs font-bold text-gray-500 dark:text-gray-400 tabular-nums">
+                    {item.correct}/{item.total} ({item.pct}%)
+                  </span>
+                </li>
+              ))}
             </ul>
           </div>
         )}
