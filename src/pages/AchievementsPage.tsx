@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useProgress } from '../hooks/useProgress';
+import { useProgress, MAX_FREEZE_TOKENS, FREEZE_EARN_INTERVAL } from '../hooks/useProgress';
 import { useSpacedRepetition } from '../hooks/useSpacedRepetition';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useUserLevel } from '../hooks/useUserLevel';
@@ -15,7 +15,7 @@ function todayString(): string {
 }
 
 export default function AchievementsPage() {
-  const { getOverallStats } = useProgress();
+  const { getOverallStats, progress } = useProgress();
   const { getStats: getSrsStats } = useSpacedRepetition();
   const { getOverallAccuracy, getAccuracyByType, getResultsByType } = useAccuracy();
   const { hasDiagnosed } = useUserLevel();
@@ -46,6 +46,7 @@ export default function AchievementsPage() {
   const achievements = evaluateAchievements(input);
   const unlocked = countUnlocked(achievements);
   const goalPct = goalProgressPct(todayMinutes, goalMinutes);
+  const freezeTokens = progress.freezeTokens;
 
   return (
     <div>
@@ -113,6 +114,34 @@ export default function AchievementsPage() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Streak protection (freeze tokens) */}
+      <section className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-8">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">ストリーク保護</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          {FREEZE_EARN_INTERVAL}日連続学習ごとに1個獲得(最大{MAX_FREEZE_TOKENS}個)。1日サボっても自動で記録を守ります。
+        </p>
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-1.5"
+            role="img"
+            aria-label={`ストリーク保護トークン ${freezeTokens} / ${MAX_FREEZE_TOKENS} 個`}
+          >
+            {Array.from({ length: MAX_FREEZE_TOKENS }, (_, i) => (
+              <span
+                key={i}
+                className={`text-2xl ${i < freezeTokens ? '' : 'grayscale opacity-30'}`}
+                aria-hidden="true"
+              >
+                ❄️
+              </span>
+            ))}
+          </div>
+          <span className="text-sm font-semibold text-sky-600 dark:text-sky-400" role="status">
+            {freezeTokens} / {MAX_FREEZE_TOKENS} 個
+          </span>
         </div>
       </section>
 

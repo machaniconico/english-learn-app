@@ -84,6 +84,30 @@ describe('AchievementsPage', () => {
     expect(screen.getByRole('status', { name: /33 パーセント/ })).toBeTruthy();
   });
 
+  it('shows the streak-protection section with the current freeze-token count', () => {
+    localStorage.setItem(
+      'english-learn-progress',
+      JSON.stringify({
+        lessons: {},
+        fillInBlankScores: {},
+        readingScores: {},
+        totalStudyTime: 0,
+        streak: 14,
+        lastStudyDate: '',
+        freezeTokens: 2,
+      }),
+    );
+    renderWithRouter(<AchievementsPage />);
+    expect(screen.getByRole('heading', { name: 'ストリーク保護' })).toBeTruthy();
+    expect(screen.getByText('2 / 3 個')).toBeTruthy();
+    expect(screen.getByRole('img', { name: /ストリーク保護トークン 2 \/ 3 個/ })).toBeTruthy();
+  });
+
+  it('defaults the freeze-token count to 0 for a fresh user', () => {
+    renderWithRouter(<AchievementsPage />);
+    expect(screen.getByText('0 / 3 個')).toBeTruthy();
+  });
+
   it('has no axe accessibility violations', async () => {
     const { container } = renderWithRouter(<AchievementsPage />);
     expect(await axe(container)).toHaveNoViolations();
