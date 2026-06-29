@@ -4,8 +4,25 @@ import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { render, screen, fireEvent } from '../test/test-utils';
 import HomeQuiz from './HomeQuiz';
+import { pickPracticeQuestions } from '../utils/practiceQuizSelect';
+import { seededRandom } from '../utils/dailyQuizSelect';
+import { getQuestionsByDifficulty } from '../data/dailyQuiz';
 
 expect.extend(matchers);
+
+/** seedOverride と同じ手順で「その回の出題」を再現する(正解インデックスを知るため)。 */
+function reproduceBeginnerPick(seed: string, count = 10) {
+  return pickPracticeQuestions(getQuestionsByDifficulty('beginner'), count, seededRandom(seed));
+}
+
+/** 出題画面で index 番目の選択肢を選んで次へ進める。 */
+function chooseOptionAndAdvance(optionIndex: number) {
+  const optionButtons = screen
+    .getAllByRole('button')
+    .filter((b) => b.getAttribute('aria-pressed') !== null);
+  fireEvent.click(optionButtons[optionIndex]);
+  fireEvent.click(screen.getByRole('button', { name: /次の問題|結果を見る/ }));
+}
 
 /** 出題画面で「先頭の選択肢を選んで次へ」を1問分進める。 */
 function answerAndAdvance() {
@@ -78,6 +95,45 @@ describe('HomeQuiz', () => {
     for (let i = 0; i < 10; i++) answerAndAdvance();
     fireEvent.click(screen.getByRole('button', { name: '設定を変える' }));
     expect(screen.getByRole('heading', { name: '練習クイズ' })).toBeTruthy();
+  });
+
+  it('全問間違えると結果に復習ボタンが出て、押すと間違えた問題の復習が始まる', () => {
+    const picked = reproduceBeginnerPick('fixed-seed');
+    render(<HomeQuiz seedOverride="fixed-seed" />);
+    fireEvent.click(screen.getByRole('button', { name: /初級/ }));
+    fireEvent.click(screen.getByRole('button', { name: /初級 10問でスタート/ }));
+
+    // 各問、正解ではない選択肢を選ぶ(全問不正解にする)。
+    for (let i = 0; i < 10; i++) {
+      const wrongIdx = picked[i].correctIndex === 0 ? 1 : 0;
+      chooseOptionAndAdvance(wrongIdx);
+    }
+
+    // 結果画面: 10問とも間違えたので復習ボタンが出る。
+    const reviewBtn = screen.getByRole('button', {
+      name: /間違えた 10 問をもう一度復習する/,
+    });
+    fireEvent.click(reviewBtn);
+
+    // 復習画面へ遷移(結果見出しは消え、間違えた最初の問題文が出る)。
+    expect(screen.queryByRole('heading', { name: '練習クイズ完了!' })).toBeNull();
+    expect(screen.getByText(picked[0].question)).toBeTruthy();
+  });
+
+  it('全問正解だと復習ボタンは出ない', () => {
+    const picked = reproduceBeginnerPick('fixed-seed');
+    render(<HomeQuiz seedOverride="fixed-seed" />);
+    fireEvent.click(screen.getByRole('button', { name: /初級/ }));
+    fireEvent.click(screen.getByRole('button', { name: /初級 10問でスタート/ }));
+
+    for (let i = 0; i < 10; i++) {
+      chooseOptionAndAdvance(picked[i].correctIndex);
+    }
+
+    expect(screen.getByRole('heading', { name: '練習クイズ完了!' })).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: /もう一度復習する/ }),
+    ).toBeNull();
   });
 
   it('設定画面に axe 違反がない', async () => {
