@@ -23,6 +23,18 @@ const STORAGE_KEY = 'english-learn-progress';
 export const MAX_FREEZE_TOKENS = 3;
 export const FREEZE_EARN_INTERVAL = 7;
 
+/**
+ * 次の保護トークン獲得まであと何日(連続学習)かを返す。
+ * すでに最大保有(freezeTokens >= MAX_FREEZE_TOKENS)なら null。
+ * それ以外は streak を FREEZE_EARN_INTERVAL で割った剰余から、次の倍数までの日数。
+ * (剰余0=ちょうど倍数のときは次の獲得まで FREEZE_EARN_INTERVAL 日)
+ */
+export function daysUntilNextFreezeToken(streak: number, freezeTokens: number): number | null {
+  if (freezeTokens >= MAX_FREEZE_TOKENS) return null;
+  const rem = ((streak % FREEZE_EARN_INTERVAL) + FREEZE_EARN_INTERVAL) % FREEZE_EARN_INTERVAL;
+  return rem === 0 ? FREEZE_EARN_INTERVAL : FREEZE_EARN_INTERVAL - rem;
+}
+
 function getToday(): string {
   const d = new Date();
   const year = d.getFullYear();

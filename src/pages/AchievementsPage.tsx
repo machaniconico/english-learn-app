@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useProgress, MAX_FREEZE_TOKENS, FREEZE_EARN_INTERVAL } from '../hooks/useProgress';
+import { useProgress, MAX_FREEZE_TOKENS, FREEZE_EARN_INTERVAL, daysUntilNextFreezeToken } from '../hooks/useProgress';
 import { useSpacedRepetition } from '../hooks/useSpacedRepetition';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useUserLevel } from '../hooks/useUserLevel';
@@ -47,6 +47,7 @@ export default function AchievementsPage() {
   const unlocked = countUnlocked(achievements);
   const goalPct = goalProgressPct(todayMinutes, goalMinutes);
   const freezeTokens = progress.freezeTokens;
+  const daysToNextToken = daysUntilNextFreezeToken(stats.streak, freezeTokens);
 
   return (
     <div>
@@ -143,6 +144,18 @@ export default function AchievementsPage() {
             {freezeTokens} / {MAX_FREEZE_TOKENS} 個
           </span>
         </div>
+        <p
+          role="status"
+          className={`mt-2 text-xs ${
+            daysToNextToken === null
+              ? 'text-sky-600 dark:text-sky-400'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
+        >
+          {daysToNextToken === null
+            ? '最大まで保有しています'
+            : `あと${daysToNextToken}日連続でトークンを1つ獲得`}
+        </p>
       </section>
 
       {/* Achievements */}

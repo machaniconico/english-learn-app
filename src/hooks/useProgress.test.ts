@@ -4,6 +4,9 @@ import {
   applyStreakBreak,
   addDays,
   daysBetween,
+  daysUntilNextFreezeToken,
+  MAX_FREEZE_TOKENS,
+  FREEZE_EARN_INTERVAL,
   type ProgressData,
 } from './useProgress';
 
@@ -167,6 +170,28 @@ describe('applyStreakBreak', () => {
     expect(next.streak).toBe(5);
     expect(next.freezeTokens).toBe(0);
     expect(next.lastStudyDate).toBe('2026-01-03');
+  });
+});
+
+describe('daysUntilNextFreezeToken', () => {
+  it('最大保有時は null を返す', () => {
+    expect(daysUntilNextFreezeToken(10, MAX_FREEZE_TOKENS)).toBeNull();
+    expect(daysUntilNextFreezeToken(3, MAX_FREEZE_TOKENS + 5)).toBeNull();
+  });
+
+  it('streak=0 のときは次の獲得まで FREEZE_EARN_INTERVAL 日', () => {
+    expect(daysUntilNextFreezeToken(0, 0)).toBe(FREEZE_EARN_INTERVAL);
+  });
+
+  it('剰余から次の倍数までの日数を返す', () => {
+    expect(daysUntilNextFreezeToken(5, 0)).toBe(2); // 7-5
+    expect(daysUntilNextFreezeToken(8, 1)).toBe(6); // 8%7=1 → 7-1
+    expect(daysUntilNextFreezeToken(13, 1)).toBe(1); // 13%7=6 → 7-6
+  });
+
+  it('ちょうど倍数(剰余0)のときは FREEZE_EARN_INTERVAL 日', () => {
+    expect(daysUntilNextFreezeToken(7, 1)).toBe(FREEZE_EARN_INTERVAL);
+    expect(daysUntilNextFreezeToken(14, 2)).toBe(FREEZE_EARN_INTERVAL);
   });
 });
 
