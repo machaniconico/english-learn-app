@@ -31,6 +31,8 @@ export interface ReportData {
   prevTotalMinutes: number;
   activeDays: number;
   prevActiveDays: number;
+  /** 期間内で学習した日の割合(activeDays / 期間日数, 0-100 の整数)。 */
+  consistencyPct: number;
   completedItems: number;
   prevCompletedItems: number;
   avgScore: number;
@@ -78,9 +80,13 @@ export function buildReportData(input: BuildReportInput): ReportData {
   const totalMinutes = sessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
   const prevTotalMinutes = prevSessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
 
-  // Active days
+  // Active days (期間内に学習した「異なる日」の数。連続性は問わない)
   const activeDays = new Set(sessions.map((s) => s.date)).size;
   const prevActiveDays = new Set(prevSessions.map((s) => s.date)).size;
+
+  // 学習継続率: 期間日数のうち何割の日に学習したか。
+  const consistencyPct =
+    range.days > 0 ? Math.round((activeDays / range.days) * 100) : 0;
 
   // Daily breakdown for chart
   const dailyData: DailyDatum[] = [];
@@ -138,7 +144,7 @@ export function buildReportData(input: BuildReportInput): ReportData {
   // Achievements
   const achievements: string[] = [];
   if (totalMinutes >= 60) achievements.push(`${formatMinutes(totalMinutes)}学習達成`);
-  if (activeDays >= 5) achievements.push(`${activeDays}日間連続で学習`);
+  if (activeDays >= 5) achievements.push(`${activeDays}日間学習しました`);
   if (completedItems >= 10) achievements.push(`${completedItems}件のアクティビティを完了`);
   if (avgScore >= 80) achievements.push(`平均スコア${avgScore}%を達成`);
   const quizEvents = periodEvents.filter((e) => e.type === 'quiz_complete');
@@ -171,6 +177,7 @@ export function buildReportData(input: BuildReportInput): ReportData {
     prevTotalMinutes,
     activeDays,
     prevActiveDays,
+    consistencyPct,
     completedItems,
     prevCompletedItems,
     avgScore,
