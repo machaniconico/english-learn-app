@@ -9,7 +9,7 @@ import {
 } from '../data/dailyQuiz';
 import { selectDailyQuiz, getTodayString, DAILY_QUIZ_COUNT } from '../utils/dailyQuizSelect';
 import { getDailyQuizSummary, recommendDifficulty, getWrongQuestions } from '../utils/dailyQuizStats';
-import { quizCategoryBreakdown } from '../utils/quizCategoryBreakdown';
+import { quizCategoryBreakdown, weakestCategory } from '../utils/quizCategoryBreakdown';
 import { useAccuracy } from '../hooks/useAccuracy';
 import DailyQuizReview from './DailyQuizReview';
 
@@ -545,6 +545,7 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
       (a, i) => a !== null && questions[i] && a === questions[i].correctIndex,
     ).length;
     const categoryStats = quizCategoryBreakdown(questions, answers);
+    const weakest = weakestCategory(categoryStats);
     const pct = total > 0 ? Math.round((finalScore / total) * 100) : 0;
     const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪';
     const difficultyLabel = selectionLabel(selection);
@@ -619,6 +620,12 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {weakest && (
+          <div role="status" className="rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-200 p-3 mb-6">
+            💡 苦手分野は「{weakest.category}」です。重点的に復習しましょう。
           </div>
         )}
 

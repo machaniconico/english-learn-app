@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { quizCategoryBreakdown } from './quizCategoryBreakdown';
+import { quizCategoryBreakdown, weakestCategory } from './quizCategoryBreakdown';
+import type { CategoryStat } from './quizCategoryBreakdown';
 import type { DailyQuizQuestion } from '../data/dailyQuiz';
 
 function q(
@@ -66,5 +67,46 @@ describe('quizCategoryBreakdown', () => {
     quizCategoryBreakdown(questions, answers);
     expect(questions).toHaveLength(1);
     expect(answers).toEqual([0]);
+  });
+});
+
+describe('weakestCategory', () => {
+  const stat = (category: string, correct: number, total: number): CategoryStat => ({
+    category,
+    correct,
+    total,
+  });
+
+  it('全分野が満点なら null(苦手なし)', () => {
+    expect(weakestCategory([stat('語彙', 3, 3), stat('文法', 2, 2)])).toBeNull();
+  });
+
+  it('空配列なら null', () => {
+    expect(weakestCategory([])).toBeNull();
+  });
+
+  it('正答率が最も低い分野を返す', () => {
+    const result = weakestCategory([
+      stat('語彙', 4, 5), // 80%
+      stat('文法', 1, 4), // 25%
+      stat('時制', 3, 4), // 75%
+    ]);
+    expect(result?.category).toBe('文法');
+  });
+
+  it('同率のときは母数(total)が大きい方を優先', () => {
+    const result = weakestCategory([
+      stat('語彙', 1, 2), // 50%, total2
+      stat('文法', 2, 4), // 50%, total4
+    ]);
+    expect(result?.category).toBe('文法');
+  });
+
+  it('満点の分野は候補から除外する', () => {
+    const result = weakestCategory([
+      stat('語彙', 2, 2), // 満点 → 除外
+      stat('文法', 3, 4), // 75% → これが最弱
+    ]);
+    expect(result?.category).toBe('文法');
   });
 });
