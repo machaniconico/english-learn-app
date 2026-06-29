@@ -3,6 +3,8 @@ import {
   emptyTypingRecord,
   isNewTypingBest,
   recordTypingAttempt,
+  recentAccuracyAverage,
+  accuracyTrend,
   TYPING_HISTORY_LIMIT,
   type TypingAttempt,
   type TypingRecord,
@@ -103,5 +105,44 @@ describe('recordTypingAttempt', () => {
     const a = attempt(42, 12345);
     const r = recordTypingAttempt(emptyTypingRecord(), a);
     expect(r.history[0].timestamp).toBe(12345);
+  });
+});
+
+function recordWith(pcts: number[]): TypingRecord {
+  // history は新しい順。pcts も新しい順で渡す。
+  return { bestPct: Math.max(0, ...pcts), plays: pcts.length, history: pcts.map((p) => attempt(p)) };
+}
+
+describe('recentAccuracyAverage', () => {
+  it('履歴が無ければ 0', () => {
+    expect(recentAccuracyAverage(emptyTypingRecord())).toBe(0);
+  });
+
+  it('直近の平均を四捨五入で返す', () => {
+    expect(recentAccuracyAverage(recordWith([80, 90, 70]))).toBe(80); // (80+90+70)/3=80
+    expect(recentAccuracyAverage(recordWith([81, 90, 70]))).toBe(80); // 241/3=80.33→80
+    expect(recentAccuracyAverage(recordWith([82, 90, 70]))).toBe(81); // 242/3=80.67→81
+  });
+
+  it('limit で直近 N 件に絞る', () => {
+    // 新しい順 [100, 0, 0] のうち直近1件だけ → 100
+    expect(recentAccuracyAverage(recordWith([100, 0, 0]), 1)).toBe(100);
+  });
+});
+
+describe('accuracyTrend', () => {
+  it('履歴が2件未満なら 0', () => {
+    expect(accuracyTrend(emptyTypingRecord())).toBe(0);
+    expect(accuracyTrend(recordWith([75]))).toBe(0);
+  });
+
+  it('最新 - 最古 を返す(正なら上達)', () => {
+    // 新しい順 [90, ..., 70] → 90 - 70 = 20
+    expect(accuracyTrend(recordWith([90, 80, 70]))).toBe(20);
+  });
+
+  it('低下は負の値', () => {
+    // 新しい順 [60, 70, 85] → 60 - 85 = -25
+    expect(accuracyTrend(recordWith([60, 70, 85]))).toBe(-25);
   });
 });
