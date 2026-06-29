@@ -1,23 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReorderQuestion } from '../data/types';
 import AudioButton from './AudioButton';
+import { shuffleArray, arraysEqual } from '../utils/array';
 
 interface SentenceReorderProps {
   questions: ReorderQuestion[];
-}
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-function arraysEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  return a.every((val, i) => val === b[i]);
 }
 
 export default function SentenceReorder({ questions }: SentenceReorderProps) {
