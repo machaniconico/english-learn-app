@@ -9,6 +9,7 @@ import {
 } from '../data/dailyQuiz';
 import { selectDailyQuiz, getTodayString, DAILY_QUIZ_COUNT } from '../utils/dailyQuizSelect';
 import { getDailyQuizSummary, recommendDifficulty, getWrongQuestions } from '../utils/dailyQuizStats';
+import { quizCategoryBreakdown } from '../utils/quizCategoryBreakdown';
 import { useAccuracy } from '../hooks/useAccuracy';
 import DailyQuizReview from './DailyQuizReview';
 
@@ -543,6 +544,7 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
     const finalScore = answers.filter(
       (a, i) => a !== null && questions[i] && a === questions[i].correctIndex,
     ).length;
+    const categoryStats = quizCategoryBreakdown(questions, answers);
     const pct = total > 0 ? Math.round((finalScore / total) * 100) : 0;
     const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪';
     const difficultyLabel = selectionLabel(selection);
@@ -591,6 +593,34 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
           </div>
           <p className="text-sm text-gray-400 dark:text-gray-500">{pct}% 正解</p>
         </div>
+
+        {categoryStats.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 px-1">
+              分野別の正答
+            </h3>
+            {categoryStats.map((stat) => (
+              <div
+                key={stat.category}
+                className="flex items-center gap-3 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2"
+                aria-label={`${stat.category} ${stat.total}問中${stat.correct}問正解`}
+              >
+                <span className="w-24 shrink-0 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {stat.category}
+                </span>
+                <span className="w-12 shrink-0 text-sm text-gray-600 dark:text-gray-400 text-right">
+                  {stat.correct} / {stat.total}
+                </span>
+                <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                  <div
+                    className="bg-blue-500 dark:bg-blue-400 h-2 rounded-full"
+                    style={{ width: `${Math.round((stat.correct / stat.total) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* 全問の振り返り(解説) */}
         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 px-1">
