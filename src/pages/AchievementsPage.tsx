@@ -6,6 +6,7 @@ import { useUserLevel } from '../hooks/useUserLevel';
 import { useStudyTimer } from '../hooks/useStudyTimer';
 import { useTypingRecords } from '../hooks/useTypingRecords';
 import { useDailyGoal, goalProgressPct, GOAL_PRESETS } from '../hooks/useDailyGoal';
+import { useWeeklyGoal, WEEKLY_GOAL_PRESETS } from '../hooks/useWeeklyGoal';
 import { evaluateAchievements, countUnlocked, type AchievementInput } from '../utils/achievements';
 import { getDailyQuizSummary } from '../utils/dailyQuizStats';
 
@@ -22,6 +23,7 @@ export default function AchievementsPage() {
   const { getTotalTime, getDailyBreakdown } = useStudyTimer();
   const { record: typingRecord } = useTypingRecords();
   const { goalMinutes, setGoalMinutes } = useDailyGoal();
+  const { weeklyGoalMinutes, setWeeklyGoalMinutes } = useWeeklyGoal();
 
   const stats = getOverallStats();
   const accuracyAttempts = getAccuracyByType().reduce((sum, t) => sum + t.attempts, 0);
@@ -46,6 +48,8 @@ export default function AchievementsPage() {
   const achievements = evaluateAchievements(input);
   const unlocked = countUnlocked(achievements);
   const goalPct = goalProgressPct(todayMinutes, goalMinutes);
+  const weeklyMinutes = getDailyBreakdown(7).reduce((sum, d) => sum + d.minutes, 0);
+  const weeklyPct = goalProgressPct(weeklyMinutes, weeklyGoalMinutes);
   const freezeTokens = progress.freezeTokens;
   const daysToNextToken = daysUntilNextFreezeToken(stats.streak, freezeTokens);
 
@@ -115,6 +119,42 @@ export default function AchievementsPage() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Weekly goal */}
+      <section className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-8">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">今週の学習目標</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+          今週 <span className="font-bold text-gray-900 dark:text-gray-100">{weeklyMinutes}分</span> / 目標 {weeklyGoalMinutes}分
+        </p>
+        <div
+          className="w-full h-3 bg-emerald-100 dark:bg-emerald-950 rounded-full overflow-hidden mb-4"
+          role="progressbar"
+          aria-valuenow={weeklyPct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="今週の学習目標の進捗"
+        >
+          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${weeklyPct}%` }} />
+        </div>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="今週の目標時間を設定">
+          {WEEKLY_GOAL_PRESETS.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setWeeklyGoalMinutes(m)}
+              aria-label={`今週の目標 ${m}分`}
+              aria-pressed={weeklyGoalMinutes === m}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-300 ${
+                weeklyGoalMinutes === m
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              {m}分
+            </button>
+          ))}
         </div>
       </section>
 
