@@ -1,66 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
-interface MatchingItem {
-  english: string;
-  japanese: string;
-}
+import {
+  buildCards,
+  formatTime,
+  getStars,
+  type Card,
+  type MatchingItem,
+} from '../utils/matchingGame';
 
 interface MatchingGameProps {
   items: MatchingItem[];
   title?: string;
-}
-
-interface Card {
-  id: string;
-  text: string;
-  pairId: number;
-  type: 'english' | 'japanese';
-  matched: boolean;
-}
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-
-function getStars(moves: number, pairCount: number): number {
-  const perfect = pairCount;
-  const good = pairCount * 2;
-  if (moves <= perfect) return 3;
-  if (moves <= good) return 2;
-  return 1;
-}
-
-function buildCards(items: MatchingItem[]): Card[] {
-  const selected = items.length > 8 ? shuffleArray(items).slice(0, 8) : items;
-  const cards: Card[] = [];
-  selected.forEach((item, i) => {
-    cards.push({
-      id: `en-${i}`,
-      text: item.english,
-      pairId: i,
-      type: 'english',
-      matched: false,
-    });
-    cards.push({
-      id: `ja-${i}`,
-      text: item.japanese,
-      pairId: i,
-      type: 'japanese',
-      matched: false,
-    });
-  });
-  return shuffleArray(cards);
 }
 
 export default function MatchingGame({ items, title }: MatchingGameProps) {
