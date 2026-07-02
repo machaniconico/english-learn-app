@@ -36,6 +36,7 @@ export const PALETTE_COMMANDS: PaletteCommand[] = [
   { id: 'matching', label: 'マッチング', path: '/matching', group: '練習', keywords: ['matching', 'マッチング'] },
   { id: 'typing', label: 'タイピング', path: '/typing', group: '練習', keywords: ['typing', 'taipingu', 'タイピング'] },
   { id: 'pronunciation', label: '発音', path: '/pronunciation', group: '練習', keywords: ['pronunciation', 'hatsuon', '発音'] },
+  { id: 'drill', label: 'ドリルモード', path: '/drill', group: '練習', keywords: ['drill', 'continuous', 'rensoku', 'ドリル', '連続', '連続出題'] },
 
   // --- リスニング ---
   { id: 'part1-listening', label: 'Part1', path: '/part1-listening', group: 'リスニング', keywords: ['part1', 'part 1', 'listening', 'リスニング'] },

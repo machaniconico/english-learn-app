@@ -33,6 +33,7 @@ const WeeklyReport = lazy(() => import('./pages/WeeklyReport'))
 const LevelTestPage = lazy(() => import('./pages/LevelTestPage'))
 const PronunciationPage = lazy(() => import('./pages/PronunciationPage'))
 const DailyReviewPage = lazy(() => import('./pages/DailyReviewPage'))
+const DrillPage = lazy(() => import('./pages/DrillPage'))
 const AchievementsPage = lazy(() => import('./pages/AchievementsPage'))
 const TypingPracticePage = lazy(() => import('./pages/TypingPracticePage'))
 const CustomDecksPage = lazy(() => import('./pages/CustomDecksPage'))
@@ -91,6 +92,7 @@ export default function App() {
         <Route path="/daily" element={<DailyChallengePage />} />
         <Route path="/daily-quiz" element={<DailyQuizPage />} />
         <Route path="/review" element={<DailyReviewPage />} />
+        <Route path="/drill" element={<DrillPage />} />
         <Route path="/plan" element={<StudyPlanPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/section/:sectionId" element={<CategoryList />} />

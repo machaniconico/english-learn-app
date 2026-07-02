@@ -38,6 +38,7 @@ import {
   ArrowRight,
   X,
   Brain,
+  Infinity as InfinityIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import StreakBanner from '../components/StreakBanner';
@@ -348,6 +349,28 @@ export default function Home() {
             挑戦する &rarr;
           </span>
         </div>
+      </Link>
+
+      {/* Drill Mode Card — 止めるまで続く連続出題の導線 */}
+      <Link
+        to="/drill"
+        className="animate-fade-in-up group mb-6 flex items-center gap-4 rounded-2xl border border-sky-200 dark:border-sky-800 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-950/50 dark:to-blue-950/50 p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+        style={{ '--stagger': '0ms' } as React.CSSProperties}
+      >
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-sm shrink-0">
+          <InfinityIcon className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors">
+            ドリルモード
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            難易度とジャンルを切り替えながら、止めるまで連続出題
+          </p>
+        </div>
+        <span className="text-sm font-medium text-sky-500 group-hover:text-sky-700 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors shrink-0 hidden sm:block">
+          始める &rarr;
+        </span>
       </Link>
 
       {/* 練習クイズ: 難易度・出題数(10の倍数)を指定してその場で挑戦 */}
