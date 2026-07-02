@@ -79,7 +79,7 @@ function isDrillGenre(value: unknown): value is DrillGenre {
 }
 
 function isDrillGenreSelection(value: unknown): value is DrillGenreSelection {
-  return value === 'random' || isDrillGenre(value);
+  return value === 'random' || value === 'weak' || isDrillGenre(value);
 }
 
 function isDrillDifficulty(value: unknown): value is DrillDifficulty {

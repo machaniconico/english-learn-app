@@ -28,6 +28,8 @@ export interface AccuracyByLevel {
 
 const STORAGE_KEY = 'english-learn-accuracy';
 const MAX_RESULTS = 500;
+// drill はジャンル混合のエンドレス練習モードで、単一の苦手分野として推薦できないため除外。
+const WEAKEST_TYPE_EXCLUDED_TYPES = new Set<string>(['drill']);
 
 // --- Helpers ---
 
@@ -111,7 +113,7 @@ export function computeRecentTrend(results: QuizResult[], type: string, lastN: n
 }
 
 export function computeWeakestTypes(results: QuizResult[]): string[] {
-  const byType = computeAccuracyByType(results);
+  const byType = computeAccuracyByType(results).filter((t) => !WEAKEST_TYPE_EXCLUDED_TYPES.has(t.type));
   if (byType.length === 0) return [];
   const sorted = [...byType].sort((a, b) => a.accuracy - b.accuracy);
   const weakest = sorted[0].accuracy;

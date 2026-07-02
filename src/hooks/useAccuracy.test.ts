@@ -61,6 +61,19 @@ describe('computeAccuracyByType', () => {
     expect(reading).toEqual({ type: 'reading', accuracy: 50, attempts: 2 });
     expect(dictation).toEqual({ type: 'dictation', accuracy: 75, attempts: 1 });
   });
+
+  it('keeps drill in the type breakdown', () => {
+    const results = [
+      makeResult({ type: 'drill', correct: 1, total: 10 }),
+      makeResult({ type: 'reading', correct: 8, total: 10 }),
+    ];
+
+    expect(computeAccuracyByType(results).find((t) => t.type === 'drill')).toEqual({
+      type: 'drill',
+      accuracy: 10,
+      attempts: 1,
+    });
+  });
 });
 
 describe('computeAccuracyByLevel', () => {
@@ -106,6 +119,29 @@ describe('computeWeakestTypes', () => {
     expect(weakest).toContain('reading');
     expect(weakest).toContain('dictation'); // 53 <= 50 + 5
     expect(weakest).not.toContain('part1'); // 70 > 55
+  });
+
+  it('excludes drill from weakest type calculation', () => {
+    const results = [
+      makeResult({ type: 'drill', correct: 0, total: 100 }),
+      makeResult({ type: 'reading', correct: 50, total: 100 }),
+      makeResult({ type: 'dictation', correct: 53, total: 100 }),
+      makeResult({ type: 'part1', correct: 70, total: 100 }),
+    ];
+
+    const weakest = computeWeakestTypes(results);
+    expect(weakest).not.toContain('drill');
+    expect(weakest).toEqual(expect.arrayContaining(['reading', 'dictation']));
+    expect(weakest).not.toContain('part1');
+  });
+
+  it('returns [] when only drill results exist', () => {
+    const results = [
+      makeResult({ type: 'drill', correct: 0, total: 10 }),
+      makeResult({ type: 'drill', correct: 10, total: 10 }),
+    ];
+
+    expect(computeWeakestTypes(results)).toEqual([]);
   });
 });
 

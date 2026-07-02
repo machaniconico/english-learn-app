@@ -4,8 +4,8 @@
 /** 出題ジャンル */
 export type DrillGenre = 'fill-blank' | 'vocab' | 'ja-en' | 'en-ja' | 'listening'
 
-/** ジャンル選択 UI 用('random' は毎問ランダムにジャンルを選ぶ) */
-export type DrillGenreSelection = DrillGenre | 'random'
+/** ジャンル選択 UI 用('random' は毎問ランダム、'weak' は苦手優先でジャンルを選ぶ) */
+export type DrillGenreSelection = DrillGenre | 'random' | 'weak'
 
 /** 難易度。初級 → TOEIC 満点レベルまで段階的 */
 export type DrillDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert'

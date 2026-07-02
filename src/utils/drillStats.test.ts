@@ -196,6 +196,14 @@ describe('loadDrillPrefs/saveDrillPrefs', () => {
     expect(loadDrillPrefs()).toEqual(prefs);
   });
 
+  it('苦手優先ジャンル設定を復元する', () => {
+    const prefs: DrillPrefs = { genre: 'weak', difficulty: 'intermediate' };
+
+    saveDrillPrefs(prefs);
+
+    expect(loadDrillPrefs()).toEqual(prefs);
+  });
+
   it('未保存なら既定設定を返す', () => {
     expect(loadDrillPrefs()).toEqual(defaultPrefs);
   });

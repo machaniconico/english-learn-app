@@ -3,9 +3,13 @@ import { DRILL_GENRES } from './drillTypes';
 import type { DrillDifficulty, DrillGenre, DrillQuestion } from './drillTypes';
 import {
   DRILL_RECENT_CAP,
+  orderedWeakGenres,
   pickNextQuestion,
   pickRandomGenre,
+  pickWeakGenre,
   pushRecent,
+  sortGenresByWeakness,
+  type DrillGenreStats,
 } from './drillEngine';
 
 function makeQuestion(
@@ -92,5 +96,53 @@ describe('pickRandomGenre', () => {
 
   it('乱数が上限境界に近くても最後のジャンルに丸める', () => {
     expect(pickRandomGenre(() => 1)).toBe(DRILL_GENRES.at(-1)?.value);
+  });
+});
+
+describe('pickWeakGenre', () => {
+  const byGenre: DrillGenreStats = {
+    'fill-blank': { answered: 20, correct: 0 },
+    vocab: { answered: 20, correct: 10 },
+    'ja-en': { answered: 0, correct: 0 },
+    'en-ja': { answered: 20, correct: 20 },
+    listening: { answered: 10, correct: 8 },
+  };
+
+  it('ラプラス平滑化した誤答率が最も高いジャンルを最も高頻度で選ぶ', () => {
+    const counts = Object.fromEntries(
+      DRILL_GENRES.map(({ value }) => [value, 0]),
+    ) as Record<DrillGenre, number>;
+
+    for (let index = 0; index < 1000; index++) {
+      const picked = pickWeakGenre(byGenre, () => (index + 0.5) / 1000);
+      counts[picked] += 1;
+    }
+
+    expect(counts['fill-blank']).toBeGreaterThan(counts.vocab);
+    expect(counts['fill-blank']).toBeGreaterThan(counts['ja-en']);
+    expect(counts['fill-blank']).toBeGreaterThan(counts['en-ja']);
+    expect(counts['fill-blank']).toBeGreaterThan(counts.listening);
+  });
+
+  it('未回答ジャンルと全問正解ジャンルにも出題機会を残す', () => {
+    const counts = Object.fromEntries(
+      DRILL_GENRES.map(({ value }) => [value, 0]),
+    ) as Record<DrillGenre, number>;
+
+    for (let index = 0; index < 1000; index++) {
+      const picked = pickWeakGenre(byGenre, () => (index + 0.5) / 1000);
+      counts[picked] += 1;
+    }
+
+    expect(counts['ja-en']).toBeGreaterThan(0);
+    expect(counts['en-ja']).toBeGreaterThan(0);
+  });
+
+  it('苦手優先の fallback は先頭を重み付き抽選し、残りを苦手順に並べる', () => {
+    const sorted = sortGenresByWeakness(byGenre);
+    const ordered = orderedWeakGenres(byGenre, () => 0.75);
+
+    expect(ordered[0]).toBe('ja-en');
+    expect(ordered.slice(1)).toEqual(sorted.filter((genre) => genre !== 'ja-en'));
   });
 });

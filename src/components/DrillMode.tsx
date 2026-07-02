@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
-import { pickNextQuestion, pickRandomGenre, pushRecent } from '../utils/drillEngine';
+import {
+  orderedWeakGenres,
+  pickNextQuestion,
+  pickRandomGenre,
+  pushRecent,
+} from '../utils/drillEngine';
 import {
   loadDrillPrefs,
   loadDrillRecent,
@@ -46,6 +51,7 @@ interface DrillModeProps {
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 const RANDOM_GENRE_LABEL = 'ランダム';
+const WEAK_GENRE_LABEL = '苦手優先';
 
 function percent(correct: number, answered: number): number {
   if (answered === 0) return 0;
@@ -60,7 +66,18 @@ function difficultyLabel(difficulty: DrillDifficulty): string {
   return DRILL_DIFFICULTIES.find((item) => item.value === difficulty)?.label ?? difficulty;
 }
 
-function orderedGenres(selection: DrillGenreSelection, rand: () => number): DrillGenre[] {
+function genreSelectionLabel(selection: DrillGenreSelection): string {
+  if (selection === 'random') return RANDOM_GENRE_LABEL;
+  if (selection === 'weak') return WEAK_GENRE_LABEL;
+  return genreLabel(selection);
+}
+
+function orderedGenres(
+  selection: DrillGenreSelection,
+  byGenre: DrillStatsData['byGenre'],
+  rand: () => number,
+): DrillGenre[] {
+  if (selection === 'weak') return orderedWeakGenres(byGenre, rand);
   if (selection !== 'random') return [selection];
 
   const first = pickRandomGenre(rand);
@@ -74,11 +91,12 @@ function resolveNextQuestion(
   selection: DrillGenreSelection,
   difficulty: DrillDifficulty,
   recentIds: string[],
+  byGenre: DrillStatsData['byGenre'],
   randOverride?: () => number,
 ): NextQuestionResult | null {
   const rand = randOverride ?? Math.random;
 
-  for (const genre of orderedGenres(selection, rand)) {
+  for (const genre of orderedGenres(selection, byGenre, rand)) {
     const pool = buildDrillPool(genre, difficulty, randOverride);
     const question = pickNextQuestion(pool, recentIds, rand);
     if (question) {
@@ -94,21 +112,28 @@ function resolveNextQuestion(
 
 export default function DrillMode({ rand }: DrillModeProps) {
   const prefs = useMemo(() => loadDrillPrefs(), []);
+  const initialStats = useMemo<DrillStatsData>(() => loadDrillStats(), []);
   const initialRuntime = useMemo<DrillRuntime>(() => {
     const loadedRecent = loadDrillRecent();
-    const result = resolveNextQuestion(prefs.genre, prefs.difficulty, loadedRecent, rand);
+    const result = resolveNextQuestion(
+      prefs.genre,
+      prefs.difficulty,
+      loadedRecent,
+      initialStats.byGenre,
+      rand,
+    );
     return {
       question: result?.question ?? null,
       recent: result?.recent ?? loadedRecent,
     };
-  }, [prefs.difficulty, prefs.genre, rand]);
+  }, [initialStats.byGenre, prefs.difficulty, prefs.genre, rand]);
   const { logResult } = useAccuracy();
   const { speak, speaking } = useSpeechSynthesis();
 
   const [phase, setPhase] = useState<DrillPhase>('active');
   const [difficulty, setDifficulty] = useState<DrillDifficulty>(prefs.difficulty);
   const [genreSelection, setGenreSelection] = useState<DrillGenreSelection>(prefs.genre);
-  const [stats, setStats] = useState<DrillStatsData>(() => loadDrillStats());
+  const [stats, setStats] = useState<DrillStatsData>(initialStats);
   const [recent, setRecent] = useState<string[]>(initialRuntime.recent);
   const [session, setSession] = useState<SessionStats>({ answered: 0, correct: 0 });
   const [currentQuestion, setCurrentQuestion] = useState<DrillQuestion | null>(
@@ -123,7 +148,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
 
   // 次に進む時点の設定を使って、直近履歴にない問題を優先して選ぶ。
   const loadNextQuestion = useCallback(() => {
-    const result = resolveNextQuestion(genreSelection, difficulty, recent, rand);
+    const result = resolveNextQuestion(genreSelection, difficulty, recent, stats.byGenre, rand);
     if (!result) {
       setCurrentQuestion(null);
       setSelectedIndex(null);
@@ -133,7 +158,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
     setCurrentQuestion(result.question);
     setSelectedIndex(null);
     setRecent(result.recent);
-  }, [difficulty, genreSelection, rand, recent]);
+  }, [difficulty, genreSelection, rand, recent, stats.byGenre]);
 
   useEffect(() => {
     saveDrillRecent(recent);
@@ -147,13 +172,13 @@ export default function DrillMode({ rand }: DrillModeProps) {
   const recoverFromEmptyPool = useCallback(
     (nextGenre: DrillGenreSelection, nextDifficulty: DrillDifficulty) => {
       if (phase !== 'active' || currentQuestion !== null) return;
-      const result = resolveNextQuestion(nextGenre, nextDifficulty, recent, rand);
+      const result = resolveNextQuestion(nextGenre, nextDifficulty, recent, stats.byGenre, rand);
       if (!result) return;
       setCurrentQuestion(result.question);
       setSelectedIndex(null);
       setRecent(result.recent);
     },
-    [currentQuestion, phase, rand, recent],
+    [currentQuestion, phase, rand, recent, stats.byGenre],
   );
 
   // リスニング問題は出題された瞬間に読み上げる。回答前は英文を画面に出さない。
@@ -223,13 +248,13 @@ export default function DrillMode({ rand }: DrillModeProps) {
   }, [logResult, session, sessionRate]);
 
   const handleRestart = useCallback(() => {
-    const result = resolveNextQuestion(genreSelection, difficulty, recent, rand);
+    const result = resolveNextQuestion(genreSelection, difficulty, recent, stats.byGenre, rand);
     setSession({ answered: 0, correct: 0 });
     setCurrentQuestion(result?.question ?? null);
     setRecent(result?.recent ?? recent);
     setSelectedIndex(null);
     setPhase('active');
-  }, [difficulty, genreSelection, rand, recent]);
+  }, [difficulty, genreSelection, rand, recent, stats.byGenre]);
 
   const renderControls = () => (
     <div className="rounded-2xl border border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-800 p-4 shadow-sm">
@@ -269,6 +294,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
             className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 shadow-sm transition-colors focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-sky-500"
           >
             <option value="random">{RANDOM_GENRE_LABEL}</option>
+            <option value="weak">{WEAK_GENRE_LABEL}</option>
             {DRILL_GENRES.map((item) => (
               <option key={item.value} value={item.value}>
                 {item.label}
@@ -390,7 +416,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
               {difficultyLabel(difficulty)}
             </span>
             <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-gray-900 dark:text-gray-300">
-              {genreSelection === 'random' ? RANDOM_GENRE_LABEL : genreLabel(genreSelection)}
+              {genreSelectionLabel(genreSelection)}
             </span>
           </div>
         </div>
