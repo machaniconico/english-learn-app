@@ -13,9 +13,9 @@ const sample: PaletteCommand[] = [
 ];
 
 describe('PALETTE_COMMANDS', () => {
-  it('仕様の全目的地(33件)を定義している', () => {
-    // メイン3 + 練習8 + リスニング4 + 学習管理10(my-notes/daily-quiz追加) + ツール8 = 33
-    expect(PALETTE_COMMANDS.length).toBe(33);
+  it('仕様の全目的地(34件)を定義している', () => {
+    // メイン3 + 練習9(ドリル追加) + リスニング4 + 学習管理10(my-notes/daily-quiz追加) + ツール8 = 34
+    expect(PALETTE_COMMANDS.length).toBe(34);
   });
 
   it('全コマンドが必須フィールドを持つ', () => {
@@ -52,6 +52,18 @@ describe('PALETTE_COMMANDS', () => {
     expect(cmd?.label).toBe('デイリー10問クイズ');
   });
 
+  it('drill が 練習グループに存在し、日本語/英語クエリでヒットする', () => {
+    const cmd = PALETTE_COMMANDS.find((c) => c.id === 'drill');
+    expect(cmd).toBeDefined();
+    expect(cmd?.path).toBe('/drill');
+    expect(cmd?.group).toBe('練習');
+    expect(cmd?.label).toBe('ドリルモード');
+
+    expect(filterCommands('ドリル').some((c) => c.id === 'drill')).toBe(true);
+    expect(filterCommands('drill').some((c) => c.id === 'drill')).toBe(true);
+    expect(filterCommands('連続').some((c) => c.id === 'drill')).toBe(true);
+  });
+
   it('path が一意', () => {
     const paths = PALETTE_COMMANDS.map((c) => c.path);
     expect(new Set(paths).size).toBe(paths.length);
@@ -71,6 +83,7 @@ describe('PALETTE_COMMANDS', () => {
       '/matching',
       '/typing',
       '/pronunciation',
+      '/drill',
       '/part1-listening',
       '/part2-listening',
       '/part3-listening',

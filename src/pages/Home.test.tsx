@@ -24,6 +24,7 @@ describe('Home a11y smoke', () => {
     // Light structure assertions so the test isn't axe-only.
     expect(screen.getByRole('heading', { level: 1, name: '英語を楽しく学ぼう' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /レベル診断テスト/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ドリルモード/ })).toHaveAttribute('href', '/drill');
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
