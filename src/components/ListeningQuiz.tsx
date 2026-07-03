@@ -143,7 +143,7 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
             className="inline-flex items-baseline gap-1 mb-6"
           >
             <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{score}</span>
-            <span className="text-2xl text-gray-400 dark:text-gray-400">/ {totalQuestions}</span>
+            <span className="text-2xl text-gray-500 dark:text-gray-400">/ {totalQuestions}</span>
           </div>
 
           <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
@@ -158,7 +158,7 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
               style={{ width: `${percentage}%` }}
             />
           </div>
-          <p className="text-sm text-gray-400 dark:text-gray-400 mb-8">{percentage}% correct</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">{percentage}% correct</p>
 
           {/* Results breakdown */}
           <div className="flex flex-wrap justify-center gap-2 mb-8">
@@ -212,8 +212,8 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
 
       {/* Audio prompt */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-6 text-center">
-        <p className="text-sm text-gray-400 dark:text-gray-400 mb-4 font-medium">Listen and choose the correct Japanese translation</p>
-        <p className="text-xs text-gray-400 dark:text-gray-400 mb-4">音声を聞いて正しい日本語訳を選んでください</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 font-medium">Listen and choose the correct Japanese translation</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">音声を聞いて正しい日本語訳を選んでください</p>
         <button
           type="button"
           onClick={handleReplay}

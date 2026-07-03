@@ -503,7 +503,7 @@ export default function DailyChallenge() {
             </div>
             <p className="text-lg text-gray-700 dark:text-gray-300">{idiom.japanese}</p>
             {idiom.pronunciation && (
-              <p className="text-sm text-gray-400 dark:text-gray-400">{idiom.pronunciation}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{idiom.pronunciation}</p>
             )}
             {idiom.example && (
               <div className="bg-amber-50 dark:bg-amber-900/40 rounded-lg p-3 border border-amber-100 dark:border-amber-800">

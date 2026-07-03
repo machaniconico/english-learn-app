@@ -129,7 +129,7 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
 
             <div className="inline-flex items-baseline gap-1 my-4">
               <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{score}</span>
-              <span className="text-2xl text-gray-400 dark:text-gray-400">/ {total}</span>
+              <span className="text-2xl text-gray-500 dark:text-gray-400">/ {total}</span>
             </div>
 
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
@@ -138,7 +138,7 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
           </div>
 
           {/* Review all answers */}
@@ -245,7 +245,7 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
                 <span className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-800">
                   {passage.type}
                 </span>
-                <span className="text-xs text-gray-400 dark:text-gray-400">{passage.typeJa}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{passage.typeJa}</span>
               </div>
               <AudioButton text={passage.passage} size="sm" />
             </div>
@@ -254,7 +254,7 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
               {passage.title}
             </h2>
-            <p className="text-xs text-gray-400 dark:text-gray-400 mb-1">{passage.titleJa}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{passage.titleJa}</p>
             {readingMinutes > 0 && (
               <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">📖 推定読了 約{readingMinutes}分</p>
             )}
@@ -272,7 +272,7 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
         <div className="md:w-1/2">
           {/* Question card */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 mb-4">
-            <p className="text-xs text-gray-400 dark:text-gray-400 font-medium mb-1 uppercase tracking-wide">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1 uppercase tracking-wide">
               Question {state.currentIndex + 1}
             </p>
             <p className="text-base sm:text-lg text-gray-800 dark:text-gray-100 leading-relaxed font-medium mb-1">
@@ -382,7 +382,7 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
                     ? 'See Results / 結果を見る'
                     : 'Next Question \u2192'}
                 </button>
-                <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Press Enter or Space to continue
                 </p>
               </div>
@@ -391,7 +391,7 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
 
           {/* Keyboard hint */}
           {!state.answered && (
-            <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-2">
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
               Press 1-4 or A-D to select an answer
             </p>
           )}

@@ -120,7 +120,7 @@ export default function ProgressPage() {
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-1">
             {progress.streak > 0 ? `${progress.streak}日連続` : '今日から始めよう！'}
           </div>
-          <div className="text-xs text-gray-400 dark:text-gray-400 mt-1">Study Streak</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Study Streak</div>
         </div>
 
         {/* Overall Completion Card */}
@@ -153,7 +153,7 @@ export default function ProgressPage() {
             </div>
           </div>
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300">全体の達成率</div>
-          <div className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">Overall Completion</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Overall Completion</div>
         </div>
       </div>
 
@@ -244,7 +244,7 @@ export default function ProgressPage() {
                       {lp.flashcardCompleted && ' / FC完了'}
                     </p>
                   </div>
-                  <span className="text-xs text-gray-400 dark:text-gray-400 shrink-0 ml-3">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0 ml-3">
                     {dateStr}
                   </span>
                 </li>

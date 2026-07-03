@@ -70,7 +70,7 @@ export default function PronunciationPractice({ items }: PronunciationPracticePr
             className="inline-flex items-baseline gap-1 my-6"
           >
             <span className={`text-5xl font-bold ${scoreColor(avg)}`}>{avg}</span>
-            <span className="text-2xl text-gray-400 dark:text-gray-400">%</span>
+            <span className="text-2xl text-gray-500 dark:text-gray-400">%</span>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">{scores.length}フレーズの平均一致率</p>
           <button
@@ -124,7 +124,7 @@ export default function PronunciationPractice({ items }: PronunciationPracticePr
             : current.english}
         </p>
         <p className="text-base text-gray-600 dark:text-gray-300 mt-2">{current.japanese}</p>
-        <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">{current.pronunciation}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{current.pronunciation}</p>
         <div className="mt-4 flex justify-center">
           <AudioButton text={current.english} size="md" />
         </div>
@@ -150,7 +150,7 @@ export default function PronunciationPractice({ items }: PronunciationPracticePr
           >
             🎤
           </button>
-          <p className="text-xs text-gray-400 dark:text-gray-400 mt-2" aria-live="polite">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2" aria-live="polite">
             {listening ? '聞き取り中...' : 'タップして話す'}
           </p>
         </div>
@@ -165,7 +165,7 @@ export default function PronunciationPractice({ items }: PronunciationPracticePr
             <span className={`text-3xl font-bold ${scoreColor(result.score)}`}>
               {result.score}%
             </span>
-            <span className="text-sm font-normal text-gray-400 dark:text-gray-400 ml-2">
+            <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
               {result.matchedCount}/{result.total} 語一致
             </span>
           </p>
@@ -194,7 +194,7 @@ export default function PronunciationPractice({ items }: PronunciationPracticePr
           <button
             type="button"
             onClick={next}
-            className="text-sm text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 underline transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 rounded"
+            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 underline transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 rounded"
           >
             スキップ
           </button>
