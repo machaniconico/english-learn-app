@@ -10,6 +10,7 @@ import CustomDeckEditPage from './CustomDeckEditPage';
 expect.extend(matchers);
 
 const DECK_ID = 'deck-test-001';
+const SECOND_DECK_ID = 'deck-test-002';
 
 const seedDeck = {
   id: DECK_ID,
@@ -35,6 +36,23 @@ const seedDeck = {
   updatedAt: 2000,
 };
 
+const secondDeck = {
+  ...seedDeck,
+  id: SECOND_DECK_ID,
+  name: '別の単語帳',
+  description: '別デッキ用',
+  items: [
+    {
+      id: 'item-101',
+      english: 'invoice',
+      japanese: '請求書',
+      pronunciation: 'ˈɪnvɔɪs',
+    },
+  ],
+  createdAt: 3000,
+  updatedAt: 4000,
+};
+
 function renderEditPage(deckId: string) {
   return render(
     <MemoryRouter initialEntries={[`/decks/${deckId}/edit`]}>
@@ -43,6 +61,28 @@ function renderEditPage(deckId: string) {
       </Routes>
     </MemoryRouter>,
   );
+}
+
+function renderEditPageForRerender(deckId: string) {
+  const routeLocation = (currentDeckId: string) => ({
+    pathname: `/decks/${currentDeckId}/edit`,
+    search: '',
+    hash: '',
+    state: null,
+    key: 'deck-edit-test-location',
+  });
+  const ui = (currentDeckId: string) => (
+    <MemoryRouter initialEntries={['/']}>
+      <Routes location={routeLocation(currentDeckId)}>
+        <Route path="/decks/:deckId/edit" element={<CustomDeckEditPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+  const result = render(ui(deckId));
+  return {
+    ...result,
+    rerenderDeckId: (nextDeckId: string) => result.rerender(ui(nextDeckId)),
+  };
 }
 
 describe('CustomDeckEditPage', () => {
@@ -81,6 +121,41 @@ describe('CustomDeckEditPage', () => {
 
       const nameInput = screen.getByPlaceholderText('例: TOEIC頻出単語');
       expect(nameInput).toHaveValue('テスト単語帳');
+    });
+
+    it('reinitializes deck meta fields before saving after rerendering with another deckId', () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([seedDeck, secondDeck]));
+      const { rerenderDeckId } = renderEditPageForRerender(DECK_ID);
+
+      expect(screen.getByLabelText(/名前/)).toHaveValue(seedDeck.name);
+      expect(screen.getByLabelText('説明（任意）')).toHaveValue(seedDeck.description);
+
+      fireEvent.click(screen.getByRole('button', { name: '保存' }));
+      expect(screen.getByRole('status')).toHaveTextContent('保存しました');
+
+      rerenderDeckId(SECOND_DECK_ID);
+
+      expect(screen.getByLabelText(/名前/)).toHaveValue(secondDeck.name);
+      expect(screen.getByLabelText('説明（任意）')).toHaveValue(secondDeck.description);
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+      const storedDecks = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) ?? '[]',
+      ) as Array<typeof seedDeck>;
+      const storedFirstDeck = storedDecks.find((deck) => deck.id === DECK_ID);
+      const storedSecondDeck = storedDecks.find((deck) => deck.id === SECOND_DECK_ID);
+      expect(storedFirstDeck).toMatchObject({
+        id: DECK_ID,
+        name: seedDeck.name,
+        description: seedDeck.description,
+      });
+      expect(storedSecondDeck).toMatchObject({
+        id: SECOND_DECK_ID,
+        name: secondDeck.name,
+        description: secondDeck.description,
+      });
     });
 
     it('renders seeded word items', () => {

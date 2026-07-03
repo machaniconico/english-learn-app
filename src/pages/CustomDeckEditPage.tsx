@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useCustomDecks } from '../hooks/useCustomDecks';
 import type { PhraseItem } from '../data/types';
@@ -24,11 +24,26 @@ export default function CustomDeckEditPage() {
   const { getDeck, renameDeck, addItem, updateItem, removeItem } = useCustomDecks();
 
   const deck = getDeck(deckId ?? '');
+  const deckIdentity = deck?.id;
+  const getDeckRef = useRef(getDeck);
 
   // Deck rename form
   const [deckName, setDeckName] = useState(deck?.name ?? '');
   const [deckDesc, setDeckDesc] = useState(deck?.description ?? '');
   const [deckSaved, setDeckSaved] = useState(false);
+
+  useEffect(() => {
+    getDeckRef.current = getDeck;
+  }, [getDeck]);
+
+  useEffect(() => {
+    if (!deckIdentity) return;
+    const latestDeck = getDeckRef.current(deckIdentity);
+    if (!latestDeck) return;
+    setDeckName(latestDeck.name);
+    setDeckDesc(latestDeck.description ?? '');
+    setDeckSaved(false);
+  }, [deckIdentity]);
 
   // Add word form
   const [addForm, setAddForm] = useState<ItemFormState>(emptyForm());
