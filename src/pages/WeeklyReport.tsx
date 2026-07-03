@@ -29,6 +29,8 @@ function getTodayStr(): string {
   return `${y}-${m}-${day}`;
 }
 
+const MIN_LEVEL_UP_ANSWERS = 20;
+
 function getPeriodRange(period: Period): { start: Date; end: Date; label: string; days: number } {
   const now = new Date();
 
@@ -119,7 +121,7 @@ export default function WeeklyReport() {
   const { progress } = useProgress();
   const { getEventsForPeriod } = useAnalytics();
   const { level: userLevel, hasDiagnosed, checkLevelUp } = useUserLevel();
-  const { getOverallAccuracy } = useAccuracy();
+  const { getOverallAccuracy, getAccuracyByType } = useAccuracy();
 
   const range = useMemo(() => getPeriodRange(period), [period]);
   const prevRange = useMemo(() => getPreviousPeriodRange(period), [period]);
@@ -129,11 +131,12 @@ export default function WeeklyReport() {
   const reportData = useMemo(
     () => {
       const timerStreak = getStreak();
+      const longestStreak = Math.max(effectiveStreak, timerStreak.longest);
       return buildReportData({
         sessions90: getSessions(90),
         sessions180: getSessions(180),
         allEvents: getEventsForPeriod(90),
-        streak: { current: effectiveStreak, longest: timerStreak.longest },
+        streak: { current: effectiveStreak, longest: longestStreak },
         range,
         prevRange,
         period,
@@ -418,7 +421,8 @@ export default function WeeklyReport() {
           {/* Level-Up Suggestion */}
           {(() => {
             const accuracy = getOverallAccuracy();
-            const nextLevel = checkLevelUp(accuracy);
+            const totalAnswers = getAccuracyByType().reduce((sum, type) => sum + type.total, 0);
+            const nextLevel = totalAnswers >= MIN_LEVEL_UP_ANSWERS ? checkLevelUp(accuracy) : null;
             if (nextLevel) {
               return (
                 <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
@@ -445,7 +449,7 @@ export default function WeeklyReport() {
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {accuracy > 0
-                      ? `現在の正答率: ${accuracy}% — 85%以上でレベルアップを提案します`
+                      ? `現在の正答率: ${accuracy}% — 85%以上かつ${MIN_LEVEL_UP_ANSWERS}問以上でレベルアップを提案します`
                       : '問題を解いて正答率を上げていきましょう！'}
                   </p>
                 </div>
