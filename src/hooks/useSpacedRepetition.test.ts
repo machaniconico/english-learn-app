@@ -79,6 +79,87 @@ describe('useSpacedRepetition storage loading resilience', () => {
   });
 });
 
+describe('useSpacedRepetition shared store', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('preserves additions from sibling hook instances in the same tree', () => {
+    const { result } = renderHook(() => ({
+      first: useSpacedRepetition(),
+      second: useSpacedRepetition(),
+    }));
+
+    act(() => {
+      result.current.first.addCard({
+        id: 'sibling-a',
+        english: 'alpha',
+        japanese: 'アルファ',
+        pronunciation: 'alpha',
+        source: 'test',
+      });
+    });
+    act(() => {
+      result.current.second.addCard({
+        id: 'sibling-b',
+        english: 'bravo',
+        japanese: 'ブラボー',
+        pronunciation: 'bravo',
+        source: 'test',
+      });
+    });
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as SRSCard[];
+    expect(stored.map((card) => card.id).sort()).toEqual(['sibling-a', 'sibling-b']);
+    expect(result.current.first.cards.map((card) => card.id).sort()).toEqual([
+      'sibling-a',
+      'sibling-b',
+    ]);
+    expect(result.current.second.cards.map((card) => card.id).sort()).toEqual([
+      'sibling-a',
+      'sibling-b',
+    ]);
+  });
+
+  it('does not throw when localStorage.setItem fails during add, review, or remove', () => {
+    const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('quota');
+    });
+    try {
+      const { result } = renderHook(() => useSpacedRepetition());
+
+      expect(() => {
+        act(() => {
+          result.current.addCard({
+            id: 'quota-card',
+            english: 'quota',
+            japanese: '容量',
+            pronunciation: 'quota',
+            source: 'test',
+          });
+        });
+      }).not.toThrow();
+      expect(result.current.isInSRS('quota-card')).toBe(true);
+
+      expect(() => {
+        act(() => {
+          result.current.reviewCard('quota-card', 5);
+        });
+      }).not.toThrow();
+      expect(result.current.cards[0].repetitions).toBe(1);
+
+      expect(() => {
+        act(() => {
+          result.current.removeCard('quota-card');
+        });
+      }).not.toThrow();
+      expect(result.current.isInSRS('quota-card')).toBe(false);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
 describe('scheduleSRSCard (SM-2)', () => {
   describe('failing reviews (quality < 3)', () => {
     it('resets repetitions to 0 and interval to 1 for quality 0', () => {

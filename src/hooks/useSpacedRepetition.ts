@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 export interface SRSCard {
   id: string;
@@ -85,7 +85,11 @@ function loadCards(): SRSCard[] {
 }
 
 function saveCards(cards: SRSCard[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+  } catch {
+    // storage full or unavailable
+  }
 }
 
 /**
@@ -159,23 +163,86 @@ export function sortDueCardsByUrgency(cards: SRSCard[], _today: string): SRSCard
   });
 }
 
-export function useSpacedRepetition() {
-  const [cards, setCards] = useState<SRSCard[]>(loadCards);
+let storeState: SRSCard[] = loadCards();
+const listeners = new Set<() => void>();
 
-  // Sync across tabs
-  useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) {
-        setCards(loadCards());
+function cardsEqual(a: SRSCard[], b: SRSCard[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i];
+    const y = b[i];
+    if (
+      x.id !== y.id ||
+      x.english !== y.english ||
+      x.japanese !== y.japanese ||
+      x.pronunciation !== y.pronunciation ||
+      x.source !== y.source ||
+      x.interval !== y.interval ||
+      x.easeFactor !== y.easeFactor ||
+      x.repetitions !== y.repetitions ||
+      x.nextReview !== y.nextReview ||
+      x.lastReview !== y.lastReview
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function getSnapshot(): SRSCard[] {
+  return storeState;
+}
+
+function syncStoreStateFromStorage(): void {
+  const loaded = loadCards();
+  if (!cardsEqual(loaded, storeState)) {
+    storeState = loaded;
+  }
+}
+
+function subscribe(listener: () => void): () => void {
+  if (listeners.size === 0) {
+    syncStoreStateFromStorage();
+  }
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function notify(): void {
+  for (const listener of listeners) listener();
+}
+
+function setStoreState(updater: (prev: SRSCard[]) => SRSCard[]): void {
+  const next = updater(storeState);
+  if (next === storeState) return;
+  storeState = next;
+  saveCards(storeState);
+  notify();
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY) {
+      const loaded = loadCards();
+      if (!cardsEqual(loaded, storeState)) {
+        storeState = loaded;
+        notify();
       }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+    }
+  });
+}
+
+export function useSpacedRepetition() {
+  if (listeners.size === 0) {
+    syncStoreStateFromStorage();
+  }
+  const cards = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   const addCard = useCallback(
     (card: Omit<SRSCard, 'interval' | 'easeFactor' | 'repetitions' | 'nextReview' | 'lastReview'>) => {
-      setCards((prev) => {
+      setStoreState((prev) => {
         if (prev.some((c) => c.id === card.id)) return prev;
         const today = todayStr();
         const newCard: SRSCard = {
@@ -186,9 +253,7 @@ export function useSpacedRepetition() {
           nextReview: today,
           lastReview: '',
         };
-        const next = [newCard, ...prev];
-        saveCards(next);
-        return next;
+        return [newCard, ...prev];
       });
     },
     [],
@@ -196,14 +261,13 @@ export function useSpacedRepetition() {
 
   const reviewCard = useCallback(
     (id: string, quality: 0 | 1 | 2 | 3 | 4 | 5) => {
-      setCards((prev) => {
+      setStoreState((prev) => {
+        if (!prev.some((card) => card.id === id)) return prev;
         const today = todayStr();
-        const next = prev.map((card) => {
+        return prev.map((card) => {
           if (card.id !== id) return card;
           return scheduleSRSCard(card, quality, today);
         });
-        saveCards(next);
-        return next;
       });
     },
     [],
@@ -224,10 +288,9 @@ export function useSpacedRepetition() {
   }, [cards]);
 
   const removeCard = useCallback((id: string) => {
-    setCards((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      saveCards(next);
-      return next;
+    setStoreState((prev) => {
+      if (!prev.some((c) => c.id === id)) return prev;
+      return prev.filter((c) => c.id !== id);
     });
   }, []);
 

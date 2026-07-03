@@ -147,6 +147,33 @@ describe('useBookmarks', () => {
         spy.mockRestore();
       }
     });
+
+    it('preserves additions from sibling hook instances in the same tree', () => {
+      const { result } = renderHook(() => ({
+        first: useBookmarks(),
+        second: useBookmarks(),
+      }));
+      const a = makeItem('sibling-a');
+      const b = makeItem('sibling-b');
+
+      act(() => {
+        result.current.first.addBookmark(a);
+      });
+      act(() => {
+        result.current.second.addBookmark(b);
+      });
+
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as BookmarkedItem[];
+      expect(stored.map((item) => item.id).sort()).toEqual(['sibling-a', 'sibling-b']);
+      expect(result.current.first.bookmarks.map((item) => item.id).sort()).toEqual([
+        'sibling-a',
+        'sibling-b',
+      ]);
+      expect(result.current.second.bookmarks.map((item) => item.id).sort()).toEqual([
+        'sibling-a',
+        'sibling-b',
+      ]);
+    });
   });
 
   describe('removeBookmark', () => {
