@@ -87,7 +87,11 @@ function loadState(date: string): DailyChallengeState {
 }
 
 function saveState(date: string, state: DailyChallengeState) {
-  localStorage.setItem(getStorageKey(date), JSON.stringify(state));
+  try {
+    localStorage.setItem(getStorageKey(date), JSON.stringify(state));
+  } catch {
+    // storage full or unavailable
+  }
 }
 
 // --- Challenge types ---
@@ -352,6 +356,12 @@ export default function DailyChallenge() {
                     className={btnClass}
                   >
                     {opt}
+                    {fibSubmitted && i === question.correctIndex && (
+                      <span className="sr-only">（正解）</span>
+                    )}
+                    {fibSubmitted && i === fibSelected && i !== question.correctIndex && (
+                      <span className="sr-only">（あなたの回答・不正解）</span>
+                    )}
                   </button>
                 );
               })}
@@ -467,6 +477,12 @@ export default function DailyChallenge() {
                     className={btnClass}
                   >
                     {opt}
+                    {listeningSubmitted && i === correctIndex && (
+                      <span className="sr-only">（正解）</span>
+                    )}
+                    {listeningSubmitted && i === listeningSelected && i !== correctIndex && (
+                      <span className="sr-only">（あなたの回答・不正解）</span>
+                    )}
                   </button>
                 );
               })}
