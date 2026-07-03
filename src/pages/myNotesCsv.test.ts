@@ -5,7 +5,11 @@ import {
   notesToCsv,
   buildNotesCsvFilename,
 } from './myNotesCsv';
+import { bookmarksToCsv } from './bookmarksCsv';
+import { weakPointsToCsv } from './weakPointsCsv';
 import type { NoteRow } from './myNotesFilter';
+import type { BookmarkedItem } from '../hooks/useBookmarks';
+import type { WeakPoint } from '../hooks/useWeakPoints';
 
 // テスト用の行ファクトリ。省略フィールドは安全な既定値で補う。
 function row(over: Partial<NoteRow> = {}): NoteRow {
@@ -17,6 +21,40 @@ function row(over: Partial<NoteRow> = {}): NoteRow {
     ...over,
   };
 }
+
+function weakPoint(over: Partial<WeakPoint> = {}): WeakPoint {
+  return {
+    id: 'id',
+    type: 'fill-in-blank',
+    question: { sentence: 'Question' },
+    wrongAnswer: '',
+    correctAnswer: '',
+    timestamp: new Date(2026, 0, 1, 0, 0).getTime(),
+    reviewCount: 0,
+    lastCorrect: false,
+    ...over,
+  };
+}
+
+function bookmark(over: Partial<BookmarkedItem> = {}): BookmarkedItem {
+  return {
+    id: 'id',
+    english: '',
+    japanese: '',
+    pronunciation: '',
+    source: '',
+    addedAt: new Date(2026, 0, 1, 0, 0).getTime(),
+    ...over,
+  };
+}
+
+const FORMULA_TRIGGER_CASES = [
+  ['=', '=1+1', "'=1+1"],
+  ['+', '+SUM(A1:A2)', "'+SUM(A1:A2)"],
+  ['-', '-10', "'-10"],
+  ['@', '@cmd', "'@cmd"],
+  ['tab', '\t=1+1', "'\t=1+1"],
+] as const;
 
 describe('NOTES_CSV_HEADER', () => {
   it('列順は 英語, 日本語, メモ', () => {
@@ -58,6 +96,18 @@ describe('escapeCsvField', () => {
 
   it('カンマと二重引用符と改行が混在する値', () => {
     expect(escapeCsvField('a,"b"\nc')).toBe('"a,""b""\nc"');
+  });
+
+  it.each(FORMULA_TRIGGER_CASES)(
+    '数式トリガー文字 %s で始まる値は先頭にシングルクォートを付ける',
+    (_label, input, expected) => {
+      expect(escapeCsvField(input)).toBe(expected);
+      expect(escapeCsvField(input)[0]).toBe("'");
+    },
+  );
+
+  it('数式トリガーを無害化してから既存のクォート規則を適用する', () => {
+    expect(escapeCsvField('=1,2')).toBe('"\'=1,2"');
   });
 });
 
@@ -132,6 +182,48 @@ describe('notesToCsv', () => {
     ];
     expect(notesToCsv(rows)).toBe('英語,日本語,メモ\r\nEN,JP,NOTE');
   });
+
+  it.each(FORMULA_TRIGGER_CASES)(
+    'メモが数式トリガー文字 %s で始まる場合は無害化して出力する',
+    (_label, input, expected) => {
+      const rows: NoteRow[] = [
+        row({ english: 'Apple', japanese: 'りんご', note: input }),
+      ];
+      expect(notesToCsv(rows)).toBe(`英語,日本語,メモ\r\nApple,りんご,${expected}`);
+    },
+  );
+});
+
+describe('weakPointsToCsv (escapeCsvField の共用)', () => {
+  const labels: Record<string, string> = {
+    'fill-in-blank': 'TOEIC模試',
+  };
+
+  it.each(FORMULA_TRIGGER_CASES)(
+    '誤答/正答が数式トリガー文字 %s で始まる場合は無害化して出力する',
+    (_label, input, expected) => {
+      const items: WeakPoint[] = [
+        weakPoint({ wrongAnswer: input, correctAnswer: input }),
+      ];
+      expect(weakPointsToCsv(items, labels)).toBe(
+        `タイプ,問題,あなたの解答,正解,復習回数,最終結果,日時\r\nTOEIC模試,Question,${expected},${expected},0,不正解,2026-01-01 00:00`,
+      );
+    },
+  );
+});
+
+describe('bookmarksToCsv (escapeCsvField の共用)', () => {
+  it.each(FORMULA_TRIGGER_CASES)(
+    'ブックマークのユーザー入力値が数式トリガー文字 %s で始まる場合は無害化して出力する',
+    (_label, input, expected) => {
+      const items: BookmarkedItem[] = [
+        bookmark({ english: input, japanese: input, pronunciation: input, source: input }),
+      ];
+      expect(bookmarksToCsv(items)).toBe(
+        `英語,日本語,発音,出典,保存日\r\n${expected},${expected},${expected},${expected},2026-01-01`,
+      );
+    },
+  );
 });
 
 describe('buildNotesCsvFilename', () => {
