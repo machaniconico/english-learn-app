@@ -26,7 +26,7 @@ export default function AchievementsPage() {
   const { weeklyGoalMinutes, setWeeklyGoalMinutes } = useWeeklyGoal();
 
   const stats = getOverallStats();
-  const accuracyAttempts = getAccuracyByType().reduce((sum, t) => sum + t.attempts, 0);
+  const accuracyAttempts = getAccuracyByType().reduce((sum, t) => sum + t.total, 0);
   // Only today's calendar-day minutes (the breakdown can include a still-within-24h
   // session from yesterday evening, so filter by today's date rather than summing).
   const todayMinutes = getDailyBreakdown(1).find((d) => d.date === todayString())?.minutes ?? 0;

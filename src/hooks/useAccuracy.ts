@@ -16,6 +16,7 @@ export interface AccuracyByType {
   type: string;
   accuracy: number;
   attempts: number;
+  total: number;
 }
 
 export interface AccuracyByLevel {
@@ -82,6 +83,7 @@ export function computeAccuracyByType(results: QuizResult[]): AccuracyByType[] {
     type,
     accuracy: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
     attempts: data.attempts,
+    total: data.total,
   }));
 }
 
@@ -127,8 +129,7 @@ export function useAccuracy() {
 
   const logResult = useCallback((result: Omit<QuizResult, 'timestamp'>): void => {
     const full: QuizResult = { ...result, timestamp: Date.now() };
-    const results = trimResults(loadResults());
-    results.push(full);
+    const results = trimResults([...loadResults(), full]);
     resultsRef.current = results;
     saveResults(results);
   }, []);
