@@ -168,23 +168,23 @@ describe('Layout', () => {
   it('opens the command palette when Ctrl+K is pressed on window', () => {
     renderLayout();
     // 初期状態ではパレット(検索入力)は出ていない。
-    expect(screen.queryByRole('textbox', { name: 'コマンドを検索' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'コマンドを検索' })).not.toBeInTheDocument();
 
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
 
     // ショートカットでパレットの検索入力が出現する。
-    expect(screen.getByRole('textbox', { name: 'コマンドを検索' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'コマンドを検索' })).toBeInTheDocument();
   });
 
   it('closes the command palette when Escape is pressed after opening', () => {
     renderLayout();
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
-    const input = screen.getByRole('textbox', { name: 'コマンドを検索' });
+    const input = screen.getByRole('combobox', { name: 'コマンドを検索' });
     expect(input).toBeInTheDocument();
 
     fireEvent.keyDown(input, { key: 'Escape' });
 
-    expect(screen.queryByRole('textbox', { name: 'コマンドを検索' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'コマンドを検索' })).not.toBeInTheDocument();
   });
 
   it('opens the keyboard shortcuts help when "?" is pressed on window', () => {
