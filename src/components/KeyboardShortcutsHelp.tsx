@@ -45,7 +45,10 @@ function KeyboardShortcutsHelpInner({ onClose }: { onClose: () => void }) {
       aria-label="キーボードショートカット"
       onClick={onClose}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          closeButtonRef.current?.focus();
+        } else if (e.key === 'Escape') {
           e.preventDefault();
           onClose();
         }

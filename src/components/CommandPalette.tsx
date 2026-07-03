@@ -65,6 +65,9 @@ function CommandPaletteInner({ onClose }: { onClose: () => void }) {
       e.preventDefault();
       const cmd = results[activeIndex];
       if (cmd) runCommand(cmd);
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      inputRef.current?.focus();
     } else if (e.key === 'Escape') {
       e.preventDefault();
       onClose();
