@@ -99,7 +99,7 @@ function formatTimer(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function MoreDropdown() {
+function MoreDropdown({ isActive }: { isActive: (path: string) => boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -159,6 +159,7 @@ function MoreDropdown() {
               key={link.to + link.label}
               to={link.to}
               onClick={closeAndRefocus}
+              aria-current={isActive(link.to) ? 'page' : undefined}
               className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus-visible:bg-gray-100 dark:focus-visible:bg-gray-800 transition-colors"
             >
               {link.label}
@@ -315,27 +316,47 @@ export default function Layout() {
           </div>
           {/* H4: Simplified desktop header — 5 key links + More dropdown */}
           <nav aria-label="グローバルナビゲーション" className="hidden md:flex items-center gap-4">
-            <Link to="/search" className={navLinkClass}>
+            <Link
+              to="/search"
+              aria-current={isActive('/search') ? 'page' : undefined}
+              className={navLinkClass}
+            >
               <Search className="w-4 h-4" />
               検索
             </Link>
-            <Link to="/dictionary" className={navLinkClass}>
+            <Link
+              to="/dictionary"
+              aria-current={isActive('/dictionary') ? 'page' : undefined}
+              className={navLinkClass}
+            >
               <BookOpen className="w-4 h-4" />
               辞書
             </Link>
-            <Link to="/toeic-practice" className={navLinkClass}>
+            <Link
+              to="/toeic-practice"
+              aria-current={isActive('/toeic-practice') ? 'page' : undefined}
+              className={navLinkClass}
+            >
               <Target className="w-4 h-4" />
               練習
             </Link>
-            <Link to="/bookmarks" className={navLinkClass}>
+            <Link
+              to="/bookmarks"
+              aria-current={isActive('/bookmarks') ? 'page' : undefined}
+              className={navLinkClass}
+            >
               <BookMarked className="w-4 h-4" />
               ブックマーク
             </Link>
-            <Link to="/progress" className={navLinkClass}>
+            <Link
+              to="/progress"
+              aria-current={isActive('/progress') ? 'page' : undefined}
+              className={navLinkClass}
+            >
               <BarChart3 className="w-4 h-4" />
               進捗
             </Link>
-            <MoreDropdown />
+            <MoreDropdown isActive={isActive} />
           </nav>
         </div>
       </header>
@@ -363,6 +384,7 @@ export default function Layout() {
               <Link
                 key={item.to}
                 to={item.to}
+                aria-current={active ? 'page' : undefined}
                 className={`flex flex-col items-center justify-center min-w-0 flex-1 py-2.5 min-h-[48px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-inset rounded-lg ${
                   active
                     ? 'text-indigo-600 dark:text-indigo-400'

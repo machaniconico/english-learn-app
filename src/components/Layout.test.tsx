@@ -40,6 +40,7 @@ function renderLayout(route = '/') {
           <Route index element={<h1>ページ本文</h1>} />
           <Route path="dictionary" element={<h1>辞書ページ</h1>} />
           <Route path="toeic-practice" element={<h1>TOEIC練習ページ</h1>} />
+          <Route path="settings" element={<h1>設定ページ</h1>} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -74,6 +75,42 @@ describe('Layout', () => {
       expect(nav).toHaveAttribute('aria-label');
       expect(nav.getAttribute('aria-label')?.trim().length).toBeGreaterThan(0);
     }
+  });
+
+  it('marks active desktop and mobile nav links with aria-current="page"', () => {
+    renderLayout('/dictionary');
+
+    const globalNav = screen.getByRole('navigation', { name: 'グローバルナビゲーション' });
+    expect(within(globalNav).getByRole('link', { name: '辞書' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(within(globalNav).getByRole('link', { name: '検索' })).not.toHaveAttribute(
+      'aria-current'
+    );
+
+    const mobileNav = screen.getByRole('navigation', { name: 'メインメニュー' });
+    expect(within(mobileNav).getByRole('link', { name: '辞書' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(within(mobileNav).getByRole('link', { name: 'ホーム' })).not.toHaveAttribute(
+      'aria-current'
+    );
+  });
+
+  it('marks active links in the more dropdown with aria-current="page"', () => {
+    renderLayout('/settings');
+
+    fireEvent.click(screen.getByRole('button', { name: 'その他' }));
+
+    expect(screen.getByRole('link', { name: '設定' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getByRole('link', { name: '学習プラン' })).not.toHaveAttribute(
+      'aria-current'
+    );
   });
 
   it('renders the site title as a non-link span inside the header link', () => {
