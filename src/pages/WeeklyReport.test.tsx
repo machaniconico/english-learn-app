@@ -6,11 +6,14 @@ import { renderWithRouter, screen, fireEvent, within } from '../test/test-utils'
 import WeeklyReport from './WeeklyReport';
 import type { StudySession } from '../hooks/useStudyTimer';
 import type { LearningEvent } from '../hooks/useAnalytics';
+import type { QuizResult } from '../hooks/useAccuracy';
 
 expect.extend(matchers);
 
 const PROGRESS_STORAGE_KEY = 'english-learn-progress';
 const TIMER_STORAGE_KEY = 'english-learn-study-time';
+const ACCURACY_STORAGE_KEY = 'english-learn-accuracy';
+const USER_LEVEL_STORAGE_KEY = 'english-learn-user-level';
 
 beforeEach(() => {
   localStorage.clear();
@@ -88,6 +91,17 @@ function seedProgress(opts: { streak: number; lastStudyDate: string; freezeToken
   );
 }
 
+function seedUserLevel(): void {
+  localStorage.setItem(
+    USER_LEVEL_STORAGE_KEY,
+    JSON.stringify({ level: 'A1', diagnosedAt: Date.now(), levelHistory: [] }),
+  );
+}
+
+function seedAccuracyResults(results: QuizResult[]): void {
+  localStorage.setItem(ACCURACY_STORAGE_KEY, JSON.stringify(results));
+}
+
 describe('WeeklyReport', () => {
   it('renders the page heading and period toggle buttons', () => {
     renderWithRouter(<WeeklyReport />);
@@ -140,7 +154,7 @@ describe('WeeklyReport', () => {
     expect(screen.getByText('学習日数')).toBeTruthy();
   });
 
-  it('uses useProgress/applyStreakBreak for current streak while keeping timer longest', () => {
+  it('uses useProgress/applyStreakBreak for current streak and clamps longest to at least current', () => {
     seedProgress({ streak: 9, lastStudyDate: daysAgoStr(3), freezeTokens: 2 });
     seedTimerSessions([
       makeSessionDaysAgo(10),
@@ -154,10 +168,32 @@ describe('WeeklyReport', () => {
     const streakCard = screen.getByRole('heading', { name: '連続学習記録' }).closest('div');
     expect(streakCard).not.toBeNull();
     const scoped = within(streakCard as HTMLElement);
-    expect(scoped.getByText('9')).toBeInTheDocument();
-    expect(scoped.getByText('現在の連続日数')).toBeInTheDocument();
-    expect(scoped.getByText('4')).toBeInTheDocument();
-    expect(scoped.getByText('最長記録')).toBeInTheDocument();
+    const currentLabel = scoped.getByText('現在の連続日数');
+    const longestLabel = scoped.getByText('最長記録');
+    const current = Number(currentLabel.previousElementSibling?.textContent);
+    const longest = Number(longestLabel.previousElementSibling?.textContent);
+
+    expect(current).toBe(9);
+    expect(longest).toBeGreaterThanOrEqual(current);
+  });
+
+  it('does not show level-up suggestion for high accuracy with fewer than 20 total answers', () => {
+    seedUserLevel();
+    seedAccuracyResults([
+      {
+        type: 'fill-in-blank',
+        setId: 'small-sample',
+        score: 90,
+        total: 10,
+        correct: 9,
+        timestamp: Date.now(),
+      },
+    ]);
+
+    renderWithRouter(<WeeklyReport />);
+
+    expect(screen.queryByText('レベルアップのチャンス！')).not.toBeInTheDocument();
+    expect(screen.getByText('現在の正答率: 90% — 85%以上かつ20問以上でレベルアップを提案します')).toBeInTheDocument();
   });
 
   it('has no axe accessibility violations', async () => {
