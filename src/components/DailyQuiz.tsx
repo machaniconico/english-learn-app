@@ -12,6 +12,7 @@ import { getDailyQuizSummary, recommendDifficulty, getWrongQuestions } from '../
 import { quizCategoryBreakdown, weakestCategory } from '../utils/quizCategoryBreakdown';
 import { loadCategoryHistory, saveCategoryHistory, recordCategoryStats, topWeakCategories } from '../utils/categoryHistory';
 import { useAccuracy } from '../hooks/useAccuracy';
+import { useProgress } from '../hooks/useProgress';
 import DailyQuizReview from './DailyQuizReview';
 
 // =====================================================================
@@ -182,6 +183,7 @@ interface DailyQuizProps {
 export default function DailyQuiz({ today }: DailyQuizProps) {
   const dateStr = useMemo(() => today ?? getTodayString(), [today]);
   const { logResult, getResultsByType } = useAccuracy();
+  const { recordStudyDay } = useProgress();
 
   // 達成ストリーク + 直近成績(select 画面でのみ表示)。
   const summary = useMemo(
@@ -307,6 +309,7 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
         correct: finalScore,
         level: selection,
       });
+      recordStudyDay();
       saveCategoryHistory(
         recordCategoryStats(loadCategoryHistory(), quizCategoryBreakdown(questions, answers)),
       );
@@ -329,7 +332,7 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
       });
       setCurrent(nextIndex);
     }
-  }, [answers, current, dateStr, selection, count, logResult, questions]);
+  }, [answers, current, dateStr, selection, count, logResult, questions, recordStudyDay]);
 
   // --- 保存済みの状態を消して選択画面へ戻る ---
   const handleRetry = useCallback(() => {

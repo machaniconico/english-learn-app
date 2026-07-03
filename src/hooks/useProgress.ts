@@ -163,6 +163,10 @@ export function useProgress() {
     return applyStudyDate(prev, getToday());
   }, []);
 
+  const recordStudyDay = useCallback(() => {
+    setProgress((prev) => touchStudyDate(prev));
+  }, [touchStudyDate]);
+
   const markItemCompleted = useCallback(
     (lessonId: string, itemId: string) => {
       setProgress((prev) => {
@@ -323,6 +327,7 @@ export function useProgress() {
     saveFillInBlankScore,
     saveReadingScore,
     markFlashcardCompleted,
+    recordStudyDay,
     getLessonProgress,
     getOverallStats,
     updateStreak,
