@@ -11,6 +11,26 @@ import {
 } from '../utils/drillStats';
 
 const zeroRand = () => 0;
+const PROGRESS_KEY = 'english-learn-progress';
+
+interface StoredProgress {
+  streak: number;
+  lastStudyDate: string;
+}
+
+function todayString(): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function readProgress(): StoredProgress {
+  const raw = localStorage.getItem(PROGRESS_KEY);
+  if (!raw) throw new Error('progress storage is missing');
+  return JSON.parse(raw) as StoredProgress;
+}
 
 function setPrefs(genre: string, difficulty = 'beginner', timer = 'off') {
   localStorage.setItem(DRILL_PREFS_KEY, JSON.stringify({ genre, difficulty, timer }));
@@ -100,6 +120,33 @@ describe('DrillMode', () => {
     expect(savedStats.total.answered).toBe(1);
     expect(savedStats.total.correct).toBeGreaterThanOrEqual(0);
     expect(savedRecent).toHaveLength(1);
+  });
+
+  it('回答確定ごとに学習日を記録し、同じ日ならストリークを二重加算しない', async () => {
+    await renderReady();
+
+    await waitFor(() => {
+      const progress = readProgress();
+      expect(progress.streak).toBe(0);
+      expect(progress.lastStudyDate).toBe('');
+    });
+
+    answerAndAdvance();
+
+    await waitFor(() => {
+      const progress = readProgress();
+      expect(progress.streak).toBe(1);
+      expect(progress.lastStudyDate).toBe(todayString());
+    });
+
+    await screen.findByText('第 2 問');
+    answerCurrent();
+
+    await waitFor(() => {
+      const progress = readProgress();
+      expect(progress.streak).toBe(1);
+      expect(progress.lastStudyDate).toBe(todayString());
+    });
   });
 
   it('リスニングは自動再生し、回答前は英文を隠して回答後に表示する', async () => {

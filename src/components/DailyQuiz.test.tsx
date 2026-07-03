@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { renderWithRouter } from '../test/test-utils';
@@ -10,6 +10,26 @@ import { selectDailyQuiz } from '../utils/dailyQuizSelect';
 expect.extend(matchers);
 
 const TODAY = '2026-06-23';
+const PROGRESS_KEY = 'english-learn-progress';
+
+interface StoredProgress {
+  streak: number;
+  lastStudyDate: string;
+}
+
+function todayString(): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function readProgress(): StoredProgress {
+  const raw = localStorage.getItem(PROGRESS_KEY);
+  if (!raw) throw new Error('progress storage is missing');
+  return JSON.parse(raw) as StoredProgress;
+}
 
 /** 出題画面まで進める(初級を選ぶ)。 */
 function startBeginner() {
@@ -358,6 +378,26 @@ describe('DailyQuiz', () => {
       fireEvent.click(screen.getByText(nextLabel));
     }
   }
+
+  it('クイズ完了時に学習日を記録してストリークを開始する', async () => {
+    const questions = selectDailyQuiz('beginner', TODAY);
+    startBeginner();
+
+    await waitFor(() => {
+      const progress = readProgress();
+      expect(progress.streak).toBe(0);
+      expect(progress.lastStudyDate).toBe('');
+    });
+
+    finishQuiz(questions, questions.map(() => true));
+
+    expect(screen.getByText('クイズ完了!')).toBeTruthy();
+    await waitFor(() => {
+      const progress = readProgress();
+      expect(progress.streak).toBe(1);
+      expect(progress.lastStudyDate).toBe(todayString());
+    });
+  });
 
   it('誤答ありで結果到達時に「間違えた…もう一度」ボタンが出る', () => {
     const questions = selectDailyQuiz('beginner', TODAY);

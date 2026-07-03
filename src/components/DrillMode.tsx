@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useAccuracy } from '../hooks/useAccuracy';
+import { useProgress } from '../hooks/useProgress';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import {
   orderedWeakGenres,
@@ -134,6 +135,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
     };
   }, [initialStats.byGenre, prefs.difficulty, prefs.genre, rand]);
   const { logResult } = useAccuracy();
+  const { recordStudyDay } = useProgress();
   const { speak, speaking } = useSpeechSynthesis();
 
   const [phase, setPhase] = useState<DrillPhase>('active');
@@ -256,8 +258,9 @@ export default function DrillMode({ rand }: DrillModeProps) {
       setStats((prev) =>
         recordDrillAnswer(prev, currentQuestion.genre, currentQuestion.difficulty, correct),
       );
+      recordStudyDay();
     },
-    [currentQuestion, phase],
+    [currentQuestion, phase, recordStudyDay],
   );
 
   const handleAnswer = useCallback(
