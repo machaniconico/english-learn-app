@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { WeakPoint } from '../hooks/useWeakPoints';
+import { isWeakPointMastered } from '../utils/reviewQueue';
 import {
   isMastered,
   sortWeakPoints,
@@ -22,17 +23,21 @@ function wp(overrides: Partial<WeakPoint> & Pick<WeakPoint, 'id'>): WeakPoint {
 }
 
 describe('isMastered', () => {
-  it('is true only when lastCorrect && reviewCount >= 3', () => {
-    expect(isMastered(wp({ id: '1', lastCorrect: true, reviewCount: 3 }))).toBe(true);
-    expect(isMastered(wp({ id: '2', lastCorrect: true, reviewCount: 5 }))).toBe(true);
+  it('is the same canonical predicate used by the review queue', () => {
+    expect(isMastered).toBe(isWeakPointMastered);
   });
 
-  it('is false when reviewCount < 3 (boundary 2)', () => {
-    expect(isMastered(wp({ id: '1', lastCorrect: true, reviewCount: 2 }))).toBe(false);
+  it('is true when correctCount >= 2', () => {
+    expect(isMastered(wp({ id: '1', lastCorrect: true, reviewCount: 2, correctCount: 2 }))).toBe(true);
+    expect(isMastered(wp({ id: '2', lastCorrect: true, reviewCount: 1, correctCount: 3 }))).toBe(true);
   });
 
-  it('is false when lastCorrect is false even with reviewCount >= 3', () => {
-    expect(isMastered(wp({ id: '1', lastCorrect: false, reviewCount: 5 }))).toBe(false);
+  it('is false when correctCount < 2 even if reviewCount is high', () => {
+    expect(isMastered(wp({ id: '1', lastCorrect: true, reviewCount: 5, correctCount: 1 }))).toBe(false);
+  });
+
+  it('is false for legacy reviewCount-only weak points', () => {
+    expect(isMastered(wp({ id: '1', lastCorrect: true, reviewCount: 5 }))).toBe(false);
   });
 });
 
@@ -88,7 +93,14 @@ describe('sortWeakPoints', () => {
 
 describe('filterAndSortWeakPoints', () => {
   const fib1 = wp({ id: 'fib1', type: 'fill-in-blank', timestamp: 100, reviewCount: 0 });
-  const fib2 = wp({ id: 'fib2', type: 'fill-in-blank', timestamp: 300, reviewCount: 4, lastCorrect: true });
+  const fib2 = wp({
+    id: 'fib2',
+    type: 'fill-in-blank',
+    timestamp: 300,
+    reviewCount: 4,
+    correctCount: 2,
+    lastCorrect: true,
+  });
   const p2 = wp({ id: 'p2', type: 'part2', timestamp: 200, reviewCount: 1 });
   const items = [fib1, fib2, p2];
 
@@ -98,7 +110,7 @@ describe('filterAndSortWeakPoints', () => {
   });
 
   it('unmasteredOnly removes mastered items', () => {
-    // fib2 is mastered (lastCorrect && reviewCount 4)
+    // fib2 is mastered (correctCount 2)
     const r = filterAndSortWeakPoints(items, { type: 'all', unmasteredOnly: true, sort: 'newest' });
     expect(r.map((x) => x.id).sort()).toEqual(['fib1', 'p2']);
   });

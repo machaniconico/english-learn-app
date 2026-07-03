@@ -47,6 +47,10 @@ function seedWeakPoints(count: number) {
   localStorage.setItem('english-learn-weak-points', JSON.stringify(wps));
 }
 
+function seedWeakPointItems(items: unknown[]) {
+  localStorage.setItem('english-learn-weak-points', JSON.stringify(items));
+}
+
 function seedDailyGoal(minutes: number) {
   localStorage.setItem('english-learn-daily-goal', String(minutes));
 }
@@ -161,6 +165,49 @@ describe('Scenario: diagnosed user with due SRS cards', () => {
   it('shows 苦手分野の克服 for active weak points', () => {
     renderWithRouter(<StudyPlanPage />);
     expect(screen.getByText('苦手分野の克服')).toBeTruthy();
+  });
+
+  it('counts only weak points that are not mastered by correctCount', () => {
+    seedSRS(0);
+    seedDailyGoal(0);
+    seedWeakPointItems([
+      {
+        id: 'active-once-correct',
+        type: 'fill-in-blank',
+        question: {},
+        wrongAnswer: 'x',
+        correctAnswer: 'y',
+        timestamp: Date.now(),
+        reviewCount: 2,
+        correctCount: 1,
+        lastCorrect: true,
+      },
+      {
+        id: 'mastered',
+        type: 'fill-in-blank',
+        question: {},
+        wrongAnswer: 'x',
+        correctAnswer: 'y',
+        timestamp: Date.now(),
+        reviewCount: 2,
+        correctCount: 2,
+        lastCorrect: true,
+      },
+      {
+        id: 'legacy-review-count-only',
+        type: 'fill-in-blank',
+        question: {},
+        wrongAnswer: 'x',
+        correctAnswer: 'y',
+        timestamp: Date.now(),
+        reviewCount: 5,
+        lastCorrect: true,
+      },
+    ]);
+
+    renderWithRouter(<StudyPlanPage />);
+
+    expect(screen.getByText('苦手な項目が2件あります。')).toBeTruthy();
   });
 
   it('shows the streak in the header', () => {

@@ -1,11 +1,10 @@
 // WeakPointsPage 用の並べ替え・フィルタ純粋関数。
 // React にもブラウザ API にも依存しないので、UI とは独立してテストできる。
 import type { WeakPoint } from '../hooks/useWeakPoints';
+import { isWeakPointMastered } from '../utils/reviewQueue';
 
-// マスター判定。ページの既存定義(lastCorrect && reviewCount>=3)と一致させる。
-export function isMastered(wp: WeakPoint): boolean {
-  return wp.lastCorrect && wp.reviewCount >= 3;
-}
+// マスター判定は daily review queue と同じ canonical 述語を使う。
+export const isMastered = isWeakPointMastered;
 
 // 並べ替えキー。UI の <select> の value として使う。
 export type WeakPointSortKey = 'newest' | 'oldest' | 'mostReviewed' | 'leastReviewed';

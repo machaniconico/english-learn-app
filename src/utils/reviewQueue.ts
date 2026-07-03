@@ -12,11 +12,11 @@ export const REVIEW_QUEUE_LIMIT = 40;
 
 /**
  * A weak point is considered "mastered" (and dropped from review) once it has
- * been recalled correctly at least twice — otherwise the queue would accumulate
- * a permanent backlog of items the learner already knows.
+ * been recalled correctly at least twice consecutively. Legacy weak points with
+ * no correctCount are treated as not mastered until they are reviewed again.
  */
 export function isWeakPointMastered(wp: WeakPoint): boolean {
-  return wp.lastCorrect && wp.reviewCount >= 2;
+  return (wp.correctCount ?? 0) >= 2;
 }
 
 /**

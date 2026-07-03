@@ -8,11 +8,13 @@ export interface WeakPoint {
   correctAnswer: string;
   timestamp: number;
   reviewCount: number; // how many times reviewed
+  correctCount?: number; // consecutive correct review count; absent for legacy storage data
   lastCorrect: boolean; // was it correct last time?
 }
 
 const STORAGE_KEY = 'english-learn-weak-points';
 export const MAX_ITEMS = 100;
+type NewWeakPoint = Omit<WeakPoint, 'timestamp' | 'reviewCount' | 'correctCount' | 'lastCorrect'>;
 
 /**
  * Pure upsert + cap logic for weak points.
@@ -21,7 +23,7 @@ export const MAX_ITEMS = 100;
  */
 export function upsertWeakPoint(
   prev: WeakPoint[],
-  wp: Omit<WeakPoint, 'timestamp' | 'reviewCount' | 'lastCorrect'>,
+  wp: NewWeakPoint,
   now: number,
 ): WeakPoint[] {
   // If this question already exists, update it instead of duplicating
@@ -35,6 +37,7 @@ export function upsertWeakPoint(
       correctAnswer: wp.correctAnswer,
       question: wp.question,
       timestamp: now,
+      correctCount: 0,
       lastCorrect: false,
     };
   } else {
@@ -42,6 +45,7 @@ export function upsertWeakPoint(
       ...wp,
       timestamp: now,
       reviewCount: 0,
+      correctCount: 0,
       lastCorrect: false,
     };
     next = [newItem, ...prev];
@@ -67,7 +71,13 @@ export function markReviewedIn(
 ): WeakPoint[] {
   return prev.map((wp) =>
     wp.id === id
-      ? { ...wp, reviewCount: wp.reviewCount + 1, lastCorrect: correct, timestamp: now }
+      ? {
+          ...wp,
+          reviewCount: wp.reviewCount + 1,
+          correctCount: correct ? (wp.correctCount ?? 0) + 1 : 0,
+          lastCorrect: correct,
+          timestamp: now,
+        }
       : wp,
   );
 }
@@ -82,6 +92,7 @@ function isWeakPoint(value: unknown): value is WeakPoint {
     typeof wp.correctAnswer === 'string' &&
     typeof wp.timestamp === 'number' &&
     typeof wp.reviewCount === 'number' &&
+    (wp.correctCount === undefined || typeof wp.correctCount === 'number') &&
     typeof wp.lastCorrect === 'boolean'
   );
 }
@@ -121,7 +132,7 @@ export function useWeakPoints() {
   }, []);
 
   const addWeakPoint = useCallback(
-    (wp: Omit<WeakPoint, 'timestamp' | 'reviewCount' | 'lastCorrect'>) => {
+    (wp: NewWeakPoint) => {
       setWeakPoints((prev) => {
         const next = upsertWeakPoint(prev, wp, Date.now());
         saveWeakPoints(next);
