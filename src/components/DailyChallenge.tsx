@@ -58,12 +58,32 @@ interface DailyChallengeState {
   completed: boolean[];
 }
 
+function createDefaultState(): DailyChallengeState {
+  return { completed: [false, false, false, false, false] };
+}
+
+function isValidChallengeState(value: unknown): value is DailyChallengeState {
+  if (!value || typeof value !== 'object') return false;
+
+  const completed = (value as { completed?: unknown }).completed;
+  return (
+    Array.isArray(completed) &&
+    completed.length === 5 &&
+    completed.every(item => typeof item === 'boolean')
+  );
+}
+
 function loadState(date: string): DailyChallengeState {
   try {
     const raw = localStorage.getItem(getStorageKey(date));
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (isValidChallengeState(parsed)) {
+        return { completed: [...parsed.completed] };
+      }
+    }
   } catch { /* ignore */ }
-  return { completed: [false, false, false, false, false] };
+  return createDefaultState();
 }
 
 function saveState(date: string, state: DailyChallengeState) {
@@ -243,20 +263,15 @@ export default function DailyChallenge() {
   }, [allCompleted]);
 
   const markCompleted = useCallback((index: number) => {
-    let justCompletedAll = false;
-    setState(prev => {
-      if (prev.completed[index]) return prev;
-      const newCompleted = [...prev.completed];
-      newCompleted[index] = true;
-      // Detect the transition into "all completed" (pure check, no side effect).
-      justCompletedAll = newCompleted.every(Boolean);
-      return { completed: newCompleted };
-    });
+    if (state.completed[index]) return;
+    const newCompleted = [...state.completed];
+    newCompleted[index] = true;
+    setState({ completed: newCompleted });
     // Trigger the celebration from the completion event, not from an effect.
-    if (justCompletedAll) {
+    if (newCompleted.every(Boolean)) {
       setShowCelebration(true);
     }
-  }, []);
+  }, [state.completed]);
 
   const toggleExpand = (index: number) => {
     if (expandedIndex === index) {
