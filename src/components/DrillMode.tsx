@@ -85,13 +85,14 @@ export default function DrillMode({ rand }: DrillModeProps) {
       prefs.difficulty,
       loadedRecent,
       initialStats.byGenre,
+      initialStats.byGenreDifficulty,
       rand,
     );
     return {
       question: result?.question ?? null,
       recent: result?.recent ?? loadedRecent,
     };
-  }, [initialStats.byGenre, prefs.difficulty, prefs.genre, rand]);
+  }, [initialStats.byGenre, initialStats.byGenreDifficulty, prefs.difficulty, prefs.genre, rand]);
   const { logResult } = useAccuracy();
   const { recordStudyDay } = useProgress();
   const { speak, speaking } = useSpeechSynthesis();
@@ -123,7 +124,14 @@ export default function DrillMode({ rand }: DrillModeProps) {
 
   // 次に進む時点の設定を使って、直近履歴にない問題を優先して選ぶ。
   const loadNextQuestion = useCallback(() => {
-    const result = resolveNextQuestion(genreSelection, difficulty, recent, stats.byGenre, rand);
+    const result = resolveNextQuestion(
+      genreSelection,
+      difficulty,
+      recent,
+      stats.byGenre,
+      stats.byGenreDifficulty,
+      rand,
+    );
     completedQuestionIdRef.current = null;
     setTimedOut(false);
     if (!result) {
@@ -137,7 +145,15 @@ export default function DrillMode({ rand }: DrillModeProps) {
     setSelectedIndex(null);
     setRemainingSeconds(timerDuration > 0 ? timerDuration : null);
     setRecent(result.recent);
-  }, [difficulty, genreSelection, rand, recent, stats.byGenre, timerDuration]);
+  }, [
+    difficulty,
+    genreSelection,
+    rand,
+    recent,
+    stats.byGenre,
+    stats.byGenreDifficulty,
+    timerDuration,
+  ]);
 
   useEffect(() => {
     saveDrillRecent(recent);
@@ -151,7 +167,14 @@ export default function DrillMode({ rand }: DrillModeProps) {
   const recoverFromEmptyPool = useCallback(
     (nextGenre: DrillGenreSelection, nextDifficulty: DrillDifficulty) => {
       if (phase !== 'active' || currentQuestion !== null) return;
-      const result = resolveNextQuestion(nextGenre, nextDifficulty, recent, stats.byGenre, rand);
+      const result = resolveNextQuestion(
+        nextGenre,
+        nextDifficulty,
+        recent,
+        stats.byGenre,
+        stats.byGenreDifficulty,
+        rand,
+      );
       if (!result) return;
       completedQuestionIdRef.current = null;
       setCurrentQuestion(result.question);
@@ -160,7 +183,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
       setRemainingSeconds(timerDuration > 0 ? timerDuration : null);
       setRecent(result.recent);
     },
-    [currentQuestion, phase, rand, recent, stats.byGenre, timerDuration],
+    [currentQuestion, phase, rand, recent, stats.byGenre, stats.byGenreDifficulty, timerDuration],
   );
 
   // リスニング問題は出題された瞬間に読み上げる。回答前は英文を画面に出さない。
@@ -272,7 +295,14 @@ export default function DrillMode({ rand }: DrillModeProps) {
   }, [logResult, session, sessionRate]);
 
   const handleRestart = useCallback(() => {
-    const result = resolveNextQuestion(genreSelection, difficulty, recent, stats.byGenre, rand);
+    const result = resolveNextQuestion(
+      genreSelection,
+      difficulty,
+      recent,
+      stats.byGenre,
+      stats.byGenreDifficulty,
+      rand,
+    );
     completedQuestionIdRef.current = null;
     setSession({ answered: 0, correct: 0 });
     setCurrentQuestion(result?.question ?? null);
@@ -281,7 +311,15 @@ export default function DrillMode({ rand }: DrillModeProps) {
     setTimedOut(false);
     setRemainingSeconds(result && timerDuration > 0 ? timerDuration : null);
     setPhase('active');
-  }, [difficulty, genreSelection, rand, recent, stats.byGenre, timerDuration]);
+  }, [
+    difficulty,
+    genreSelection,
+    rand,
+    recent,
+    stats.byGenre,
+    stats.byGenreDifficulty,
+    timerDuration,
+  ]);
 
   const renderControls = () => (
     <div className="rounded-2xl border border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-800 p-4 shadow-sm">

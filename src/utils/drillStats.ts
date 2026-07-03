@@ -14,6 +14,7 @@ export interface DrillStatsData {
   total: DrillTotals;
   byGenre: Record<DrillGenre, DrillTotals>;
   byDifficulty: Record<DrillDifficulty, DrillTotals>;
+  byGenreDifficulty: Record<DrillGenre, Record<DrillDifficulty, DrillTotals>>;
 }
 
 export interface DrillPrefs {
@@ -76,6 +77,35 @@ function readTotalsRecord<T extends string>(
   return result;
 }
 
+function createEmptyByGenreDifficulty(): Record<DrillGenre, Record<DrillDifficulty, DrillTotals>> {
+  const byGenreDifficulty = {} as Record<DrillGenre, Record<DrillDifficulty, DrillTotals>>;
+
+  for (const { value: genre } of DRILL_GENRES) {
+    const byDifficulty = {} as Record<DrillDifficulty, DrillTotals>;
+    for (const { value: difficulty } of DRILL_DIFFICULTIES) {
+      byDifficulty[difficulty] = emptyTotals();
+    }
+    byGenreDifficulty[genre] = byDifficulty;
+  }
+
+  return byGenreDifficulty;
+}
+
+function readGenreDifficultyRecord(
+  source: unknown,
+): Record<DrillGenre, Record<DrillDifficulty, DrillTotals>> | null {
+  if (!isRecord(source)) return null;
+
+  const result = {} as Record<DrillGenre, Record<DrillDifficulty, DrillTotals>>;
+  for (const genre of DRILL_GENRE_VALUES) {
+    const byDifficulty = readTotalsRecord(source[genre], DRILL_DIFFICULTY_VALUES);
+    if (!byDifficulty) return null;
+    result[genre] = byDifficulty;
+  }
+
+  return result;
+}
+
 function isDrillGenre(value: unknown): value is DrillGenre {
   return DRILL_GENRE_VALUES.includes(value as DrillGenre);
 }
@@ -108,6 +138,7 @@ export function createEmptyDrillStats(): DrillStatsData {
     total: emptyTotals(),
     byGenre,
     byDifficulty,
+    byGenreDifficulty: createEmptyByGenreDifficulty(),
   };
 }
 
@@ -128,6 +159,13 @@ export function recordDrillAnswer(
       ...stats.byDifficulty,
       [difficulty]: incrementTotals(stats.byDifficulty[difficulty], correct),
     },
+    byGenreDifficulty: {
+      ...stats.byGenreDifficulty,
+      [genre]: {
+        ...stats.byGenreDifficulty[genre],
+        [difficulty]: incrementTotals(stats.byGenreDifficulty[genre][difficulty], correct),
+      },
+    },
   };
 }
 
@@ -144,11 +182,14 @@ export function loadDrillStats(): DrillStatsData {
     const byGenre = readTotalsRecord(parsed.byGenre, DRILL_GENRE_VALUES);
     const byDifficulty = readTotalsRecord(parsed.byDifficulty, DRILL_DIFFICULTY_VALUES);
     if (!byGenre || !byDifficulty) return createEmptyDrillStats();
+    const byGenreDifficulty =
+      readGenreDifficultyRecord(parsed.byGenreDifficulty) ?? createEmptyByGenreDifficulty();
 
     return {
       total: cloneTotals(parsed.total),
       byGenre,
       byDifficulty,
+      byGenreDifficulty,
     };
   } catch {
     return createEmptyDrillStats();

@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { DRILL_GENRES } from './drillTypes';
+import { DRILL_DIFFICULTIES, DRILL_GENRES } from './drillTypes';
 import type { DrillDifficulty, DrillGenre, DrillQuestion } from './drillTypes';
 import { buildDrillPool } from './drillQuestionBank';
 import {
   DRILL_RECENT_CAP,
+  WEAK_DIFFICULTY_MIN_SAMPLES,
   orderedGenres,
   orderedWeakGenres,
   pickNextQuestion,
   pickRandomGenre,
   pickWeakGenre,
+  projectGenreStatsForDifficulty,
   pushRecent,
   resolveNextQuestion,
   sortGenresByWeakness,
+  type DrillGenreDifficultyStats,
   type DrillGenreStats,
 } from './drillEngine';
 
@@ -40,6 +43,25 @@ function makeGenreStats(overrides: Partial<DrillGenreStats> = {}): DrillGenreSta
     listening: { answered: 0, correct: 0 },
     ...overrides,
   };
+}
+
+function makeGenreDifficultyStats(
+  overrides: Partial<
+    Record<DrillGenre, Partial<Record<DrillDifficulty, DrillGenreStats[DrillGenre]>>>
+  > = {},
+): DrillGenreDifficultyStats {
+  const stats = {} as DrillGenreDifficultyStats;
+
+  for (const { value: genre } of DRILL_GENRES) {
+    const byDifficulty = {} as DrillGenreDifficultyStats[DrillGenre];
+    for (const { value: difficulty } of DRILL_DIFFICULTIES) {
+      const totals = overrides[genre]?.[difficulty] ?? { answered: 0, correct: 0 };
+      byDifficulty[difficulty] = { answered: totals.answered, correct: totals.correct };
+    }
+    stats[genre] = byDifficulty;
+  }
+
+  return stats;
 }
 
 describe('pickNextQuestion', () => {
@@ -100,12 +122,20 @@ describe('pushRecent', () => {
 
 describe('orderedGenres', () => {
   it('単一ジャンル選択ならそのジャンルだけを返す', () => {
-    expect(orderedGenres('listening', makeGenreStats(), () => 0)).toEqual(['listening']);
+    expect(
+      orderedGenres('listening', 'beginner', makeGenreStats(), makeGenreDifficultyStats(), () => 0),
+    ).toEqual(['listening']);
   });
 
   it('random は抽選ジャンルを先頭にし、残りの全ジャンルを重複なく並べる', () => {
     const rand = () => 0.25;
-    const ordered = orderedGenres('random', makeGenreStats(), rand);
+    const ordered = orderedGenres(
+      'random',
+      'beginner',
+      makeGenreStats(),
+      makeGenreDifficultyStats(),
+      rand,
+    );
     const allGenres = DRILL_GENRES.map((genre) => genre.value);
 
     expect(ordered[0]).toBe(pickRandomGenre(rand));
@@ -123,10 +153,76 @@ describe('orderedGenres', () => {
     });
     const rand = () => 0;
 
-    const ordered = orderedGenres('weak', byGenre, rand);
+    const ordered = orderedGenres('weak', 'beginner', byGenre, makeGenreDifficultyStats(), rand);
 
     expect(ordered).toEqual(orderedWeakGenres(byGenre, rand));
     expect(ordered[0]).toBe('fill-blank');
+  });
+
+  it('weak は難易度スライスが閾値以上なら選択中難易度の苦手順を使う', () => {
+    const byGenre = makeGenreStats({
+      'fill-blank': { answered: 40, correct: 0 },
+      vocab: { answered: 20, correct: 20 },
+      'ja-en': { answered: 20, correct: 20 },
+      'en-ja': { answered: 20, correct: 18 },
+      listening: { answered: 0, correct: 0 },
+    });
+    const byGenreDifficulty = makeGenreDifficultyStats({
+      'fill-blank': { beginner: { answered: 20, correct: 20 } },
+      vocab: { beginner: { answered: 20, correct: 20 } },
+      'ja-en': { beginner: { answered: 20, correct: 0 } },
+      'en-ja': { beginner: { answered: 20, correct: 18 } },
+    });
+    const rand = () => 0.35;
+
+    const ordered = orderedGenres('weak', 'beginner', byGenre, byGenreDifficulty, rand);
+
+    expect(ordered).toEqual(['ja-en', 'listening', 'en-ja', 'fill-blank', 'vocab']);
+    expect(ordered).not.toEqual(orderedWeakGenres(byGenre, rand));
+  });
+
+  it('weak は難易度スライスが閾値未満なら全体 byGenre にフォールバックする', () => {
+    const byGenre = makeGenreStats({
+      'fill-blank': { answered: 40, correct: 0 },
+      vocab: { answered: 20, correct: 20 },
+      'ja-en': { answered: 20, correct: 20 },
+      'en-ja': { answered: 20, correct: 18 },
+      listening: { answered: 0, correct: 0 },
+    });
+    const byGenreDifficulty = makeGenreDifficultyStats({
+      'ja-en': {
+        beginner: { answered: WEAK_DIFFICULTY_MIN_SAMPLES - 1, correct: 0 },
+      },
+    });
+    const rand = () => 0.35;
+
+    const ordered = orderedGenres('weak', 'beginner', byGenre, byGenreDifficulty, rand);
+
+    expect(ordered).toEqual(orderedWeakGenres(byGenre, rand));
+    expect(ordered[0]).toBe('fill-blank');
+  });
+});
+
+describe('projectGenreStatsForDifficulty', () => {
+  it('指定難易度の genre×difficulty セルを genre→totals に射影する', () => {
+    const byGenreDifficulty = makeGenreDifficultyStats({
+      vocab: {
+        beginner: { answered: 3, correct: 2 },
+        advanced: { answered: 10, correct: 10 },
+      },
+      listening: {
+        beginner: { answered: 4, correct: 1 },
+      },
+    });
+
+    const projected = projectGenreStatsForDifficulty(byGenreDifficulty, 'beginner');
+
+    expect(projected).toEqual(
+      makeGenreStats({
+        vocab: { answered: 3, correct: 2 },
+        listening: { answered: 4, correct: 1 },
+      }),
+    );
   });
 });
 
@@ -135,7 +231,14 @@ describe('resolveNextQuestion', () => {
     const recentIds = ['already-seen'];
     const expectedQuestion = buildDrillPool('vocab', 'beginner', () => 0)[0];
 
-    const result = resolveNextQuestion('vocab', 'beginner', recentIds, makeGenreStats(), () => 0);
+    const result = resolveNextQuestion(
+      'vocab',
+      'beginner',
+      recentIds,
+      makeGenreStats(),
+      makeGenreDifficultyStats(),
+      () => 0,
+    );
 
     expect(result?.question.id).toBe(expectedQuestion.id);
     expect(result?.question.genre).toBe('vocab');
@@ -148,7 +251,14 @@ describe('resolveNextQuestion', () => {
     const pool = buildDrillPool('vocab', 'beginner', () => 0);
     const recentIds = pool.map((question) => question.id);
 
-    const result = resolveNextQuestion('vocab', 'beginner', recentIds, makeGenreStats(), () => 0);
+    const result = resolveNextQuestion(
+      'vocab',
+      'beginner',
+      recentIds,
+      makeGenreStats(),
+      makeGenreDifficultyStats(),
+      () => 0,
+    );
 
     expect(result?.question.id).toBe(pool[0].id);
     expect(result?.recent).toEqual([...recentIds, pool[0].id]);
