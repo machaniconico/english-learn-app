@@ -137,6 +137,27 @@ function formatTimer(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+function StudyTimerIndicator() {
+  const { isTracking, currentDuration, stopTimer } = useStudyTimer();
+
+  if (!isTracking) return null;
+
+  return (
+    <button
+      onClick={stopTimer}
+      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors text-sm font-mono"
+      aria-label="学習タイマーを停止"
+      title="クリックで停止"
+    >
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+      </span>
+      <span className="tabular-nums">{formatTimer(currentDuration)}</span>
+    </button>
+  );
+}
+
 function MoreDropdown({ isActive }: { isActive: (path: string) => boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -212,7 +233,6 @@ function MoreDropdown({ isActive }: { isActive: (path: string) => boolean }) {
 export default function Layout() {
   const location = useLocation();
   const { isDark, toggle } = useDarkMode();
-  const { isTracking, currentDuration, stopTimer } = useStudyTimer();
   const mainRef = useRef<HTMLElement>(null);
   const previousPathRef = useRef(location.pathname);
   // 最後に開いた学習ページを localStorage に記録する(US-002)。
@@ -311,20 +331,7 @@ export default function Layout() {
             {/* PWA インストール促進ボタン(インストール可能なときだけ表示) */}
             <InstallButton />
             {/* Study timer indicator */}
-            {isTracking && (
-              <button
-                onClick={stopTimer}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors text-sm font-mono"
-                aria-label="学習タイマーを停止"
-                title="クリックで停止"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="tabular-nums">{formatTimer(currentDuration)}</span>
-              </button>
-            )}
+            <StudyTimerIndicator />
             {/* Dark mode toggle */}
             <button
               onClick={toggle}

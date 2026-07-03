@@ -1,13 +1,21 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { Routes, Route, MemoryRouter } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor, within } from '../test/test-utils';
 import Layout from './Layout';
 import { STORAGE_KEY } from '../hooks/useLastActivity';
+import { useStudyTimer } from '../hooks/useStudyTimer';
 
 expect.extend(matchers);
+
+vi.mock('../hooks/useStudyTimer', () => ({
+  useStudyTimer: vi.fn(),
+}));
+
+const stopTimerMock = vi.fn();
+const mockedUseStudyTimer = vi.mocked(useStudyTimer);
 
 // jsdom does not implement matchMedia; useDarkMode reads it on mount.
 // Provide a minimal, non-listening implementation (defaults to light scheme).
@@ -25,6 +33,15 @@ beforeAll(() => {
         dispatchEvent: () => false,
       }) as unknown as MediaQueryList;
   }
+});
+
+beforeEach(() => {
+  stopTimerMock.mockReset();
+  mockedUseStudyTimer.mockReturnValue({
+    isTracking: false,
+    currentDuration: 0,
+    stopTimer: stopTimerMock,
+  } as ReturnType<typeof useStudyTimer>);
 });
 
 /**
@@ -149,6 +166,31 @@ describe('Layout', () => {
     const toggled = screen.getByRole('button', { name: 'ライトモードに切り替え' });
     expect(toggled).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'ダークモードに切り替え' })).not.toBeInTheDocument();
+  });
+
+  it('renders the formatted study timer and stop control while tracking', () => {
+    mockedUseStudyTimer.mockReturnValue({
+      isTracking: true,
+      currentDuration: 65,
+      stopTimer: stopTimerMock,
+    } as ReturnType<typeof useStudyTimer>);
+
+    renderLayout();
+
+    const timerButton = screen.getByRole('button', { name: '学習タイマーを停止' });
+    expect(timerButton).toBeInTheDocument();
+    expect(timerButton).toHaveAttribute('title', 'クリックで停止');
+    expect(timerButton).toHaveTextContent('01:05');
+
+    fireEvent.click(timerButton);
+    expect(stopTimerMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not render the study timer indicator while not tracking', () => {
+    renderLayout();
+
+    expect(screen.queryByRole('button', { name: '学習タイマーを停止' })).not.toBeInTheDocument();
+    expect(screen.queryByText('00:00')).not.toBeInTheDocument();
   });
 
   it('does not render breadcrumbs on the index route but does on a nested route', () => {
