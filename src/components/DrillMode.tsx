@@ -2,12 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } f
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useProgress } from '../hooks/useProgress';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
-import {
-  orderedWeakGenres,
-  pickNextQuestion,
-  pickRandomGenre,
-  pushRecent,
-} from '../utils/drillEngine';
+import { resolveNextQuestion } from '../utils/drillEngine';
 import {
   loadDrillPrefs,
   loadDrillRecent,
@@ -18,7 +13,6 @@ import {
   saveDrillStats,
   type DrillStatsData,
 } from '../utils/drillStats';
-import { buildDrillPool } from '../utils/drillQuestionBank';
 import {
   DRILL_DIFFICULTIES,
   DRILL_GENRES,
@@ -42,11 +36,6 @@ interface SummaryBreakdownItem {
   label: string;
   answered: number;
   correct: number;
-}
-
-interface NextQuestionResult {
-  question: DrillQuestion;
-  recent: string[];
 }
 
 interface DrillRuntime {
@@ -84,44 +73,6 @@ function genreSelectionLabel(selection: DrillGenreSelection): string {
   if (selection === 'random') return RANDOM_GENRE_LABEL;
   if (selection === 'weak') return WEAK_GENRE_LABEL;
   return genreLabel(selection);
-}
-
-function orderedGenres(
-  selection: DrillGenreSelection,
-  byGenre: DrillStatsData['byGenre'],
-  rand: () => number,
-): DrillGenre[] {
-  if (selection === 'weak') return orderedWeakGenres(byGenre, rand);
-  if (selection !== 'random') return [selection];
-
-  const first = pickRandomGenre(rand);
-  return [
-    first,
-    ...DRILL_GENRES.map((item) => item.value).filter((genre) => genre !== first),
-  ];
-}
-
-function resolveNextQuestion(
-  selection: DrillGenreSelection,
-  difficulty: DrillDifficulty,
-  recentIds: string[],
-  byGenre: DrillStatsData['byGenre'],
-  randOverride?: () => number,
-): NextQuestionResult | null {
-  const rand = randOverride ?? Math.random;
-
-  for (const genre of orderedGenres(selection, byGenre, rand)) {
-    const pool = buildDrillPool(genre, difficulty, randOverride);
-    const question = pickNextQuestion(pool, recentIds, rand);
-    if (question) {
-      return {
-        question,
-        recent: pushRecent(recentIds, question.id),
-      };
-    }
-  }
-
-  return null;
 }
 
 export default function DrillMode({ rand }: DrillModeProps) {
