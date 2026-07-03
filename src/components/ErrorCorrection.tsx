@@ -153,6 +153,14 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
             className={`${segmentStyle} focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800 rounded ${state.answered ? 'cursor-default' : ''}`}
           >
             {segment}
+            {state.answered && segIdx === currentQuestion.errorIndex && (
+              <span className="sr-only">（正解）</span>
+            )}
+            {state.answered &&
+              segIdx === state.selectedIndex &&
+              segIdx !== currentQuestion.errorIndex && (
+                <span className="sr-only">（不正解）</span>
+              )}
           </button>
         );
         void segmentCounter;
@@ -330,6 +338,14 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
                   : SEGMENT_LABELS[index]}
               </span>
               <span className="block text-sm">{segment}</span>
+              {state.answered && index === currentQuestion.errorIndex && (
+                <span className="sr-only">（正解）</span>
+              )}
+              {state.answered &&
+                index === state.selectedIndex &&
+                index !== currentQuestion.errorIndex && (
+                  <span className="sr-only">（不正解）</span>
+                )}
             </button>
           );
         })}

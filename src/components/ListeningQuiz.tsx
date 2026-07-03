@@ -292,6 +292,14 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
                   }
                 </span>
                 <span>{option}</span>
+                {state.answered && index === state.correctOptionIndex && (
+                  <span className="sr-only">（正解）</span>
+                )}
+                {state.answered &&
+                  index === state.selectedIndex &&
+                  index !== state.correctOptionIndex && (
+                    <span className="sr-only">（不正解）</span>
+                  )}
               </span>
             </button>
           );

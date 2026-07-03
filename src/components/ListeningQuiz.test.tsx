@@ -74,6 +74,19 @@ describe('ListeningQuiz', () => {
     expect(screen.getByText(/Score: 0 \/ 1/)).toBeTruthy();
   });
 
+  it('adds sr-only correctness labels to options only after answering', () => {
+    renderWithRouter(<ListeningQuiz items={items} />);
+    expect(screen.queryByText('（正解）')).toBeNull();
+    expect(screen.queryByText('（不正解）')).toBeNull();
+
+    // Identity shuffle => option index 0 is correct and option index 1 is wrong.
+    fireEvent.click(getOptionButtons()[1]);
+
+    const opts = getOptionButtons();
+    expect(within(opts[0]).getByText('（正解）')).toBeTruthy();
+    expect(within(opts[1]).getByText('（不正解）')).toBeTruthy();
+  });
+
   it('advances through every question, tallies an all-correct score, and restarts', () => {
     renderWithRouter(<ListeningQuiz items={items} />);
 
