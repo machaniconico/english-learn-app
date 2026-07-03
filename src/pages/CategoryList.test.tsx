@@ -124,15 +124,23 @@ describe('CategoryList', () => {
 
     // The filter row appears because the two categories span different CEFR
     // levels: with sectionId 'phrases', Greetings maps to A1 and Farewells to B1.
+    const allBtn = screen.getByRole('button', { name: /全レベル/i });
     const a1Btn = screen.getByRole('button', { name: /^A1/ });
+    expect(allBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(a1Btn).toHaveAttribute('aria-pressed', 'false');
+
     fireEvent.click(a1Btn);
+    expect(allBtn).toHaveAttribute('aria-pressed', 'false');
+    expect(a1Btn).toHaveAttribute('aria-pressed', 'true');
 
     // Filtering actually removed the B1 category and kept the A1 one.
     expect(screen.getByRole('heading', { name: 'Greetings' })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Farewells' })).toBeNull();
 
     // Clicking "全レベル" restores all category headings.
-    fireEvent.click(screen.getByRole('button', { name: /全レベル/i }));
+    fireEvent.click(allBtn);
+    expect(allBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(a1Btn).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByRole('heading', { name: 'Greetings' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Farewells' })).toBeTruthy();
   });

@@ -29,6 +29,11 @@ describe('ReadingPracticePage', () => {
   it('filters passages by level when a tab is clicked', () => {
     renderWithRouter(<ReadingPracticePage />, { route: '/reading-practice' });
 
+    const allButton = screen.getByRole('button', { name: 'すべて' });
+    const beginnerButton = screen.getByRole('button', { name: '初級' });
+    expect(allButton).toHaveAttribute('aria-pressed', 'true');
+    expect(beginnerButton).toHaveAttribute('aria-pressed', 'false');
+
     // Count passage links before filtering
     const allLinks = screen.getAllByRole('link').filter((el) =>
       el.getAttribute('href')?.startsWith('/reading-practice/')
@@ -37,13 +42,19 @@ describe('ReadingPracticePage', () => {
     expect(totalCount).toBeGreaterThan(0);
 
     // Click "初級" filter — should reduce the number of passage cards
-    fireEvent.click(screen.getByRole('button', { name: '初級' }));
+    fireEvent.click(beginnerButton);
+    expect(allButton).toHaveAttribute('aria-pressed', 'false');
+    expect(beginnerButton).toHaveAttribute('aria-pressed', 'true');
 
     const filteredLinks = screen.getAllByRole('link').filter((el) =>
       el.getAttribute('href')?.startsWith('/reading-practice/')
     );
     expect(filteredLinks.length).toBeGreaterThan(0);
     expect(filteredLinks.length).toBeLessThan(totalCount);
+
+    fireEvent.click(allButton);
+    expect(allButton).toHaveAttribute('aria-pressed', 'true');
+    expect(beginnerButton).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('renders the single passage view with title and back link', () => {
