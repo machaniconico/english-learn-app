@@ -21,6 +21,11 @@ const items: PhraseItem[] = [
   { id: '3', english: 'See you later', japanese: 'また後で', pronunciation: 'シー ユー レイター' },
 ];
 
+const nextDeckItems: PhraseItem[] = [
+  { id: '10', english: 'Nice to meet you', japanese: 'はじめまして', pronunciation: 'ナイス トゥ ミート ユー' },
+  { id: '11', english: 'Excuse me', japanese: 'すみません', pronunciation: 'エクスキューズ ミー' },
+];
+
 // Flip state is exposed via the dedicated flip button: its label is
 // 答えを見る (front) / 問題に戻る (back) and aria-pressed reflects flipped.
 function flipButton() {
@@ -114,6 +119,23 @@ describe('Flashcard', () => {
     expect(isFlipped()).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: /Next/ }));
     expect(screen.getByText('Thank you')).toBeTruthy();
+    expect(isFlipped()).toBe(false);
+  });
+
+  it('starts fresh when a new deck key remounts the flashcard', () => {
+    const { rerender } = renderWithRouter(<Flashcard key="deck-a" items={items} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+    fireEvent.click(flipButton());
+    expect(screen.getByText('Thank you')).toBeTruthy();
+    expect(screen.getByText('2 / 3')).toBeTruthy();
+    expect(isFlipped()).toBe(true);
+
+    rerender(<Flashcard key="deck-b" items={nextDeckItems} />);
+
+    expect(screen.getByText('Nice to meet you')).toBeTruthy();
+    expect(screen.getByText('1 / 2')).toBeTruthy();
+    expect(flipButton()).toHaveAccessibleName('答えを見る');
     expect(isFlipped()).toBe(false);
   });
 
