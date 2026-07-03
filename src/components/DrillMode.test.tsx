@@ -318,4 +318,23 @@ describe('DrillMode', () => {
     expect(await screen.findByText('第 1 問')).toBeInTheDocument();
     expect(screen.getByLabelText(/今回 0問中0問正解 0パーセント/)).toBeInTheDocument();
   });
+
+  it('終了サマリーに累計のジャンル別と難易度別の成績内訳を表示する', async () => {
+    const pool = buildDrillPool('vocab', 'beginner', zeroRand);
+    await renderReady('vocab', 'beginner');
+
+    answerCurrent(pool[0].correctIndex);
+    fireEvent.click(screen.getByRole('button', { name: '次の問題 →' }));
+    await screen.findByText('第 2 問');
+    answerCurrent((pool[1].correctIndex + 1) % pool[1].options.length);
+    fireEvent.click(screen.getByRole('button', { name: '終了' }));
+
+    expect(screen.getByRole('heading', { name: 'ドリルモード終了' })).toBeInTheDocument();
+    expect(screen.getByText('ジャンル別の成績')).toBeInTheDocument();
+    expect(screen.getByText('難易度別の成績')).toBeInTheDocument();
+    expect(screen.getByLabelText('単語 2問中1問正解 50パーセント')).toBeInTheDocument();
+    expect(screen.getByLabelText('リスニング データなし')).toHaveTextContent('データなし');
+    expect(screen.getByLabelText('初級 2問中1問正解 50パーセント')).toBeInTheDocument();
+    expect(screen.getByLabelText('中級 データなし')).toHaveTextContent('データなし');
+  });
 });
