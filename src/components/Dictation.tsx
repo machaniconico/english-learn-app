@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DictationItem } from '../data/types';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import { normalize, gradeResult, type ResultGrade } from '../utils/dictationSimilarity';
+import { percentage, scoreBarColor } from '../utils/quizScoreDisplay';
 
 interface DictationProps {
   items: DictationItem[];
@@ -116,9 +117,8 @@ export default function Dictation({ items }: DictationProps) {
   // Results screen
   if (finished) {
     const totalMax = items.length * 10;
-    const percentage = Math.round((scorePoints / totalMax) * 100);
-    const barColor =
-      percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+    const scorePct = percentage(scorePoints, totalMax);
+    const barColor = scoreBarColor(scorePct);
     const mistakes = results.filter((r) => r.grade !== 'perfect');
 
     return (
@@ -136,10 +136,10 @@ export default function Dictation({ items }: DictationProps) {
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
-                style={{ width: `${percentage}%` }}
+                style={{ width: `${scorePct}%` }}
               />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% score</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{scorePct}% score</p>
 
             <div className="flex justify-center gap-4 mt-4 text-sm">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full">

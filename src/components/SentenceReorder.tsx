@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReorderQuestion } from '../data/types';
 import AudioButton from './AudioButton';
 import { shuffleArray, arraysEqual } from '../utils/array';
+import { percentage, scoreBarColor } from '../utils/quizScoreDisplay';
 
 interface SentenceReorderProps {
   questions: ReorderQuestion[];
@@ -149,9 +150,8 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
 
   // Results screen
   if (finished) {
-    const percentage = Math.round((score / questions.length) * 100);
-    const barColor =
-      percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+    const scorePct = percentage(score, questions.length);
+    const barColor = scoreBarColor(scorePct);
     const mistakes = results.filter((r) => !r.correct);
 
     return (
@@ -169,10 +169,10 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
-                style={{ width: `${percentage}%` }}
+                style={{ width: `${scorePct}%` }}
               />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{scorePct}% correct</p>
 
             <div className="flex justify-center gap-4 mt-4 text-sm">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full">

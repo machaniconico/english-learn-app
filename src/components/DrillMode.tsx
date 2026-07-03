@@ -3,6 +3,7 @@ import { useAccuracy } from '../hooks/useAccuracy';
 import { useProgress } from '../hooks/useProgress';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import { resolveNextQuestion } from '../utils/drillEngine';
+import { percentage, scoreBarColor } from '../utils/quizScoreDisplay';
 import {
   loadDrillPrefs,
   loadDrillRecent,
@@ -80,8 +81,7 @@ function isSpaceKey(event: KeyboardEvent): boolean {
 }
 
 function percent(correct: number, answered: number): number {
-  if (answered === 0) return 0;
-  return Math.round((correct / answered) * 100);
+  return percentage(correct, answered);
 }
 
 function timerSeconds(timer: DrillTimer): number {
@@ -599,13 +599,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
           </div>
           <div className="mx-auto mt-4 h-3 w-full max-w-md overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
             <div
-              className={`h-full rounded-full transition-all duration-700 ${
-                sessionRate >= 80
-                  ? 'bg-green-500'
-                  : sessionRate >= 60
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
-              }`}
+              className={`h-full rounded-full transition-all duration-700 ${scoreBarColor(sessionRate)}`}
               style={{ width: `${sessionRate}%` }}
             />
           </div>

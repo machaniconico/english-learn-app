@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Part1Question } from '../data/types';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
+import { percentage, scoreBarColor } from '../utils/quizScoreDisplay';
 
 interface Part1ListeningProps {
   questions: Part1Question[];
@@ -222,14 +223,9 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
   if (finished) {
     const score = correctCount;
     const total = questions.length;
-    const percentage = Math.round((score / total) * 100);
+    const scorePct = percentage(score, total);
     const wrongAnswers = state.results.filter((r) => !r.correct);
-    const barColor =
-      percentage >= 80
-        ? 'bg-green-500'
-        : percentage >= 60
-          ? 'bg-yellow-500'
-          : 'bg-red-500';
+    const barColor = scoreBarColor(scorePct);
 
     return (
       <div className="w-full max-w-2xl mx-auto">
@@ -246,10 +242,10 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
-                style={{ width: `${percentage}%` }}
+                style={{ width: `${scorePct}%` }}
               />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{scorePct}% correct</p>
           </div>
 
           {/* Wrong answers review */}

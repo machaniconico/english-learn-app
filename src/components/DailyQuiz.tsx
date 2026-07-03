@@ -11,6 +11,7 @@ import { selectDailyQuiz, getTodayString, DAILY_QUIZ_COUNT } from '../utils/dail
 import { getDailyQuizSummary, recommendDifficulty, getWrongQuestions } from '../utils/dailyQuizStats';
 import { quizCategoryBreakdown, weakestCategory } from '../utils/quizCategoryBreakdown';
 import { loadCategoryHistory, saveCategoryHistory, recordCategoryStats, topWeakCategories } from '../utils/categoryHistory';
+import { percentage, scoreBarColor, scoreEmoji } from '../utils/quizScoreDisplay';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useProgress } from '../hooks/useProgress';
 import DailyQuizReview from './DailyQuizReview';
@@ -582,8 +583,8 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
     ).length;
     const categoryStats = quizCategoryBreakdown(questions, answers);
     const weakest = weakestCategory(categoryStats);
-    const pct = total > 0 ? Math.round((finalScore / total) * 100) : 0;
-    const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪';
+    const pct = percentage(finalScore, total);
+    const emoji = scoreEmoji(pct);
     const difficultyLabel = selectionLabel(selection);
 
     // Round 49: 間違えた問題だけを一時的に復習(ephemeral)。保存済み結果には触れない。
@@ -622,9 +623,7 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
           </div>
           <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-700 ${
-                pct >= 80 ? 'bg-green-500' : pct >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}
+              className={`h-full rounded-full transition-all duration-700 ${scoreBarColor(pct)}`}
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -651,7 +650,7 @@ export default function DailyQuiz({ today }: DailyQuizProps) {
                 <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                   <div
                     className="bg-blue-500 dark:bg-blue-400 h-2 rounded-full"
-                    style={{ width: `${Math.round((stat.correct / stat.total) * 100)}%` }}
+                    style={{ width: `${percentage(stat.correct, stat.total)}%` }}
                   />
                 </div>
               </div>

@@ -15,6 +15,7 @@ import {
 import { getWrongQuestions } from '../utils/dailyQuizStats';
 import { quizCategoryBreakdown, weakestCategory } from '../utils/quizCategoryBreakdown';
 import { loadPracticePrefs, savePracticePrefs } from '../utils/practiceQuizPrefs';
+import { percentage, scoreBarColor, scoreEmoji } from '../utils/quizScoreDisplay';
 import DailyQuizReview from './DailyQuizReview';
 
 // トップ画面の「練習クイズ」。
@@ -247,8 +248,8 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
     const finalScore = answers.filter(
       (a, i) => a !== null && questions[i] && a === questions[i].correctIndex,
     ).length;
-    const pct = total > 0 ? Math.round((finalScore / total) * 100) : 0;
-    const emoji = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪';
+    const pct = percentage(finalScore, total);
+    const emoji = scoreEmoji(pct);
     const wrongQuestions = getWrongQuestions(questions, answers);
 
     if (reviewing) {
@@ -290,9 +291,7 @@ export default function HomeQuiz({ seedOverride }: HomeQuizProps) {
           </div>
           <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-1 overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-700 ${
-                pct >= 80 ? 'bg-green-500' : pct >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}
+              className={`h-full rounded-full transition-all duration-700 ${scoreBarColor(pct)}`}
               style={{ width: `${pct}%` }}
             />
           </div>

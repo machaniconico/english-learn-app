@@ -3,6 +3,7 @@ import type { PhraseItem } from '../data/types';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import { shuffleArray } from '../utils/array';
 import { pickDistractors } from '../utils/listeningQuiz';
+import { percentage, scoreBarColor, scoreEmoji } from '../utils/quizScoreDisplay';
 
 interface ListeningQuizProps {
   items: PhraseItem[];
@@ -126,8 +127,8 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
   // Finished screen
   if (finished) {
     const score = correctCount;
-    const percentage = Math.round((score / totalQuestions) * 100);
-    const emoji = percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪';
+    const scorePct = percentage(score, totalQuestions);
+    const emoji = scoreEmoji(scorePct);
 
     return (
       <div className="w-full max-w-lg mx-auto text-center">
@@ -139,7 +140,7 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
           <div
             role="status"
             aria-live="polite"
-            aria-label={`スコア ${score} / ${totalQuestions} (${percentage}% 正解)`}
+            aria-label={`スコア ${score} / ${totalQuestions} (${scorePct}% 正解)`}
             className="inline-flex items-baseline gap-1 mb-6"
           >
             <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{score}</span>
@@ -149,16 +150,12 @@ export default function ListeningQuiz({ items }: ListeningQuizProps) {
           <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-700 ease-out ${
-                percentage >= 80
-                  ? 'bg-green-500'
-                  : percentage >= 60
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
+                scoreBarColor(scorePct)
               }`}
-              style={{ width: `${percentage}%` }}
+              style={{ width: `${scorePct}%` }}
             />
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">{percentage}% correct</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">{scorePct}% correct</p>
 
           {/* Results breakdown */}
           <div className="flex flex-wrap justify-center gap-2 mb-8">
