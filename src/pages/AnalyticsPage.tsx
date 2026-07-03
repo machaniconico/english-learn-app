@@ -28,6 +28,7 @@ const QUIZ_TYPE_LABELS: Record<string, string> = {
   'reorder': '語順',
   'listening-quiz': 'リスニング',
   'reading': '読解',
+  'daily-quiz': 'デイリークイズ',
   'drill': 'ドリル',
 };
 
