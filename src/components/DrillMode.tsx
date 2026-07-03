@@ -37,6 +37,13 @@ interface SessionStats {
   correct: number;
 }
 
+interface SummaryBreakdownItem {
+  key: string;
+  label: string;
+  answered: number;
+  correct: number;
+}
+
 interface NextQuestionResult {
   question: DrillQuestion;
   recent: string[];
@@ -433,6 +440,88 @@ export default function DrillMode({ rand }: DrillModeProps) {
     </div>
   );
 
+  const renderStatsBreakdownSection = (title: string, items: SummaryBreakdownItem[]) => (
+    <div className="rounded-2xl border border-sky-200 bg-white p-5 shadow-sm dark:border-sky-800 dark:bg-gray-800">
+      <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">{title}</h3>
+      <div className="mt-4 space-y-3">
+        {items.map((item) => {
+          const rate = percent(item.correct, item.answered);
+          const hasData = item.answered > 0;
+          const ariaLabel = hasData
+            ? `${item.label} ${item.answered}問中${item.correct}問正解 ${rate}パーセント`
+            : `${item.label} データなし`;
+
+          return (
+            <div
+              key={item.key}
+              aria-label={ariaLabel}
+              className={`rounded-xl border p-3 ${
+                hasData
+                  ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40'
+                  : 'border-gray-200 bg-gray-50/70 text-gray-400 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-500'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p
+                  className={`text-sm font-semibold ${
+                    hasData ? 'text-gray-800 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'
+                  }`}
+                >
+                  {item.label}
+                </p>
+                {hasData ? (
+                  <p className="shrink-0 text-sm font-bold text-gray-900 dark:text-gray-100">
+                    {item.correct} / {item.answered}
+                    <span className="ml-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {rate}%
+                    </span>
+                  </p>
+                ) : (
+                  <p className="shrink-0 text-sm font-semibold text-gray-400 dark:text-gray-500">
+                    データなし
+                  </p>
+                )}
+              </div>
+              {hasData && (
+                <div
+                  aria-hidden="true"
+                  className="mt-2 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+                >
+                  <div
+                    className="h-full rounded-full bg-sky-500 transition-all duration-700 dark:bg-sky-400"
+                    style={{ width: `${rate}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderStatsBreakdown = () => {
+    const genreItems = DRILL_GENRES.map(({ value }) => ({
+      key: value,
+      label: genreLabel(value),
+      answered: stats.byGenre[value].answered,
+      correct: stats.byGenre[value].correct,
+    }));
+    const difficultyItems = DRILL_DIFFICULTIES.map(({ value }) => ({
+      key: value,
+      label: difficultyLabel(value),
+      answered: stats.byDifficulty[value].answered,
+      correct: stats.byDifficulty[value].correct,
+    }));
+
+    return (
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {renderStatsBreakdownSection('ジャンル別の成績', genreItems)}
+        {renderStatsBreakdownSection('難易度別の成績', difficultyItems)}
+      </div>
+    );
+  };
+
   if (phase === 'summary') {
     return (
       <section
@@ -482,6 +571,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
             もう一度
           </button>
         </div>
+        {renderStatsBreakdown()}
       </section>
     );
   }
