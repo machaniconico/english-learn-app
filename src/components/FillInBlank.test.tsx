@@ -46,6 +46,9 @@ describe('FillInBlank', () => {
   it('shows the first question with its options', () => {
     renderWithRouter(<FillInBlank questions={questions} />);
     expect(screen.getByText('Question 1 / 2')).toBeTruthy();
+    const progressBar = screen.getByRole('progressbar', { name: '問題の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '2');
     expect(screen.getByText('go', { selector: 'span' })).toBeTruthy();
     expect(screen.getByText('goes', { selector: 'span' })).toBeTruthy();
   });
@@ -103,6 +106,9 @@ describe('FillInBlank', () => {
 
     expect(screen.getByText('Results / 結果')).toBeTruthy();
     expect(screen.getByText('100% correct')).toBeTruthy();
+    const scoreBar = screen.getByRole('progressbar', { name: 'スコア' });
+    expect(scoreBar).toHaveAttribute('aria-valuenow', '100');
+    expect(scoreBar).toHaveAttribute('aria-valuemax', '100');
 
     const status = screen.getByRole('status');
     expect(within(status).getByText('2')).toBeTruthy();

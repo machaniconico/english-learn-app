@@ -90,6 +90,9 @@ describe('LessonPage', () => {
   it('shows listening progress at 0% initially and practice navigation links', () => {
     renderLesson();
     expect(screen.getByText('0 / 2 (0%)')).toBeTruthy();
+    const progressBar = screen.getByRole('progressbar', { name: 'リスニング進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '100');
     expect(screen.getByRole('link', { name: /フラッシュカードで練習/ })).toBeTruthy();
     expect(screen.getByRole('link', { name: /リスニングクイズ/ })).toBeTruthy();
   });
@@ -104,6 +107,10 @@ describe('LessonPage', () => {
     fireEvent.click(playButtons[0]);
     // Progress should update to 1/2
     expect(screen.getByText('1 / 2 (50%)')).toBeTruthy();
+    expect(screen.getByRole('progressbar', { name: 'リスニング進捗' })).toHaveAttribute(
+      'aria-valuenow',
+      '50',
+    );
     expect(screen.getByText('リスニング済み')).toBeTruthy();
   });
 

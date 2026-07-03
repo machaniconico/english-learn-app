@@ -38,6 +38,9 @@ describe('SentenceReorder', () => {
     renderWithRouter(<SentenceReorder questions={questions} />);
     expect(screen.getByText('私はりんごが好きです。')).toBeTruthy();
     expect(screen.getByText('Question 1 / 2')).toBeTruthy();
+    const progressBar = screen.getByRole('progressbar', { name: '問題の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '2');
     // All three words are available to add
     for (const word of questions[0].words) {
       expect(screen.getByRole('button', { name: `${word} を追加` })).toBeTruthy();
@@ -134,6 +137,9 @@ describe('SentenceReorder', () => {
     // Results screen
     expect(screen.getByText('Results / 結果')).toBeTruthy();
     expect(screen.getByText('Correct: 2')).toBeTruthy();
+    const scoreBar = screen.getByRole('progressbar', { name: 'スコア' });
+    expect(scoreBar).toHaveAttribute('aria-valuenow', '100');
+    expect(scoreBar).toHaveAttribute('aria-valuemax', '100');
     // Restart button present
     expect(screen.getByRole('button', { name: 'もう一度' })).toBeTruthy();
   });

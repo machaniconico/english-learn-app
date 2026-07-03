@@ -40,6 +40,9 @@ describe('PronunciationPractice', () => {
     renderWithRouter(<PronunciationPractice items={items} />);
     expect(screen.getByText('Good morning')).toBeTruthy();
     expect(screen.getByText('おはよう')).toBeTruthy();
+    const progressBar = screen.getByRole('progressbar', { name: '発音練習の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '2');
     expect(screen.getByRole('button', { name: '録音して発音する' })).toBeTruthy();
   });
 
@@ -61,6 +64,8 @@ describe('PronunciationPractice', () => {
     // "Good" missed -> 50%
     expect(screen.getByText('50%')).toBeTruthy();
     expect(screen.getByText(/1\/2 語一致/)).toBeTruthy();
+    expect(screen.getByLabelText('Good 不一致')).toHaveClass('line-through');
+    expect(screen.getByLabelText('morning 一致')).toBeTruthy();
   });
 
   it('advances through items and shows an average score on the results screen', () => {

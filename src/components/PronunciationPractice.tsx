@@ -97,7 +97,14 @@ export default function PronunciationPractice({ items }: PronunciationPracticePr
           {scores.length > 0 ? '%' : ''}
         </span>
       </div>
-      <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
+      <div
+        className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden"
+        role="progressbar"
+        aria-valuenow={Math.round(index)}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-label="発音練習の進捗"
+      >
         <div
           className="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full transition-all duration-300"
           style={{ width: `${(index / total) * 100}%` }}
@@ -115,7 +122,8 @@ export default function PronunciationPractice({ items }: PronunciationPracticePr
             ? result.words.map((w, i) => (
                 <span
                   key={i}
-                  className={w.matched ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}
+                  className={w.matched ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400 line-through decoration-2'}
+                  aria-label={`${w.word} ${w.matched ? '一致' : '不一致'}`}
                 >
                   {w.word}
                   {i < result.words.length - 1 ? ' ' : ''}

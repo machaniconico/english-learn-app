@@ -151,7 +151,14 @@ export default function TypingPractice({ items }: TypingPracticeProps) {
           正解: {correctCount}
         </span>
       </div>
-      <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
+      <div
+        className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden"
+        role="progressbar"
+        aria-valuenow={Math.round(index + (checked ? 1 : 0))}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-label="タイピング練習の進捗"
+      >
         <div className="h-full bg-indigo-500 rounded-full transition-all duration-300" style={{ width: `${((index + (checked ? 1 : 0)) / total) * 100}%` }} />
       </div>
 

@@ -76,7 +76,14 @@ export default function DailyReview({ items, onReviewSrs, onReviewWeak }: DailyR
           {current.kind === 'srs' ? '単語カード' : '弱点'}
         </span>
       </div>
-      <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
+      <div
+        className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden"
+        role="progressbar"
+        aria-valuenow={Math.round(progress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="復習の進捗"
+      >
         <div
           className="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}

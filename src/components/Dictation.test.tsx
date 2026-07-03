@@ -35,6 +35,9 @@ describe('Dictation', () => {
     renderWithRouter(<Dictation items={items} />);
     expect(screen.getByText('Question 1 / 2')).toBeTruthy();
     expect(screen.getByText('Score: 0 / 0')).toBeTruthy();
+    const progressBar = screen.getByRole('progressbar', { name: '問題の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '2');
     expect(screen.getByLabelText('聞こえた英語を入力')).toBeTruthy();
   });
 
@@ -105,6 +108,9 @@ describe('Dictation', () => {
     expect(screen.getByText('10')).toBeTruthy();
     expect(screen.getByText('Perfect: 1')).toBeTruthy();
     expect(screen.getByText('Wrong: 1')).toBeTruthy();
+    const scoreBar = screen.getByRole('progressbar', { name: 'スコア' });
+    expect(scoreBar).toHaveAttribute('aria-valuenow', '50');
+    expect(scoreBar).toHaveAttribute('aria-valuemax', '100');
     // Mistakes review section shows the wrong item's translation
     expect(screen.getByText('彼女は速く走ります')).toBeTruthy();
   });
