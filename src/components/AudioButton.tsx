@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 
 interface AudioButtonProps {
@@ -18,6 +18,7 @@ const speeds = [0.5, 0.75, 1] as const;
 export default function AudioButton({ text, size = 'md', onPlayed }: AudioButtonProps) {
   const { speak, stop, speaking, rate, setRate } = useSpeechSynthesis();
   const [showSpeed, setShowSpeed] = useState(false);
+  const speedToggleRef = useRef<HTMLButtonElement>(null);
 
   const handleClick = () => {
     if (speaking) {
@@ -31,6 +32,7 @@ export default function AudioButton({ text, size = 'md', onPlayed }: AudioButton
   const handleSpeedClick = (speed: number) => {
     setRate(speed);
     setShowSpeed(false);
+    speedToggleRef.current?.focus();
   };
 
   return (
@@ -59,6 +61,7 @@ export default function AudioButton({ text, size = 'md', onPlayed }: AudioButton
       </button>
 
       <button
+        ref={speedToggleRef}
         type="button"
         onClick={() => setShowSpeed((v) => !v)}
         className={`
@@ -78,7 +81,15 @@ export default function AudioButton({ text, size = 'md', onPlayed }: AudioButton
       </button>
 
       {showSpeed && (
-        <div className="absolute top-full right-0 sm:left-0 sm:right-auto mt-1 z-10 flex gap-1 bg-white dark:bg-[oklch(18%_0.01_270)] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1.5">
+        <div
+          className="absolute top-full right-0 sm:left-0 sm:right-auto mt-1 z-10 flex gap-1 bg-white dark:bg-[oklch(18%_0.01_270)] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1.5"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setShowSpeed(false);
+              speedToggleRef.current?.focus();
+            }
+          }}
+        >
           {speeds.map((speed) => (
             <button
               key={speed}

@@ -32,4 +32,35 @@ describe('AudioButton', () => {
     const { container } = render(<AudioButton text="hello" />);
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('returns focus to the speed toggle after selecting a speed option', () => {
+    render(<AudioButton text="hello" />);
+    const speedToggle = screen.getByRole('button', { name: '再生速度を変更' });
+    fireEvent.click(speedToggle);
+
+    const speedOption = screen.getByRole('button', { name: '0.5x' });
+    speedOption.focus();
+    expect(document.activeElement).toBe(speedOption);
+
+    fireEvent.click(speedOption);
+
+    expect(screen.queryByRole('button', { name: '0.5x' })).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(speedToggle);
+    expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it('closes the speed popup on Escape and returns focus to the speed toggle', () => {
+    render(<AudioButton text="hello" />);
+    const speedToggle = screen.getByRole('button', { name: '再生速度を変更' });
+    fireEvent.click(speedToggle);
+
+    const speedOption = screen.getByRole('button', { name: '0.75x' });
+    speedOption.focus();
+    expect(document.activeElement).toBe(speedOption);
+
+    fireEvent.keyDown(speedOption, { key: 'Escape' });
+
+    expect(screen.queryByRole('button', { name: '0.75x' })).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(speedToggle);
+  });
 });

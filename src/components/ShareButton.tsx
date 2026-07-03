@@ -10,6 +10,7 @@ export default function ShareButton({ score, title, text }: ShareButtonProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const shareTriggerRef = useRef<HTMLButtonElement>(null);
 
   const url = 'https://english-learn-app.pages.dev/';
   const defaultText = `English Learnで英語学習中！${score ? `スコア${score}%を達成！` : ''}`;
@@ -44,12 +45,14 @@ export default function ShareButton({ score, title, text }: ShareButtonProps) {
     const tweetText = encodeURIComponent(`${shareText}\n${url}`);
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank', 'noopener');
     setShowDropdown(false);
+    shareTriggerRef.current?.focus();
   }
 
   function shareOnLINE() {
     const lineText = encodeURIComponent(`${shareText}\n${url}`);
     window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${lineText}`, '_blank', 'noopener');
     setShowDropdown(false);
+    shareTriggerRef.current?.focus();
   }
 
   async function copyLink() {
@@ -69,11 +72,13 @@ export default function ShareButton({ score, title, text }: ShareButtonProps) {
       setTimeout(() => setCopied(false), 2000);
     }
     setShowDropdown(false);
+    shareTriggerRef.current?.focus();
   }
 
   return (
     <div className="relative inline-block" ref={dropdownRef}>
       <button
+        ref={shareTriggerRef}
         onClick={handleShare}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors shadow-sm"
         aria-label="共有"
@@ -97,7 +102,15 @@ export default function ShareButton({ score, title, text }: ShareButtonProps) {
       </button>
 
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[oklch(18%_0.01_270)] shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2">
+        <div
+          className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[oklch(18%_0.01_270)] shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setShowDropdown(false);
+              shareTriggerRef.current?.focus();
+            }
+          }}
+        >
           <button
             onClick={shareOnX}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"

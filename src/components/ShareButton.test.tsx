@@ -76,6 +76,7 @@ describe('ShareButton', () => {
 
     beforeEach(() => {
       writeTextMock = vi.fn().mockResolvedValue(undefined);
+      vi.spyOn(window, 'open').mockImplementation(() => null);
       vi.stubGlobal('navigator', {
         ...navigator,
         share: undefined,
@@ -106,6 +107,38 @@ describe('ShareButton', () => {
       expect(await screen.findByText('コピーしました！')).toBeInTheDocument();
       // dropdown closes after copying
       expect(screen.queryByText('リンクをコピー')).not.toBeInTheDocument();
+    });
+
+    it('returns focus to the share trigger after copying the link', async () => {
+      renderWithRouter(<ShareButton />);
+      const trigger = screen.getByRole('button', { name: '共有' });
+      fireEvent.click(trigger);
+
+      const copyButton = screen.getByRole('button', { name: 'リンクをコピー' });
+      copyButton.focus();
+      expect(document.activeElement).toBe(copyButton);
+
+      fireEvent.click(copyButton);
+
+      await waitFor(() => expect(writeTextMock).toHaveBeenCalledWith(URL));
+      await waitFor(() => expect(document.activeElement).toBe(trigger));
+      expect(screen.queryByRole('button', { name: 'リンクをコピー' })).not.toBeInTheDocument();
+      expect(document.activeElement).not.toBe(document.body);
+    });
+
+    it('closes the dropdown on Escape and returns focus to the share trigger', () => {
+      renderWithRouter(<ShareButton />);
+      const trigger = screen.getByRole('button', { name: '共有' });
+      fireEvent.click(trigger);
+
+      const copyButton = screen.getByRole('button', { name: 'リンクをコピー' });
+      copyButton.focus();
+      expect(document.activeElement).toBe(copyButton);
+
+      fireEvent.keyDown(copyButton, { key: 'Escape' });
+
+      expect(screen.queryByRole('button', { name: 'リンクをコピー' })).not.toBeInTheDocument();
+      expect(document.activeElement).toBe(trigger);
     });
 
     it('has no accessibility violations with the dropdown open', async () => {
