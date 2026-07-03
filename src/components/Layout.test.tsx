@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { Routes, Route, MemoryRouter } from 'react-router-dom';
-import { render, screen, fireEvent, within } from '../test/test-utils';
+import { render, screen, fireEvent, waitFor, within } from '../test/test-utils';
 import Layout from './Layout';
 import { STORAGE_KEY } from '../hooks/useLastActivity';
 
@@ -59,8 +59,27 @@ describe('Layout', () => {
     renderLayout();
     const main = screen.getByRole('main');
     expect(main).toHaveAttribute('id', 'main-content');
+    expect(main).toHaveAttribute('tabIndex', '-1');
     // The outlet page content is rendered inside <main>.
     expect(within(main).getByRole('heading', { name: 'ページ本文' })).toBeInTheDocument();
+  });
+
+  it('does not move focus to <main> on initial render', () => {
+    renderLayout('/dictionary');
+
+    expect(document.activeElement).not.toBe(screen.getByRole('main'));
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+
+  it('moves focus to <main> and announces the new page after client route changes', async () => {
+    renderLayout('/');
+    const main = screen.getByRole('main');
+    const globalNav = screen.getByRole('navigation', { name: 'グローバルナビゲーション' });
+
+    fireEvent.click(within(globalNav).getByRole('link', { name: '辞書' }));
+
+    await waitFor(() => expect(document.activeElement).toBe(main));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('辞書ページ'));
   });
 
   it('exposes navigation landmarks with accessible names', () => {
