@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { DRILL_GENRES } from './drillTypes';
 import type { DrillDifficulty, DrillGenre, DrillQuestion } from './drillTypes';
+import { buildDrillPool } from './drillQuestionBank';
 import {
   DRILL_RECENT_CAP,
+  orderedGenres,
   orderedWeakGenres,
   pickNextQuestion,
   pickRandomGenre,
   pickWeakGenre,
   pushRecent,
+  resolveNextQuestion,
   sortGenresByWeakness,
   type DrillGenreStats,
 } from './drillEngine';
@@ -25,6 +28,17 @@ function makeQuestion(
     options: ['A', 'B', 'C', 'D'],
     correctIndex: 0,
     explanation: `解説 ${id}`,
+  };
+}
+
+function makeGenreStats(overrides: Partial<DrillGenreStats> = {}): DrillGenreStats {
+  return {
+    'fill-blank': { answered: 0, correct: 0 },
+    vocab: { answered: 0, correct: 0 },
+    'ja-en': { answered: 0, correct: 0 },
+    'en-ja': { answered: 0, correct: 0 },
+    listening: { answered: 0, correct: 0 },
+    ...overrides,
   };
 }
 
@@ -81,6 +95,63 @@ describe('pushRecent', () => {
     expect(next).toHaveLength(DRILL_RECENT_CAP);
     expect(next[0]).toBe('q-1');
     expect(next.at(-1)).toBe('latest');
+  });
+});
+
+describe('orderedGenres', () => {
+  it('単一ジャンル選択ならそのジャンルだけを返す', () => {
+    expect(orderedGenres('listening', makeGenreStats(), () => 0)).toEqual(['listening']);
+  });
+
+  it('random は抽選ジャンルを先頭にし、残りの全ジャンルを重複なく並べる', () => {
+    const rand = () => 0.25;
+    const ordered = orderedGenres('random', makeGenreStats(), rand);
+    const allGenres = DRILL_GENRES.map((genre) => genre.value);
+
+    expect(ordered[0]).toBe(pickRandomGenre(rand));
+    expect(ordered).toHaveLength(allGenres.length);
+    expect(new Set(ordered)).toEqual(new Set(allGenres));
+  });
+
+  it('weak は orderedWeakGenres と同じ苦手優先順を返す', () => {
+    const byGenre = makeGenreStats({
+      'fill-blank': { answered: 20, correct: 0 },
+      vocab: { answered: 20, correct: 10 },
+      'ja-en': { answered: 20, correct: 15 },
+      'en-ja': { answered: 20, correct: 20 },
+      listening: { answered: 0, correct: 0 },
+    });
+    const rand = () => 0;
+
+    const ordered = orderedGenres('weak', byGenre, rand);
+
+    expect(ordered).toEqual(orderedWeakGenres(byGenre, rand));
+    expect(ordered[0]).toBe('fill-blank');
+  });
+});
+
+describe('resolveNextQuestion', () => {
+  it('決定的乱数で単一ジャンル・難易度の問題を返し、recent に id を追加する', () => {
+    const recentIds = ['already-seen'];
+    const expectedQuestion = buildDrillPool('vocab', 'beginner', () => 0)[0];
+
+    const result = resolveNextQuestion('vocab', 'beginner', recentIds, makeGenreStats(), () => 0);
+
+    expect(result?.question.id).toBe(expectedQuestion.id);
+    expect(result?.question.genre).toBe('vocab');
+    expect(result?.question.difficulty).toBe('beginner');
+    expect(result?.recent).toEqual([...recentIds, expectedQuestion.id]);
+    expect(recentIds).toEqual(['already-seen']);
+  });
+
+  it('現行プールがすべて recent 済みでも全体から選び直して継続する', () => {
+    const pool = buildDrillPool('vocab', 'beginner', () => 0);
+    const recentIds = pool.map((question) => question.id);
+
+    const result = resolveNextQuestion('vocab', 'beginner', recentIds, makeGenreStats(), () => 0);
+
+    expect(result?.question.id).toBe(pool[0].id);
+    expect(result?.recent).toEqual([...recentIds, pool[0].id]);
   });
 });
 

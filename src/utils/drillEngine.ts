@@ -1,5 +1,11 @@
 import { DRILL_GENRES } from './drillTypes';
-import type { DrillGenre, DrillQuestion } from './drillTypes';
+import { buildDrillPool } from './drillQuestionBank';
+import type {
+  DrillDifficulty,
+  DrillGenre,
+  DrillGenreSelection,
+  DrillQuestion,
+} from './drillTypes';
 
 /** 直近出題履歴として保持する最大件数。 */
 export const DRILL_RECENT_CAP = 300;
@@ -10,6 +16,11 @@ type DrillGenreTotals = {
 };
 
 export type DrillGenreStats = Record<DrillGenre, DrillGenreTotals>;
+
+export interface NextQuestionResult {
+  question: DrillQuestion;
+  recent: string[];
+}
 
 function randomIndex(length: number, rand: () => number): number {
   const index = Math.floor(rand() * length);
@@ -91,4 +102,42 @@ export function sortGenresByWeakness(byGenre: DrillGenreStats): DrillGenre[] {
 export function orderedWeakGenres(byGenre: DrillGenreStats, rand: () => number): DrillGenre[] {
   const first = pickWeakGenre(byGenre, rand);
   return [first, ...sortGenresByWeakness(byGenre).filter((genre) => genre !== first)];
+}
+
+export function orderedGenres(
+  selection: DrillGenreSelection,
+  byGenre: DrillGenreStats,
+  rand: () => number,
+): DrillGenre[] {
+  if (selection === 'weak') return orderedWeakGenres(byGenre, rand);
+  if (selection !== 'random') return [selection];
+
+  const first = pickRandomGenre(rand);
+  return [
+    first,
+    ...DRILL_GENRES.map((item) => item.value).filter((genre) => genre !== first),
+  ];
+}
+
+export function resolveNextQuestion(
+  selection: DrillGenreSelection,
+  difficulty: DrillDifficulty,
+  recentIds: string[],
+  byGenre: DrillGenreStats,
+  randOverride?: () => number,
+): NextQuestionResult | null {
+  const rand = randOverride ?? Math.random;
+
+  for (const genre of orderedGenres(selection, byGenre, rand)) {
+    const pool = buildDrillPool(genre, difficulty, randOverride);
+    const question = pickNextQuestion(pool, recentIds, rand);
+    if (question) {
+      return {
+        question,
+        recent: pushRecent(recentIds, question.id),
+      };
+    }
+  }
+
+  return null;
 }
