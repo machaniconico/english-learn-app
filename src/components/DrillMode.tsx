@@ -49,8 +49,35 @@ interface DrillModeProps {
 }
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
+const SHORTCUT_OPTION_KEYS: Record<string, number> = {
+  '1': 0,
+  '2': 1,
+  '3': 2,
+  '4': 3,
+  a: 0,
+  b: 1,
+  c: 2,
+  d: 3,
+};
 const RANDOM_GENRE_LABEL = 'ランダム';
 const WEAK_GENRE_LABEL = '苦手優先';
+
+function shouldIgnoreShortcutTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+
+  const tagName = target.tagName.toLowerCase();
+  return (
+    tagName === 'input' ||
+    tagName === 'textarea' ||
+    tagName === 'select' ||
+    target.isContentEditable ||
+    target.closest('[contenteditable="true"], [contenteditable=""]') !== null
+  );
+}
+
+function isSpaceKey(event: KeyboardEvent): boolean {
+  return event.key === ' ' || event.key === 'Space' || event.key === 'Spacebar' || event.code === 'Space';
+}
 
 function percent(correct: number, answered: number): number {
   if (answered === 0) return 0;
@@ -118,6 +145,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
   const answered = selectedIndex !== null || timedOut;
   const timerDuration = timerSeconds(timer);
   const visibleRemainingSeconds = remainingSeconds ?? timerDuration;
+  const isTimerAlmostOver = visibleRemainingSeconds <= 3;
   const sessionRate = percent(session.correct, session.answered);
   const totalRate = percent(stats.total.correct, stats.total.answered);
   const questionNumber = session.answered + (answered ? 0 : 1);
@@ -275,6 +303,36 @@ export default function DrillMode({ rand }: DrillModeProps) {
     if (!answered) return;
     loadNextQuestion();
   }, [answered, loadNextQuestion]);
+
+  useEffect(() => {
+    if (phase !== 'active') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (shouldIgnoreShortcutTarget(event.target)) return;
+
+      const optionIndex = SHORTCUT_OPTION_KEYS[event.key.toLowerCase()];
+      if (
+        !answered &&
+        currentQuestion &&
+        optionIndex !== undefined &&
+        optionIndex < currentQuestion.options.length
+      ) {
+        handleAnswer(optionIndex);
+        return;
+      }
+
+      if (answered && (event.key === 'Enter' || isSpaceKey(event))) {
+        if (isSpaceKey(event)) {
+          event.preventDefault();
+        }
+        handleNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [answered, currentQuestion, handleAnswer, handleNext, phase]);
 
   const handleReplay = useCallback(() => {
     if (currentQuestion?.genre !== 'listening') return;
@@ -593,7 +651,11 @@ export default function DrillMode({ rand }: DrillModeProps) {
                 // 毎秒更新されるため読み上げは抑制し、見た目のカウントダウン専用にする。
                 aria-live="off"
                 aria-label={`残り時間 ${visibleRemainingSeconds}秒`}
-                className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+                className={`rounded-full px-3 py-1 text-xs font-bold ${
+                  isTimerAlmostOver
+                    ? 'animate-pulse bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300'
+                    : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
+                }`}
               >
                 残り {visibleRemainingSeconds} 秒
               </span>
