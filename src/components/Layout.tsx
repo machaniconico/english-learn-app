@@ -42,6 +42,44 @@ function matchLearningCommand(pathname: string) {
   return null;
 }
 
+function getRouteLabel(pathname: string): string {
+  const exactCommand = PALETTE_COMMANDS.find((cmd) => cmd.path === pathname);
+  if (exactCommand) {
+    return exactCommand.label;
+  }
+
+  const parentCommand = PALETTE_COMMANDS
+    .filter((cmd) => cmd.path !== '/')
+    .sort((a, b) => b.path.length - a.path.length)
+    .find((cmd) => pathname.startsWith(cmd.path + '/'));
+  if (parentCommand) {
+    return parentCommand.label;
+  }
+
+  if (typeof document !== 'undefined') {
+    const title = document.title.trim();
+    if (title) {
+      return title;
+    }
+  }
+
+  const segments = pathname.split('/').filter(Boolean);
+  const lastSegment = segments[segments.length - 1];
+  if (!lastSegment) {
+    return 'ホーム';
+  }
+
+  return decodeURIComponent(lastSegment)
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function getRouteAnnouncement(pathname: string, main: HTMLElement | null): string {
+  const heading = main?.querySelector('h1, [role="heading"][aria-level="1"], h2, [role="heading"]');
+  const headingText = heading?.textContent?.replace(/\s+/g, ' ').trim();
+  return headingText || getRouteLabel(pathname);
+}
+
 function Breadcrumbs() {
   const location = useLocation();
   const paths = location.pathname.split('/').filter(Boolean);
@@ -175,12 +213,15 @@ export default function Layout() {
   const location = useLocation();
   const { isDark, toggle } = useDarkMode();
   const { isTracking, currentDuration, stopTimer } = useStudyTimer();
+  const mainRef = useRef<HTMLElement>(null);
+  const previousPathRef = useRef(location.pathname);
   // 最後に開いた学習ページを localStorage に記録する(US-002)。
   const { record } = useLastActivity();
   // コマンドパレットの開閉状態。
   const [paletteOpen, setPaletteOpen] = useState(false);
   // キーボードショートカットヘルプ(? キー)の開閉状態。
   const [helpOpen, setHelpOpen] = useState(false);
+  const [routeAnnouncement, setRouteAnnouncement] = useState('');
 
   // グローバルショートカット:
   //  - ⌘K / Ctrl+K: コマンドパレットのトグル(既存挙動・維持)
@@ -225,6 +266,16 @@ export default function Layout() {
     }
   }, [location.pathname, record]);
 
+  useEffect(() => {
+    if (previousPathRef.current === location.pathname) {
+      return;
+    }
+
+    previousPathRef.current = location.pathname;
+    mainRef.current?.focus();
+    setRouteAnnouncement(getRouteAnnouncement(location.pathname, mainRef.current));
+  }, [location.pathname]);
+
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -242,6 +293,9 @@ export default function Layout() {
       >
         本文へスキップ
       </a>
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {routeAnnouncement}
+      </div>
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-[oklch(18%_0.01_270/0.8)] backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
@@ -361,7 +415,12 @@ export default function Layout() {
         </div>
       </header>
 
-      <main id="main-content" className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 pb-24 md:pb-8">
+      <main
+        id="main-content"
+        ref={mainRef}
+        tabIndex={-1}
+        className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 pb-24 md:pb-8 outline-none"
+      >
         <Breadcrumbs />
         <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
           <Outlet />
