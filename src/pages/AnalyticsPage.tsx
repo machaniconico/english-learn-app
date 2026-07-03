@@ -528,6 +528,18 @@ function AccuracyAnalysis() {
   const byType = useMemo(() => getAccuracyByType(), [getAccuracyByType]);
   const byLevel = useMemo(() => getAccuracyByLevel(), [getAccuracyByLevel]);
   const weakest = useMemo(() => getWeakestTypes(), [getWeakestTypes]);
+  const sortedByType = useMemo(
+    () => [...byType].sort((a, b) => b.accuracy - a.accuracy),
+    [byType],
+  );
+  const sortedByLevel = useMemo(
+    () =>
+      [...byLevel].sort((a, b) => {
+        const order = ['beginner', 'intermediate', 'advanced'];
+        return order.indexOf(a.level) - order.indexOf(b.level);
+      }),
+    [byLevel],
+  );
 
   const trendData = useMemo(() => {
     const types = byType.map((t) => t.type);
@@ -624,8 +636,7 @@ function AccuracyAnalysis() {
             問題タイプ別正答率
           </h2>
           <div className="space-y-3">
-            {byType
-              .sort((a, b) => b.accuracy - a.accuracy)
+            {sortedByType
               .map((item) => (
                 <div key={item.type}>
                   <div className="flex justify-between text-sm mb-1">
@@ -664,11 +675,7 @@ function AccuracyAnalysis() {
             </p>
           ) : (
             <div className="flex items-end gap-3 sm:gap-4 h-44 px-2">
-              {byLevel
-                .sort((a, b) => {
-                  const order = ['beginner', 'intermediate', 'advanced'];
-                  return order.indexOf(a.level) - order.indexOf(b.level);
-                })
+              {sortedByLevel
                 .map((item) => {
                   const height = Math.max(8, item.accuracy);
                   return (
