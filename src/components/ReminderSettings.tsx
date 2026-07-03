@@ -1,8 +1,8 @@
 import { useReminder } from '../hooks/useReminder';
-import { useStudyTimer } from '../hooks/useStudyTimer';
+import { useProgress, applyStreakBreak } from '../hooks/useProgress';
 
 // 今日のローカル暦日を 'YYYY-MM-DD' で返す。
-// useStudyTimer の getDateString と同一規約で生成する(ローカル暦日ベース)。
+// StreakBanner と同一規約で生成する(ローカル暦日ベース)。
 function getTodayStr(): string {
   const d = new Date();
   const y = d.getFullYear();
@@ -13,20 +13,18 @@ function getTodayStr(): string {
 
 /**
  * 学習リマインダー設定カード。
- * useReminder(設定・権限) と useStudyTimer(今日の学習有無・連続日数) を組み合わせ、
+ * useReminder(設定・権限) と useProgress(今日の学習有無・連続日数) を組み合わせ、
  * 有効トグル / 通知時刻 / 通知許可ボタン / 未対応環境メッセージ を表示する。
  * ダークモードと a11y(label と input の関連付け・aria) に対応する。
  */
 export default function ReminderSettings() {
-  const { getSessions, getStreak } = useStudyTimer();
+  const { progress } = useProgress();
 
-  // 今日の日付文字列と学習状態・連続日数を算出。
-  // getSessions(1) は直近24時間のセッションを返すため、その中から
-  // 今日のローカル暦日(date)に一致する session があれば studiedToday とみなす。
+  // StreakBanner と同じ正典ソースから、今日時点の実効ストリークを算出する。
   const todayStr = getTodayStr();
-  const sessions = getSessions(1);
-  const studiedToday = sessions.some((s) => s.date === todayStr);
-  const currentStreak = getStreak().current;
+  const effective = applyStreakBreak(progress, todayStr);
+  const studiedToday = progress.lastStudyDate === todayStr;
+  const currentStreak = effective.streak;
 
   const { settings, setEnabled, setTime, permission, requestPermission } = useReminder({
     studiedToday,

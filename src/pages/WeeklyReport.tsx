@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useStudyTimer } from '../hooks/useStudyTimer';
+import { useProgress, applyStreakBreak } from '../hooks/useProgress';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useUserLevel, LEVEL_INFO, CEFR_ORDER } from '../hooks/useUserLevel';
 import { useAccuracy } from '../hooks/useAccuracy';
@@ -17,6 +18,15 @@ function getMondayOfWeek(date: Date): Date {
 
 function formatDateJa(date: Date): string {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+// 今日のローカル暦日を 'YYYY-MM-DD' で返す(ローカル暦日ベース)。
+function getTodayStr(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function getPeriodRange(period: Period): { start: Date; end: Date; label: string; days: number } {
@@ -106,25 +116,30 @@ function getPreviousPeriodRange(period: Period): { start: Date; end: Date } {
 export default function WeeklyReport() {
   const [period, setPeriod] = useState<Period>('this-week');
   const { getSessions, getStreak } = useStudyTimer();
+  const { progress } = useProgress();
   const { getEventsForPeriod } = useAnalytics();
   const { level: userLevel, hasDiagnosed, checkLevelUp } = useUserLevel();
   const { getOverallAccuracy } = useAccuracy();
 
   const range = useMemo(() => getPeriodRange(period), [period]);
   const prevRange = useMemo(() => getPreviousPeriodRange(period), [period]);
+  const todayStr = getTodayStr();
+  const effectiveStreak = applyStreakBreak(progress, todayStr).streak;
 
   const reportData = useMemo(
-    () =>
-      buildReportData({
+    () => {
+      const timerStreak = getStreak();
+      return buildReportData({
         sessions90: getSessions(90),
         sessions180: getSessions(180),
         allEvents: getEventsForPeriod(90),
-        streak: getStreak(),
+        streak: { current: effectiveStreak, longest: timerStreak.longest },
         range,
         prevRange,
         period,
-      }),
-    [range, prevRange, period, getSessions, getEventsForPeriod, getStreak],
+      });
+    },
+    [range, prevRange, period, getSessions, getEventsForPeriod, getStreak, effectiveStreak],
   );
 
   const maxMinutes = Math.max(...reportData.dailyData.map((d) => d.minutes), 1);

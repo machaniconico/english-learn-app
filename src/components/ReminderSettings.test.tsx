@@ -5,7 +5,8 @@ import { renderWithRouter, screen, fireEvent } from '../test/test-utils';
 import ReminderSettings from './ReminderSettings';
 
 const REMINDER_STORAGE_KEY = 'english-learn-reminder';
-const TIMER_STORAGE_KEY = 'english-learn-study-time';
+const PROGRESS_STORAGE_KEY = 'english-learn-progress';
+const INTERVAL_MS = 60_000;
 
 // ---------------------------------------------------------------------------
 // Notification モック(useReminder.test.ts と同等の実装)
@@ -13,6 +14,7 @@ const TIMER_STORAGE_KEY = 'english-learn-study-time';
 // テストするには自前で取り付ける必要がある。
 // ---------------------------------------------------------------------------
 interface NotificationMock {
+  ctor: ReturnType<typeof vi.fn>;
   requestPermission: ReturnType<typeof vi.fn>;
   setPermission: (p: NotificationPermission) => void;
 }
@@ -31,6 +33,7 @@ function installNotificationMock(
   }) as unknown as typeof Notification;
   vi.stubGlobal('Notification', mock);
   return {
+    ctor,
     requestPermission,
     setPermission: (p: NotificationPermission) => {
       permission = p;
@@ -39,32 +42,36 @@ function installNotificationMock(
 }
 
 // ---------------------------------------------------------------------------
-// useStudyTimer の localStorage シードヘルパ
+// useProgress の localStorage シードヘルパ
 // ---------------------------------------------------------------------------
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function seedTodaySession(): void {
-  const now = Date.now();
-  const today = toDateStr(new Date(now));
+function daysAgoStr(daysAgo: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return toDateStr(d);
+}
+
+function seedProgress(opts: { streak: number; lastStudyDate: string; freezeTokens?: number }): void {
   localStorage.setItem(
-    TIMER_STORAGE_KEY,
+    PROGRESS_STORAGE_KEY,
     JSON.stringify({
-      sessions: [
-        {
-          date: today,
-          startTime: now - 300_000,
-          endTime: now - 240_000,
-          duration: 300,
-          activity: 'reading',
-        },
-      ],
-      currentActivity: null,
-      currentStart: null,
-      lastInteraction: null,
+      lessons: {},
+      fillInBlankScores: {},
+      readingScores: {},
+      totalStudyTime: 0,
+      streak: opts.streak,
+      lastStudyDate: opts.lastStudyDate,
+      freezeTokens: opts.freezeTokens ?? 0,
     }),
   );
+}
+
+function pinTime(date: Date): void {
+  vi.useFakeTimers();
+  vi.setSystemTime(date);
 }
 
 describe('ReminderSettings', () => {
@@ -73,6 +80,7 @@ describe('ReminderSettings', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     // setup.ts の afterEach が localStorage.clear() を実行する。
   });
@@ -165,11 +173,54 @@ describe('ReminderSettings', () => {
   });
 
   // -------------------------------------------------------------------------
-  // 今日学習済みの表示への影動(回帰)
+  // useProgress 由来の streak/studiedToday 連携
   // -------------------------------------------------------------------------
 
-  it('今日のセッションが存在する場合はトグル操作が壊れない(studiedToday 連携)', () => {
-    seedTodaySession();
+  it('freeze で継続している streak を通知本文へ渡す', () => {
+    pinTime(new Date('2026-06-21T20:05:00'));
+    const mock = installNotificationMock('granted');
+    localStorage.setItem(
+      REMINDER_STORAGE_KEY,
+      JSON.stringify({ enabled: true, time: '20:00' }),
+    );
+    seedProgress({ streak: 9, lastStudyDate: daysAgoStr(3), freezeTokens: 2 });
+
+    renderWithRouter(<ReminderSettings />);
+
+    act(() => {
+      vi.advanceTimersByTime(INTERVAL_MS);
+    });
+
+    expect(mock.ctor).toHaveBeenCalledTimes(1);
+    expect(mock.ctor).toHaveBeenCalledWith(
+      '学習リマインダー',
+      expect.objectContaining({
+        body: expect.stringContaining('9日連続'),
+        icon: '/icon-192.png',
+      }),
+    );
+  });
+
+  it('progress.lastStudyDate が今日ならセッションがなくても通知しない(studiedToday 連携)', () => {
+    pinTime(new Date('2026-06-21T20:05:00'));
+    const mock = installNotificationMock('granted');
+    localStorage.setItem(
+      REMINDER_STORAGE_KEY,
+      JSON.stringify({ enabled: true, time: '20:00' }),
+    );
+    seedProgress({ streak: 5, lastStudyDate: daysAgoStr(0), freezeTokens: 0 });
+
+    renderWithRouter(<ReminderSettings />);
+
+    act(() => {
+      vi.advanceTimersByTime(INTERVAL_MS);
+    });
+
+    expect(mock.ctor).not.toHaveBeenCalled();
+  });
+
+  it('progress.lastStudyDate が今日の場合もトグル操作が壊れない(studiedToday 連携)', () => {
+    seedProgress({ streak: 1, lastStudyDate: daysAgoStr(0) });
     renderWithRouter(<ReminderSettings />);
     const toggle = screen.getByLabelText('リマインダーを有効にする') as HTMLInputElement;
     fireEvent.click(toggle);

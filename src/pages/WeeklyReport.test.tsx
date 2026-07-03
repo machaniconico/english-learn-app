@@ -2,12 +2,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
-import { renderWithRouter, screen, fireEvent } from '../test/test-utils';
+import { renderWithRouter, screen, fireEvent, within } from '../test/test-utils';
 import WeeklyReport from './WeeklyReport';
 import type { StudySession } from '../hooks/useStudyTimer';
 import type { LearningEvent } from '../hooks/useAnalytics';
 
 expect.extend(matchers);
+
+const PROGRESS_STORAGE_KEY = 'english-learn-progress';
+const TIMER_STORAGE_KEY = 'english-learn-study-time';
 
 beforeEach(() => {
   localStorage.clear();
@@ -37,6 +40,52 @@ function makeEvent(minutesAgo: number, score: number): LearningEvent {
     score,
     timestamp: Date.now() - minutesAgo * 60 * 1000,
   };
+}
+
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function daysAgoStr(daysAgo: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return toDateStr(d);
+}
+
+function makeSessionDaysAgo(daysAgo: number): StudySession {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const startTime = d.getTime();
+  const endTime = startTime + 10 * 60 * 1000;
+  return {
+    date: toDateStr(d),
+    startTime,
+    endTime,
+    duration: 10 * 60,
+    activity: 'lesson',
+  };
+}
+
+function seedTimerSessions(sessions: StudySession[]): void {
+  localStorage.setItem(
+    TIMER_STORAGE_KEY,
+    JSON.stringify({ sessions, currentActivity: null, currentStart: null, lastInteraction: null }),
+  );
+}
+
+function seedProgress(opts: { streak: number; lastStudyDate: string; freezeTokens?: number }): void {
+  localStorage.setItem(
+    PROGRESS_STORAGE_KEY,
+    JSON.stringify({
+      lessons: {},
+      fillInBlankScores: {},
+      readingScores: {},
+      totalStudyTime: 0,
+      streak: opts.streak,
+      lastStudyDate: opts.lastStudyDate,
+      freezeTokens: opts.freezeTokens ?? 0,
+    }),
+  );
 }
 
 describe('WeeklyReport', () => {
@@ -73,7 +122,7 @@ describe('WeeklyReport', () => {
       makeSession(60, 30 * 60),  // another 30 min session -> 60 min total
     ];
     localStorage.setItem(
-      'english-learn-study-time',
+      TIMER_STORAGE_KEY,
       JSON.stringify({ sessions, currentActivity: null, currentStart: null, lastInteraction: null }),
     );
 
@@ -89,6 +138,26 @@ describe('WeeklyReport', () => {
     // Stat card labels
     expect(screen.getByText('総学習時間')).toBeTruthy();
     expect(screen.getByText('学習日数')).toBeTruthy();
+  });
+
+  it('uses useProgress/applyStreakBreak for current streak while keeping timer longest', () => {
+    seedProgress({ streak: 9, lastStudyDate: daysAgoStr(3), freezeTokens: 2 });
+    seedTimerSessions([
+      makeSessionDaysAgo(10),
+      makeSessionDaysAgo(9),
+      makeSessionDaysAgo(8),
+      makeSessionDaysAgo(7),
+    ]);
+
+    renderWithRouter(<WeeklyReport />);
+
+    const streakCard = screen.getByRole('heading', { name: '連続学習記録' }).closest('div');
+    expect(streakCard).not.toBeNull();
+    const scoped = within(streakCard as HTMLElement);
+    expect(scoped.getByText('9')).toBeInTheDocument();
+    expect(scoped.getByText('現在の連続日数')).toBeInTheDocument();
+    expect(scoped.getByText('4')).toBeInTheDocument();
+    expect(scoped.getByText('最長記録')).toBeInTheDocument();
   });
 
   it('has no axe accessibility violations', async () => {
