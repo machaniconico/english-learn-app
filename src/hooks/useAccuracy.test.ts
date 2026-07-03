@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import {
   computeOverallAccuracy,
   computeAccuracyByType,
@@ -6,8 +7,11 @@ import {
   computeRecentTrend,
   computeWeakestTypes,
   trimResults,
+  useAccuracy,
   type QuizResult,
 } from './useAccuracy';
+
+const STORAGE_KEY = 'english-learn-accuracy';
 
 function makeResult(partial: Partial<QuizResult> & Pick<QuizResult, 'type'>): QuizResult {
   return {
@@ -18,6 +22,10 @@ function makeResult(partial: Partial<QuizResult> & Pick<QuizResult, 'type'>): Qu
     timestamp: 1_000,
     ...partial,
   };
+}
+
+function storedResults(): QuizResult[] {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as QuizResult[];
 }
 
 beforeEach(() => {
@@ -49,7 +57,7 @@ describe('computeAccuracyByType', () => {
     expect(computeAccuracyByType([])).toEqual([]);
   });
 
-  it('sums correct/total and counts attempts per type', () => {
+  it('returns question totals and counts attempts per type', () => {
     const results = [
       makeResult({ type: 'reading', correct: 1, total: 2 }),
       makeResult({ type: 'reading', correct: 1, total: 2 }),
@@ -58,8 +66,8 @@ describe('computeAccuracyByType', () => {
     const byType = computeAccuracyByType(results);
     const reading = byType.find((t) => t.type === 'reading');
     const dictation = byType.find((t) => t.type === 'dictation');
-    expect(reading).toEqual({ type: 'reading', accuracy: 50, attempts: 2 });
-    expect(dictation).toEqual({ type: 'dictation', accuracy: 75, attempts: 1 });
+    expect(reading).toEqual({ type: 'reading', accuracy: 50, attempts: 2, total: 4 });
+    expect(dictation).toEqual({ type: 'dictation', accuracy: 75, attempts: 1, total: 4 });
   });
 
   it('keeps drill in the type breakdown', () => {
@@ -72,7 +80,31 @@ describe('computeAccuracyByType', () => {
       type: 'drill',
       accuracy: 10,
       attempts: 1,
+      total: 10,
     });
+  });
+});
+
+describe('useAccuracy', () => {
+  it('saves at most 500 results after appending a new result', () => {
+    const existing = Array.from({ length: 500 }, (_, i) => makeResult({ type: 'reading', score: i }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+
+    const { result } = renderHook(() => useAccuracy());
+    act(() => {
+      result.current.logResult({
+        type: 'reading',
+        setId: 'new',
+        score: 999,
+        total: 1,
+        correct: 1,
+      });
+    });
+
+    const saved = storedResults();
+    expect(saved).toHaveLength(500);
+    expect(saved[0].score).toBe(1);
+    expect(saved[saved.length - 1]).toMatchObject({ setId: 'new', score: 999 });
   });
 });
 

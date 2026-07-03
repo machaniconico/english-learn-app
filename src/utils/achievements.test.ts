@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateAchievements, countUnlocked, type AchievementInput } from './achievements';
+import { computeAccuracyByType, type QuizResult } from '../hooks/useAccuracy';
 
 const zero: AchievementInput = {
   streak: 0,
@@ -43,11 +44,28 @@ describe('evaluateAchievements', () => {
     expect(a.progress).toEqual({ current: 25, target: 50 });
   });
 
-  it('gates the accuracy badge on a minimum number of attempts', () => {
+  it('gates the accuracy badge on a minimum number of recorded questions', () => {
     expect(find({ ...zero, overallAccuracy: 95, accuracyAttempts: 5 }, 'accuracy-80').unlocked).toBe(false);
     expect(find({ ...zero, overallAccuracy: 95, accuracyAttempts: 20 }, 'accuracy-80').unlocked).toBe(true);
-    // below the accuracy target stays locked even with enough attempts
+    // below the accuracy target stays locked even with enough questions
     expect(find({ ...zero, overallAccuracy: 70, accuracyAttempts: 50 }, 'accuracy-80').unlocked).toBe(false);
+  });
+
+  it('can unlock the accuracy badge from one 20-question drill result', () => {
+    const results: QuizResult[] = [
+      {
+        type: 'drill',
+        setId: 'drill-session',
+        score: 90,
+        total: 20,
+        correct: 18,
+        timestamp: 1,
+      },
+    ];
+    const accuracyAttempts = computeAccuracyByType(results).reduce((sum, t) => sum + t.total, 0);
+
+    expect(accuracyAttempts).toBe(20);
+    expect(find({ ...zero, overallAccuracy: 90, accuracyAttempts }, 'accuracy-80').unlocked).toBe(true);
   });
 
   it('unlocks the diagnosis badge only once diagnosed', () => {
