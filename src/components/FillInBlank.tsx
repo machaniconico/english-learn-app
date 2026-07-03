@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FillInBlankQuestion } from '../data/types';
+import { percentage, scoreBarColor } from '../utils/quizScoreDisplay';
 
 interface FillInBlankProps {
   questions: FillInBlankQuestion[];
@@ -132,14 +133,9 @@ export default function FillInBlank({ questions }: FillInBlankProps) {
   if (finished) {
     const score = correctCount;
     const total = questions.length;
-    const percentage = Math.round((score / total) * 100);
+    const scorePct = percentage(score, total);
     const wrongAnswers = state.results.filter((r) => !r.correct);
-    const barColor =
-      percentage >= 80
-        ? 'bg-green-500'
-        : percentage >= 60
-          ? 'bg-yellow-500'
-          : 'bg-red-500';
+    const barColor = scoreBarColor(scorePct);
 
     return (
       <div className="w-full max-w-2xl mx-auto">
@@ -156,10 +152,10 @@ export default function FillInBlank({ questions }: FillInBlankProps) {
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
-                style={{ width: `${percentage}%` }}
+                style={{ width: `${scorePct}%` }}
               />
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300">{percentage}% correct</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{scorePct}% correct</p>
           </div>
 
           {/* Wrong answers review */}

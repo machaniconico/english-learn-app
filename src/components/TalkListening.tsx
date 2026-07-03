@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Part4Question } from '../data/types';
+import { percentage, scoreBarColor, scoreEmoji } from '../utils/quizScoreDisplay';
 
 interface TalkListeningProps {
   talks: Part4Question[];
@@ -128,10 +129,9 @@ export default function TalkListening({ talks }: TalkListeningProps) {
 
   // Results screen
   if (finished) {
-    const percentage = Math.round((correctCount / totalQuestions) * 100);
-    const barColor =
-      percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500';
-    const emoji = percentage >= 80 ? '\u{1F389}' : percentage >= 60 ? '\u{1F44D}' : '\u{1F4AA}';
+    const scorePct = percentage(correctCount, totalQuestions);
+    const barColor = scoreBarColor(scorePct);
+    const emoji = scoreEmoji(scorePct);
 
     return (
       <div className="w-full max-w-2xl mx-auto">
@@ -148,10 +148,10 @@ export default function TalkListening({ talks }: TalkListeningProps) {
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
-                style={{ width: `${percentage}%` }}
+                style={{ width: `${scorePct}%` }}
               />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{scorePct}% correct</p>
           </div>
 
           {/* Per-talk breakdown */}

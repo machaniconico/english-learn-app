@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReadingPassage, ReadingQuestion } from '../data/types';
+import { percentage, scoreBarColor } from '../utils/quizScoreDisplay';
 import { estimateReadingMinutes } from '../utils/readingTime';
 import AudioButton from './AudioButton';
 
@@ -112,13 +113,8 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
   if (finished) {
     const score = correctCount;
     const total = passage.questions.length;
-    const percentage = Math.round((score / total) * 100);
-    const barColor =
-      percentage >= 80
-        ? 'bg-green-500'
-        : percentage >= 60
-          ? 'bg-yellow-500'
-          : 'bg-red-500';
+    const scorePct = percentage(score, total);
+    const barColor = scoreBarColor(scorePct);
 
     return (
       <div className="w-full max-w-4xl mx-auto">
@@ -135,10 +131,10 @@ export default function ReadingComprehension({ passage }: ReadingComprehensionPr
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
-                style={{ width: `${percentage}%` }}
+                style={{ width: `${scorePct}%` }}
               />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{scorePct}% correct</p>
           </div>
 
           {/* Review all answers */}

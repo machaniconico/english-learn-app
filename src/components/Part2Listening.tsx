@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import type { Part2Question } from '../data/types';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
+import { percentage as scorePercentage, scoreEmoji } from '../utils/quizScoreDisplay';
 
 interface Part2ListeningProps {
   questions: Part2Question[];
@@ -93,8 +94,8 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
 
   // Results screen
   if (finished) {
-    const percentage = Math.round((correctCount / questions.length) * 100);
-    const emoji = percentage >= 80 ? '\u{1F389}' : percentage >= 60 ? '\u{1F44D}' : '\u{1F4AA}';
+    const percentage = scorePercentage(correctCount, questions.length);
+    const emoji = scoreEmoji(percentage);
 
     // Score breakdown by question type
     const typeStats: Record<string, { correct: number; total: number }> = {};
