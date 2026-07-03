@@ -163,7 +163,7 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
 
             <div className="inline-flex items-baseline gap-1 my-4">
               <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{score}</span>
-              <span className="text-2xl text-gray-400 dark:text-gray-400">/ {questions.length}</span>
+              <span className="text-2xl text-gray-500 dark:text-gray-400">/ {questions.length}</span>
             </div>
 
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
@@ -172,7 +172,7 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
 
             <div className="flex justify-center gap-4 mt-4 text-sm">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full">
@@ -255,7 +255,7 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
 
       {/* Question card */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-6">
-        <p className="text-xs text-gray-400 dark:text-gray-400 font-medium mb-4 uppercase tracking-wide">
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-4 uppercase tracking-wide">
           Arrange the words / 語順を並べ替えよう
         </p>
 
@@ -267,7 +267,7 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
 
         {/* Answer area */}
         <div className="mb-6">
-          <p className="text-xs text-gray-400 dark:text-gray-400 font-medium mb-2 uppercase tracking-wide">
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-2 uppercase tracking-wide">
             Your answer / あなたの回答
           </p>
           <div
@@ -280,7 +280,7 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
             `}
           >
             {answer.length === 0 && !checked && (
-              <p className="text-sm text-gray-400 dark:text-gray-400 italic m-auto">
+              <p className="text-sm text-gray-500 dark:text-gray-400 italic m-auto">
                 下のワードをタップして文を作ろう
               </p>
             )}
@@ -315,7 +315,7 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
         {/* Word pool */}
         {(!checked || !isCorrect) && (
           <div className="mb-6">
-            <p className="text-xs text-gray-400 dark:text-gray-400 font-medium mb-2 uppercase tracking-wide">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-2 uppercase tracking-wide">
               Available words / 使えるワード
             </p>
             <div className="flex flex-wrap gap-2">
@@ -439,13 +439,13 @@ export default function SentenceReorder({ questions }: SentenceReorderProps) {
           >
             {currentIndex + 1 >= questions.length ? 'See Results / 結果を見る' : 'Next \u2192'}
           </button>
-          <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">Press Enter to continue</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Press Enter to continue</p>
         </div>
       )}
 
       {/* Keyboard hint */}
       {!checked && allPlaced && (
-        <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-2">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
           Press Enter to check your answer
         </p>
       )}

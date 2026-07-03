@@ -146,7 +146,7 @@ export default function DictationPage() {
 
               {/* Footer */}
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-400 dark:text-gray-400">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {set.items.length} 問
                 </span>
                 <span className="text-sm font-medium text-indigo-500 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">

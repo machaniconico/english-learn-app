@@ -240,7 +240,7 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
 
             <div className="inline-flex items-baseline gap-1 my-4">
               <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{score}</span>
-              <span className="text-2xl text-gray-400 dark:text-gray-400">/ {total}</span>
+              <span className="text-2xl text-gray-500 dark:text-gray-400">/ {total}</span>
             </div>
 
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
@@ -249,7 +249,7 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
           </div>
 
           {/* Wrong answers review */}
@@ -329,7 +329,7 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
 
       {/* Scenario card (replaces photo) */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-6">
-        <p className="text-xs text-gray-400 dark:text-gray-400 font-medium mb-3 uppercase tracking-wide">
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-3 uppercase tracking-wide">
           Scene Description / 場面の説明
         </p>
         <div className="flex items-start gap-4">
@@ -341,7 +341,7 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
               {currentQuestion.scenario}
             </p>
             {state.answered && (
-              <p className="text-sm text-gray-400 dark:text-gray-400 mt-1 italic">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">
                 {currentQuestion.scenarioEn}
               </p>
             )}
@@ -454,7 +454,7 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
                   ${
                     isPlaying
                       ? 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-400 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300'
-                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-400 hover:border-indigo-300 dark:hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-indigo-300 dark:hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400'
                   }
                 `}
                 aria-label={`Play option ${OPTION_LABELS[index]}`}
@@ -564,7 +564,7 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
                 ? 'See Results / 結果を見る'
                 : 'Next Question \u2192'}
             </button>
-            <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Press Enter or Space to continue
             </p>
           </div>
@@ -573,7 +573,7 @@ export default function Part1Listening({ questions }: Part1ListeningProps) {
 
       {/* Keyboard hint */}
       {!state.answered && (
-        <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-2">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
           Press 1-4 or A-D to select / Space to play all
         </p>
       )}

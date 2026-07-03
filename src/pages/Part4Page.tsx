@@ -112,7 +112,7 @@ export default function Part4Page() {
           <button
             type="button"
             onClick={() => setSelectedId(null)}
-            className="absolute top-4 right-4 text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer text-xl"
+            className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer text-xl"
             aria-label="Close"
           >
             {'\u2715'}
@@ -223,7 +223,7 @@ export default function Part4Page() {
 
               {/* Footer */}
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-400 dark:text-gray-400">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {talk.questions.length} 問
                 </span>
                 <span className="text-xs font-medium text-indigo-500 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">

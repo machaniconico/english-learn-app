@@ -142,7 +142,7 @@ export default function TalkListening({ talks }: TalkListeningProps) {
 
             <div className="inline-flex items-baseline gap-1 my-4">
               <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{correctCount}</span>
-              <span className="text-2xl text-gray-400 dark:text-gray-400">/ {totalQuestions}</span>
+              <span className="text-2xl text-gray-500 dark:text-gray-400">/ {totalQuestions}</span>
             </div>
 
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
@@ -151,7 +151,7 @@ export default function TalkListening({ talks }: TalkListeningProps) {
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
           </div>
 
           {/* Per-talk breakdown */}
@@ -251,7 +251,7 @@ export default function TalkListening({ talks }: TalkListeningProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-400 dark:text-gray-400 font-medium" htmlFor="talk-speed">速度</label>
+          <label className="text-xs text-gray-500 dark:text-gray-400 font-medium" htmlFor="talk-speed">速度</label>
           <select
             id="talk-speed"
             aria-label="再生速度"
@@ -270,7 +270,7 @@ export default function TalkListening({ talks }: TalkListeningProps) {
 
       {/* Talk playback area */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-4">
-        <p className="text-sm text-gray-400 dark:text-gray-400 font-medium mb-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-4">
           {'\u{1F399}'} Talk / トーク
         </p>
 
@@ -281,7 +281,7 @@ export default function TalkListening({ talks }: TalkListeningProps) {
         )}
 
         {!playing && !hasPlayed && (
-          <p className="text-center text-sm text-gray-400 dark:text-gray-400 mb-4">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-4">
             トークを聞いて、質問に答えましょう。テキストは全問回答後に表示されます。
           </p>
         )}
@@ -319,7 +319,7 @@ export default function TalkListening({ talks }: TalkListeningProps) {
         {/* Script (shown after all questions answered) */}
         {showScript && (
           <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-            <p className="text-xs text-gray-400 dark:text-gray-400 mb-3 font-medium">Script / スクリプト</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium">Script / スクリプト</p>
             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
               {current.talk}
             </p>
@@ -330,13 +330,13 @@ export default function TalkListening({ talks }: TalkListeningProps) {
       {/* Questions */}
       {!allQuestionsAnswered && (
         <>
-          <div className="text-xs text-gray-400 dark:text-gray-400 mb-2 font-medium">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">
             Question {qIndex + 1} / {current.questions.length}
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow p-5 mb-4">
             <p className="text-base font-semibold text-gray-800 dark:text-gray-100 mb-1">{currentQ.question}</p>
-            <p className="text-sm text-gray-400 dark:text-gray-400 mb-4">{currentQ.questionJa}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{currentQ.questionJa}</p>
 
             <div className="space-y-2">
               {currentQ.options.map((option, index) => {

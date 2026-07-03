@@ -203,7 +203,7 @@ export default function ReadingPracticePage() {
 
               {/* Footer */}
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-400 dark:text-gray-400">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {passage.questions.length} 問
                   {readingMinutes > 0 && ` · 📖 約${readingMinutes}分`}
                 </span>

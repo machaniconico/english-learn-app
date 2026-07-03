@@ -117,7 +117,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
 
           <div role="status" className="inline-flex items-baseline gap-1 mb-6">
             <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{correctCount}</span>
-            <span className="text-2xl text-gray-400 dark:text-gray-400">/ {questions.length}</span>
+            <span className="text-2xl text-gray-500 dark:text-gray-400">/ {questions.length}</span>
           </div>
 
           <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
@@ -132,7 +132,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
               style={{ width: `${percentage}%` }}
             />
           </div>
-          <p className="text-sm text-gray-400 dark:text-gray-400 mb-6">{percentage}% correct</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{percentage}% correct</p>
 
           {/* Per-question results */}
           <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -217,7 +217,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
           {current.questionType}
         </span>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-400 dark:text-gray-400 font-medium">{'\u901F\u5EA6'}</label>
+          <label className="text-xs text-gray-500 dark:text-gray-400 font-medium">{'\u901F\u5EA6'}</label>
           <select
             value={rate}
             onChange={(e) => setRate(Number(e.target.value))}
@@ -235,8 +235,8 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
 
       {/* Question audio area */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-4 text-center">
-        <p className="text-sm text-gray-400 dark:text-gray-400 mb-1 font-medium">Listen to the question</p>
-        <p className="text-xs text-gray-400 dark:text-gray-400 mb-5">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 font-medium">Listen to the question</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
           {'\u8CEA\u554F\u3092\u805E\u3044\u3066\u3001\u6700\u3082\u9069\u5207\u306A\u5FDC\u7B54\u3092\u9078\u3073\u307E\u3057\u3087\u3046'}
         </p>
 
@@ -277,7 +277,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
             <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
               &ldquo;{current.question}&rdquo;
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">{current.questionJa}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{current.questionJa}</p>
           </div>
         )}
       </div>
@@ -288,7 +288,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
           <button
             type="button"
             onClick={() => setShowText((prev) => !prev)}
-            className="text-xs text-gray-400 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors cursor-pointer flex items-center gap-1"
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors cursor-pointer flex items-center gap-1"
           >
             {showText ? '\u{1F441}' : '\u{1F4AC}'}{' '}
             {showText
@@ -362,7 +362,7 @@ export default function Part2Listening({ questions }: Part2ListeningProps) {
                       <span>
                         <span className="block">{response}</span>
                         {answered && (
-                          <span className="block text-xs text-gray-400 dark:text-gray-400 mt-0.5">
+                          <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             {current.responsesJa[index]}
                           </span>
                         )}

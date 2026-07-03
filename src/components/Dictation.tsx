@@ -130,7 +130,7 @@ export default function Dictation({ items }: DictationProps) {
 
             <div className="inline-flex items-baseline gap-1 my-4">
               <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{scorePoints}</span>
-              <span className="text-2xl text-gray-400 dark:text-gray-400">/ {totalMax}</span>
+              <span className="text-2xl text-gray-500 dark:text-gray-400">/ {totalMax}</span>
             </div>
 
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
@@ -139,7 +139,7 @@ export default function Dictation({ items }: DictationProps) {
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-400">{percentage}% score</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% score</p>
 
             <div className="flex justify-center gap-4 mt-4 text-sm">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full">
@@ -240,7 +240,7 @@ export default function Dictation({ items }: DictationProps) {
 
       {/* Listening card */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-6">
-        <p className="text-xs text-gray-400 dark:text-gray-400 font-medium mb-4 uppercase tracking-wide">
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-4 uppercase tracking-wide">
           Listen and type / 聞いて書こう
         </p>
 
@@ -411,13 +411,13 @@ export default function Dictation({ items }: DictationProps) {
           >
             {currentIndex + 1 >= items.length ? 'See Results / 結果を見る' : 'Next \u2192'}
           </button>
-          <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">Press Enter to continue</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Press Enter to continue</p>
         </div>
       )}
 
       {/* Keyboard hint */}
       {!answered && (
-        <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-2">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
           Enter to check your answer
         </p>
       )}

@@ -117,7 +117,7 @@ export default function DailyReview({ items, onReviewSrs, onReviewWeak }: DailyR
                 <p className="text-xl font-bold text-red-500 dark:text-red-400 line-through">
                   {current.weak.wrongAnswer || '（未解答）'}
                 </p>
-                <p className="text-sm text-gray-400 dark:text-gray-400 mt-2">正しい答えを思い出そう</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">正しい答えを思い出そう</p>
               </>
             ) : (
               <div role="status" aria-live="polite">

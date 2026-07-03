@@ -186,7 +186,7 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
 
             <div className="inline-flex items-baseline gap-1 my-4">
               <span className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{score}</span>
-              <span className="text-2xl text-gray-400 dark:text-gray-400">/ {total}</span>
+              <span className="text-2xl text-gray-500 dark:text-gray-400">/ {total}</span>
             </div>
 
             <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
@@ -195,7 +195,7 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
                 style={{ width: `${percentage}%` }}
               />
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-400">{percentage}% correct</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{percentage}% correct</p>
           </div>
 
           {/* Wrong answers review */}
@@ -276,7 +276,7 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
 
       {/* Sentence card */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 sm:p-8 mb-6">
-        <p className="text-xs text-gray-400 dark:text-gray-400 font-medium mb-3 uppercase tracking-wide">
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-3 uppercase tracking-wide">
           Find the error / 誤りを見つけよう
         </p>
         <p className="text-lg sm:text-xl text-gray-800 dark:text-gray-100 leading-loose font-medium">
@@ -383,7 +383,7 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
                 ? 'See Results / 結果を見る'
                 : 'Next Question \u2192'}
             </button>
-            <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Press Enter or Space to continue
             </p>
           </div>
@@ -392,7 +392,7 @@ export default function ErrorCorrection({ questions }: ErrorCorrectionProps) {
 
       {/* Keyboard hint */}
       {!state.answered && (
-        <p className="text-center text-xs text-gray-400 dark:text-gray-400 mt-2">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
           Press A-D to select the segment with the error
         </p>
       )}
