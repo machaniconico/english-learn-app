@@ -10,9 +10,12 @@ const STORAGE_KEY = 'english-learn-theme';
  * The global setup defines it with configurable:true, so we can redefine.
  */
 function stubMatchMedia(matches: boolean) {
+  let currentMatches = matches;
   const listeners: Array<(e: Partial<MediaQueryListEvent>) => void> = [];
   const mql = {
-    matches,
+    get matches() {
+      return currentMatches;
+    },
     media: '(prefers-color-scheme: dark)',
     onchange: null,
     addEventListener: vi.fn((_type: string, listener: (e: Partial<MediaQueryListEvent>) => void) => {
@@ -27,6 +30,7 @@ function stubMatchMedia(matches: boolean) {
     dispatchEvent: vi.fn(),
     /** Test helper: fire a change event to all registered listeners */
     _fire(newMatches: boolean) {
+      currentMatches = newMatches;
       listeners.forEach((l) => l({ matches: newMatches } as Partial<MediaQueryListEvent>));
     },
   };
@@ -39,6 +43,7 @@ function stubMatchMedia(matches: boolean) {
 
 beforeEach(() => {
   // Reset the documentElement class so tests don't bleed into each other.
+  localStorage.clear();
   document.documentElement.classList.remove('dark');
 });
 
@@ -132,6 +137,59 @@ describe('useDarkMode — setMode', () => {
 
     expect(result.current.isDark).toBe(true);
     expect(localStorage.getItem(STORAGE_KEY)).toBe('system');
+  });
+});
+
+describe('useDarkMode — shared singleton store', () => {
+  it('updates another mounted hook instance without remounting when one instance changes mode', () => {
+    localStorage.setItem(STORAGE_KEY, 'dark');
+    stubMatchMedia(false);
+    const first = renderHook(() => useDarkMode());
+    const second = renderHook(() => useDarkMode());
+
+    expect(first.result.current.mode).toBe('dark');
+    expect(first.result.current.isDark).toBe(true);
+    expect(second.result.current.mode).toBe('dark');
+    expect(second.result.current.isDark).toBe(true);
+
+    act(() => {
+      second.result.current.setMode('light');
+    });
+
+    expect(first.result.current.mode).toBe('light');
+    expect(first.result.current.isDark).toBe(false);
+    expect(second.result.current.mode).toBe('light');
+    expect(second.result.current.isDark).toBe(false);
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+    first.unmount();
+    second.unmount();
+  });
+});
+
+describe('useDarkMode — system preference listener', () => {
+  it('updates mounted system-mode instances when the system preference changes', () => {
+    const mql = stubMatchMedia(false);
+    const first = renderHook(() => useDarkMode());
+    const second = renderHook(() => useDarkMode());
+
+    expect(first.result.current.mode).toBe('system');
+    expect(first.result.current.isDark).toBe(false);
+    expect(second.result.current.mode).toBe('system');
+    expect(second.result.current.isDark).toBe(false);
+
+    act(() => {
+      mql._fire(true);
+    });
+
+    expect(first.result.current.mode).toBe('system');
+    expect(first.result.current.isDark).toBe(true);
+    expect(second.result.current.mode).toBe('system');
+    expect(second.result.current.isDark).toBe(true);
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+    first.unmount();
+    second.unmount();
   });
 });
 
