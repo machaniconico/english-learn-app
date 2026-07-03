@@ -48,6 +48,9 @@ describe('ErrorCorrection', () => {
   it('renders the first question with progress and segments', () => {
     renderWithRouter(<ErrorCorrection questions={questions} />);
     expect(screen.getByText('Question 1 / 2')).toBeTruthy();
+    const progressBar = screen.getByRole('progressbar', { name: '問題の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '2');
     // segment texts appear (inline + grid)
     expect(screen.getAllByText('have').length).toBeGreaterThan(0);
     expect(screen.getAllByText('apples').length).toBeGreaterThan(0);
@@ -117,6 +120,9 @@ describe('ErrorCorrection', () => {
     expect(screen.getByText('Results / 結果')).toBeTruthy();
     expect(screen.getByText('1')).toBeTruthy(); // score
     expect(screen.getByText('/ 2')).toBeTruthy();
+    const scoreBar = screen.getByRole('progressbar', { name: 'スコア' });
+    expect(scoreBar).toHaveAttribute('aria-valuenow', '50');
+    expect(scoreBar).toHaveAttribute('aria-valuemax', '100');
     // wrong answer review present for Q2
     expect(screen.getByText('間違えた問題の復習')).toBeTruthy();
   });

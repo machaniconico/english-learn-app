@@ -41,6 +41,9 @@ describe('ListeningQuiz', () => {
     renderWithRouter(<ListeningQuiz items={items} />);
     expect(screen.getByText(/Question 1 \//)).toBeTruthy();
     expect(screen.getByLabelText('Play audio')).toBeTruthy();
+    const progressBar = screen.getByRole('progressbar', { name: '問題の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', String(items.length));
     expect(getOptionButtons()).toHaveLength(4);
     expect(screen.queryByRole('button', { name: /Next Question|See Results/ })).toBeNull();
   });
@@ -103,6 +106,9 @@ describe('ListeningQuiz', () => {
     expect(status.getAttribute('aria-label')).toMatch(
       new RegExp(`スコア ${items.length} / ${items.length}`),
     );
+    const scoreBar = screen.getByRole('progressbar', { name: 'スコア' });
+    expect(scoreBar).toHaveAttribute('aria-valuenow', '100');
+    expect(scoreBar).toHaveAttribute('aria-valuemax', '100');
 
     fireEvent.click(screen.getByRole('button', { name: 'Try Again' }));
     expect(screen.getByText(/Question 1 \//)).toBeTruthy();

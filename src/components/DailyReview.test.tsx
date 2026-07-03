@@ -50,6 +50,9 @@ describe('DailyReview', () => {
     // Front: japanese prompt, english hidden
     expect(screen.getByText('りんご')).toBeTruthy();
     expect(screen.queryByText('apple')).toBeNull();
+    const progressBar = screen.getByRole('progressbar', { name: '復習の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '100');
 
     fireEvent.click(screen.getByRole('button', { name: '答えを見る' }));
     expect(screen.getByText('apple')).toBeTruthy();

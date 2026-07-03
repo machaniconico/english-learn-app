@@ -81,7 +81,14 @@ export default function LessonPage() {
             {listenedIds.size} / {lesson.items.length} ({progress}%)
           </span>
         </div>
-        <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div
+          className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="リスニング進捗"
+        >
           <div
             className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}

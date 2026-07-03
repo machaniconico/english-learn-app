@@ -133,7 +133,14 @@ export default function Dictation({ items }: DictationProps) {
               <span className="text-2xl text-gray-500 dark:text-gray-400">/ {totalMax}</span>
             </div>
 
-            <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden">
+            <div
+              className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full mb-2 overflow-hidden"
+              role="progressbar"
+              aria-valuenow={Math.round(scorePct)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="スコア"
+            >
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
                 style={{ width: `${scorePct}%` }}
@@ -229,7 +236,14 @@ export default function Dictation({ items }: DictationProps) {
       </div>
 
       {/* Progress bar */}
-      <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
+      <div
+        className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden"
+        role="progressbar"
+        aria-valuenow={Math.round(currentIndex + (answered ? 1 : 0))}
+        aria-valuemin={0}
+        aria-valuemax={items.length}
+        aria-label="問題の進捗"
+      >
         <div
           className="h-full bg-indigo-500 rounded-full transition-all duration-300 ease-out"
           style={{

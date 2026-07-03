@@ -38,6 +38,9 @@ describe('TypingPractice', () => {
   it('shows the japanese prompt and a disabled check button until typing', () => {
     renderWithRouter(<TypingPractice items={items} />);
     expect(screen.getByText('おはよう')).toBeTruthy();
+    const progressBar = screen.getByRole('progressbar', { name: 'タイピング練習の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '2');
     expect(screen.getByRole('button', { name: 'チェック' })).toBeDisabled();
     type('hi');
     expect(screen.getByRole('button', { name: 'チェック' })).not.toBeDisabled();

@@ -42,6 +42,9 @@ describe('ReadingComprehension', () => {
 
     // First question shown
     expect(screen.getByText('When will the room be closed?')).toBeInTheDocument();
+    const progressBar = screen.getByRole('progressbar', { name: '問題の進捗' });
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0');
+    expect(progressBar).toHaveAttribute('aria-valuemax', '2');
 
     // Pick the correct answer from the fixture (correctIndex 2 = 'Friday')
     fireEvent.click(screen.getByRole('button', { name: /Friday/ }));
@@ -88,6 +91,9 @@ describe('ReadingComprehension', () => {
     expect(screen.getByText('Results / 結果')).toBeInTheDocument();
     expect(screen.getByText('/ 2')).toBeInTheDocument();
     expect(screen.getByText('100% correct')).toBeInTheDocument();
+    const scoreBar = screen.getByRole('progressbar', { name: 'スコア' });
+    expect(scoreBar).toHaveAttribute('aria-valuenow', '100');
+    expect(scoreBar).toHaveAttribute('aria-valuemax', '100');
     // Score number (large indigo total) is 2 of 2 correct
     const score = screen.getByText('/ 2').previousElementSibling;
     expect(score).toHaveTextContent('2');
