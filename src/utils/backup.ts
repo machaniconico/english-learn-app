@@ -71,6 +71,17 @@ export function parseBackup(text: string): BackupFile {
   }
 
   const obj = parsed as Record<string, unknown>;
+  const version = obj['version'];
+  if (
+    typeof version !== 'number' ||
+    !Number.isInteger(version) ||
+    version < 1 ||
+    version > BACKUP_VERSION
+  ) {
+    throw new Error(
+      `バックアップファイルの version フィールドが不正です。対応バージョンは 1〜${BACKUP_VERSION} です。`,
+    );
+  }
 
   if (typeof obj['data'] !== 'object' || obj['data'] === null || Array.isArray(obj['data'])) {
     throw new Error('バックアップファイルの data フィールドが不正です。');
@@ -88,30 +99,81 @@ export function parseBackup(text: string): BackupFile {
   return parsed as BackupFile;
 }
 
+function getPrefixedKeys(storage: Storage): string[] {
+  const keys: string[] = [];
+  for (let i = 0; i < storage.length; i++) {
+    const key = storage.key(i);
+    if (key !== null && key.startsWith(BACKUP_PREFIX)) {
+      keys.push(key);
+    }
+  }
+  return keys;
+}
+
+function takeSnapshot(storage: Storage): Map<string, string> {
+  const snapshot = new Map<string, string>();
+  for (const key of getPrefixedKeys(storage)) {
+    const value = storage.getItem(key);
+    if (value !== null) {
+      snapshot.set(key, value);
+    }
+  }
+  return snapshot;
+}
+
+function rollbackFromSnapshot(storage: Storage, snapshot: Map<string, string>): void {
+  for (const key of getPrefixedKeys(storage)) {
+    if (!snapshot.has(key)) {
+      storage.removeItem(key);
+    }
+  }
+
+  for (const [key, value] of snapshot) {
+    storage.setItem(key, value);
+  }
+}
+
+function restoreFailureMessage(key: string): string {
+  return `復元中にエラーが発生したため元の状態に戻しました（キー: ${key}）。ストレージ容量が不足している可能性があります。`;
+}
+
 export function applyBackup(
   backup: BackupFile,
   mode: 'replace' | 'merge',
   storage: Storage = localStorage,
 ): { applied: number } {
+  const entriesToApply = Object.entries(backup.data).filter(([key]) => key.startsWith(BACKUP_PREFIX));
+
   if (mode === 'replace') {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < storage.length; i++) {
-      const key = storage.key(i);
-      if (key !== null && key.startsWith(BACKUP_PREFIX)) {
-        keysToRemove.push(key);
-      }
-    }
-    for (const key of keysToRemove) {
+    const snapshot = takeSnapshot(storage);
+    for (const key of getPrefixedKeys(storage)) {
       storage.removeItem(key);
     }
+
+    let applied = 0;
+    for (const [key, value] of entriesToApply) {
+      try {
+        storage.setItem(key, value);
+      } catch {
+        rollbackFromSnapshot(storage, snapshot);
+        throw new Error(restoreFailureMessage(key));
+      }
+      applied++;
+    }
+
+    return { applied };
   }
 
   let applied = 0;
-  for (const [key, value] of Object.entries(backup.data)) {
-    if (key.startsWith(BACKUP_PREFIX)) {
+  for (const [key, value] of entriesToApply) {
+    try {
       storage.setItem(key, value);
-      applied++;
+    } catch {
+      throw new Error(
+        `バックアップの復元中にエラーが発生しました（キー: ${key}）。ストレージ容量が不足している可能性があります。`,
+      );
     }
+    applied++;
   }
 
   return { applied };

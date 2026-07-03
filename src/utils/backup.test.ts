@@ -42,6 +42,42 @@ class FakeStorage implements Storage {
   }
 }
 
+class FailingSetStorage extends FakeStorage {
+  private failOnSetCall: number | null = null;
+  private setCallsAfterArming = 0;
+
+  failOnceOnNthSetItem(callNumber: number): void {
+    this.failOnSetCall = callNumber;
+    this.setCallsAfterArming = 0;
+  }
+
+  setItem(key: string, value: string): void {
+    if (this.failOnSetCall !== null) {
+      this.setCallsAfterArming++;
+      if (this.setCallsAfterArming === this.failOnSetCall) {
+        this.failOnSetCall = null;
+        throw new Error(`setItem failed for ${key}`);
+      }
+    }
+
+    super.setItem(key, value);
+  }
+}
+
+function dumpStorage(storage: Storage): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (let i = 0; i < storage.length; i++) {
+    const key = storage.key(i);
+    if (key !== null) {
+      const value = storage.getItem(key);
+      if (value !== null) {
+        result[key] = value;
+      }
+    }
+  }
+  return result;
+}
+
 // ---------------------------------------------------------------------------
 // collectBackup
 // ---------------------------------------------------------------------------
@@ -162,7 +198,32 @@ describe('parseBackup validation', () => {
     expect(() => parseBackup('42')).toThrow();
   });
 
-  it('accepts a valid minimal backup', () => {
+  it('throws when version is missing', () => {
+    const bad = JSON.stringify({ app: 'english-learn-app', exportedAt: 0, data: {} });
+    expect(() => parseBackup(bad)).toThrow(/version/);
+  });
+
+  it('throws when version is not a number', () => {
+    const bad = JSON.stringify({
+      app: 'english-learn-app',
+      version: '1',
+      exportedAt: 0,
+      data: {},
+    });
+    expect(() => parseBackup(bad)).toThrow(/version/);
+  });
+
+  it('throws when version is newer than BACKUP_VERSION', () => {
+    const bad = JSON.stringify({
+      app: 'english-learn-app',
+      version: BACKUP_VERSION + 1,
+      exportedAt: 0,
+      data: {},
+    });
+    expect(() => parseBackup(bad)).toThrow(/version/);
+  });
+
+  it('accepts a valid minimal backup with version 1', () => {
     const valid: BackupFile = {
       app: 'english-learn-app',
       version: 1,
@@ -171,6 +232,7 @@ describe('parseBackup validation', () => {
     };
     const result = parseBackup(JSON.stringify(valid));
     expect(result.app).toBe('english-learn-app');
+    expect(result.version).toBe(1);
     expect(result.data['english-learn-theme']).toBe('"light"');
   });
 });
@@ -229,6 +291,31 @@ describe('applyBackup replace mode', () => {
     };
     const { applied } = applyBackup(backup, 'replace', s);
     expect(applied).toBe(2);
+  });
+
+  it('rolls back completely when setItem throws during replace restore', () => {
+    const s = new FailingSetStorage();
+    s.setItem('english-learn-progress', 'old-progress');
+    s.setItem('english-learn-srs', 'old-srs');
+    s.setItem('foreign-key', 'keep-me');
+    const before = dumpStorage(s);
+
+    const backup: BackupFile = {
+      app: 'english-learn-app',
+      version: 1,
+      exportedAt: 0,
+      data: {
+        'english-learn-progress': 'new-progress',
+        'english-learn-theme': '"light"',
+      },
+    };
+
+    s.failOnceOnNthSetItem(2);
+
+    expect(() => applyBackup(backup, 'replace', s)).toThrow(
+      /元の状態に戻しました（キー: english-learn-theme）/,
+    );
+    expect(dumpStorage(s)).toEqual(before);
   });
 });
 
