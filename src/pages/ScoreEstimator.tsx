@@ -31,6 +31,12 @@ interface SkillBreakdown {
 const HISTORY_KEY = 'english-learn-score-history';
 const MAX_HISTORY = 10;
 
+const TOTAL_ITEMS = sections.reduce((sum, s) => {
+  return sum + s.categories.reduce((cSum, c) => {
+    return cSum + c.lessons.reduce((lSum, l) => lSum + l.items.length, 0);
+  }, 0);
+}, 0);
+
 const LEVEL_LABELS: Record<string, { label: string; color: string }> = {
   beginner: { label: '初級', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
   intermediate: { label: '中級', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
@@ -375,12 +381,6 @@ export default function ScoreEstimator() {
 
   // Calculate estimated TOEIC score
   const estimate = useMemo((): Omit<ScoreEstimate, 'timestamp'> => {
-    const totalSections = sections.reduce((sum, s) => {
-      return sum + s.categories.reduce((cSum, c) => {
-        return cSum + c.lessons.reduce((lSum, l) => lSum + l.items.length, 0);
-      }, 0);
-    }, 0);
-
     return estimateToeicScore({
       fillIn: {
         beginner: fillInBreakdown.beginner,
@@ -393,7 +393,7 @@ export default function ScoreEstimator() {
         advanced: readingBreakdown.advanced,
       },
       completedItems: stats.totalItems,
-      totalItems: totalSections,
+      totalItems: TOTAL_ITEMS,
     });
   }, [fillInBreakdown, readingBreakdown, stats.totalItems]);
 
