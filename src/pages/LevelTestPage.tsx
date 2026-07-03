@@ -48,9 +48,6 @@ export default function LevelTestPage() {
   );
 
   const handleNext = useCallback(() => {
-    const isCorrect = selectedOption === currentQuestion.correctIndex;
-    const newWrongCount = wrongCountInCurrentLevel + (isCorrect ? 0 : 1);
-
     // Check if we should skip to next level or end test
     const currentLevel = currentQuestion.level;
     const levelQuestions = questions.filter((q) => q.level === currentLevel);
@@ -58,15 +55,9 @@ export default function LevelTestPage() {
     const isLastInLevel = answeredInLevel >= levelQuestions.length;
 
     // If 3+ wrong in this level, skip remaining questions in this level and end
-    if (newWrongCount >= 3 && !isLastInLevel) {
-      // Find the first question of the next level, or end
-      const currentLevelIdx = CEFR_ORDER.indexOf(currentLevel);
-      if (currentLevelIdx < CEFR_ORDER.length - 1) {
-        // Skip to results - user's level is determined
-        setPhase('result');
-      } else {
-        setPhase('result');
-      }
+    if (wrongCountInCurrentLevel >= 3 && !isLastInLevel) {
+      // Skip to results - user's level is determined
+      setPhase('result');
       setSelectedOption(null);
       setShowExplanation(false);
       return;
