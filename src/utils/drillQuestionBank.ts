@@ -33,7 +33,7 @@ function joinExplanation(parts: (string | undefined)[]): string {
   return text.endsWith('。') ? text : `${text}。`
 }
 
-function inferSectionDifficulty(
+export function inferSectionDifficulty(
   sectionId: string,
   categoryId: string,
   lessonId: string,
@@ -91,7 +91,7 @@ function pickUniqueDistractors<T>(
   return distractors
 }
 
-function buildOptions(
+export function buildOptions(
   correctAnswer: string,
   distractors: string[],
   rand: () => number,
@@ -136,18 +136,18 @@ function buildDictionaryVocabPool(
   const entries = dictionary.filter((entry) => entry.level === difficulty)
 
   return entries.flatMap((entry): DrillQuestion[] => {
-    const samePartOfSpeech = dictionary.filter(
+    const sameLevelEntries = dictionary.filter(
       (candidate) =>
         candidate.id !== entry.id &&
-        candidate.partOfSpeech === entry.partOfSpeech &&
+        candidate.level === entry.level &&
         candidate.japanese !== entry.japanese,
     )
-    const otherEntries = dictionary.filter(
+    const allOtherEntries = dictionary.filter(
       (candidate) => candidate.id !== entry.id && candidate.japanese !== entry.japanese,
     )
     const options = buildOptions(
       entry.japanese,
-      pickUniqueDistractors(samePartOfSpeech, otherEntries, entry.japanese, (candidate) => candidate.japanese, rand),
+      pickUniqueDistractors(sameLevelEntries, allOtherEntries, entry.japanese, (candidate) => candidate.japanese, rand),
       rand,
     )
 
@@ -243,7 +243,7 @@ function buildPhrasePool(
   })
 }
 
-function isValidFixedOptions(options: readonly string[], correctIndex: number): boolean {
+export function isValidFixedOptions(options: readonly string[], correctIndex: number): boolean {
   return (
     options.length === 4 &&
     Number.isInteger(correctIndex) &&
