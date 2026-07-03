@@ -57,6 +57,21 @@ function statusIsCorrect(status: HTMLElement): boolean {
   return (status.textContent ?? '').trim().startsWith('正解！');
 }
 
+function expectSubmittedOptionLabels(card: HTMLElement): void {
+  const correctLabel = within(card).getByText('（正解）');
+  const incorrectLabel = within(card).getByText('（あなたの回答・不正解）');
+
+  expect(correctLabel).toHaveClass('sr-only');
+  expect(incorrectLabel).toHaveClass('sr-only');
+
+  const correctButton = correctLabel.closest('button');
+  const incorrectButton = incorrectLabel.closest('button');
+  if (!correctButton || !incorrectButton) {
+    throw new Error('Submitted option labels must be rendered inside buttons');
+  }
+  expect(correctButton).not.toBe(incorrectButton);
+}
+
 function renderWithOptionOutcome(title: string, expectedCorrect: boolean): {
   view: RenderedChallenge;
   card: HTMLElement;
@@ -124,6 +139,7 @@ describe('DailyChallenge', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -175,6 +191,12 @@ describe('DailyChallenge', () => {
     expect(status.textContent?.trim().startsWith('不正解...')).toBe(true);
   });
 
+  it('adds sr-only correctness labels to submitted fill-in-the-blank options', () => {
+    const { card } = renderWithOptionOutcome('Fill in the Blank', false);
+
+    expectSubmittedOptionLabels(card);
+  });
+
   it('accepts a case-insensitive translation answer submitted with Enter', () => {
     const answer = discoverTranslationAnswer();
     localStorage.clear();
@@ -212,6 +234,12 @@ describe('DailyChallenge', () => {
 
     const wrong = renderWithOptionOutcome('Listening Challenge', false);
     expect(wrong.status.textContent?.trim().startsWith('不正解...')).toBe(true);
+  });
+
+  it('adds sr-only correctness labels to submitted listening options', () => {
+    const { card } = renderWithOptionOutcome('Listening Challenge', false);
+
+    expectSubmittedOptionLabels(card);
   });
 
   it('shows the all-complete celebration and dismisses it after three seconds', () => {
@@ -252,6 +280,26 @@ describe('DailyChallenge', () => {
 
       view.unmount();
     }
+  });
+
+  it('does not crash when localStorage saving fails while submitting an answer', () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('storage unavailable');
+    });
+
+    let view: RenderedChallenge | undefined;
+    expect(() => {
+      view = renderWithRouter(<DailyChallenge />);
+    }).not.toThrow();
+    if (!view) throw new Error('DailyChallenge did not render');
+
+    const card = expandChallenge('Fill in the Blank');
+    expect(() => {
+      submitOptionChallenge(card, 0);
+    }).not.toThrow();
+
+    expect(screen.getByText('1/5 完了')).toBeTruthy();
+    expect(setItem).toHaveBeenCalled();
   });
 
   it('restores completion state when revisiting on the same day', () => {
