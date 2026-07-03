@@ -1,12 +1,18 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { screen } from '../test/test-utils';
 import { renderWithRouter } from '../test/test-utils';
-import ScoreEstimator from './ScoreEstimator';
+import ScoreEstimator, { isScoreEstimate, loadHistory } from './ScoreEstimator';
 
 expect.extend(matchers);
+
+const HISTORY_KEY = 'english-learn-score-history';
+
+beforeEach(() => {
+  localStorage.clear();
+});
 
 // Seed quiz data so the page renders its full (data-present) view rather than
 // the "まだデータがありません" empty state. The page reads progress from the
@@ -25,6 +31,41 @@ function seedProgress() {
     }),
   );
 }
+
+describe('loadHistory', () => {
+  it('returns an empty array for non-array storage data', () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify({ score: 410 }));
+
+    expect(loadHistory()).toEqual([]);
+  });
+
+  it('removes entries with missing or non-number fields and keeps valid entries', () => {
+    const validEntry = { score: 410, low: 350, high: 470, timestamp: 1_700_000_000_000 };
+    const laterValidEntry = { score: 450, low: 390, high: 510, timestamp: 1_700_000_100_000 };
+    localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify([
+        validEntry,
+        { score: 999, low: 900, timestamp: 1_700_000_050_000 },
+        { score: '450', low: 390, high: 510, timestamp: 1_700_000_060_000 },
+        { score: 470, low: 410, high: 530, timestamp: 'invalid' },
+        null,
+        laterValidEntry,
+      ]),
+    );
+
+    expect(loadHistory()).toEqual([validEntry, laterValidEntry]);
+  });
+
+  it('identifies ScoreEstimate-shaped values', () => {
+    expect(
+      isScoreEstimate({ score: 410, low: 350, high: 470, timestamp: 1_700_000_000_000 }),
+    ).toBe(true);
+    expect(
+      isScoreEstimate({ score: 410, low: 350, high: '470', timestamp: 1_700_000_000_000 }),
+    ).toBe(false);
+  });
+});
 
 describe('ScoreEstimator a11y smoke', () => {
   it('renders the score view with a heading and share control', () => {

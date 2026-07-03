@@ -9,7 +9,7 @@ import { clamp, determineSkillLevel, estimateToeicScore } from './scoreEstimate'
 
 // --- Types ---
 
-interface ScoreEstimate {
+export interface ScoreEstimate {
   score: number;
   low: number;
   high: number;
@@ -72,12 +72,26 @@ function getMotivationalMessage(score: number): string {
   return '始めたばかりです。基礎から一歩ずつ進めていきましょう！';
 }
 
-function loadHistory(): ScoreEstimate[] {
+// eslint-disable-next-line react-refresh/only-export-components
+export function isScoreEstimate(value: unknown): value is ScoreEstimate {
+  if (typeof value !== 'object' || value === null) return false;
+  const estimate = value as Record<string, unknown>;
+  return (
+    typeof estimate.score === 'number' &&
+    typeof estimate.low === 'number' &&
+    typeof estimate.high === 'number' &&
+    typeof estimate.timestamp === 'number'
+  );
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function loadHistory(): ScoreEstimate[] {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isScoreEstimate);
   } catch {
     return [];
   }
