@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import {
   applyStudyDate,
@@ -28,8 +28,19 @@ function baseProgress(overrides: Partial<ProgressData> = {}): ProgressData {
 }
 
 beforeEach(() => {
+  vi.useRealTimers();
   localStorage.clear();
 });
+
+function setSystemToday(date: string): void {
+  const [year, month, day] = date.split('-').map(Number);
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(year, month - 1, day, 12));
+}
+
+function storeProgress(progress: ProgressData): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+}
 
 describe('useProgress storage loading resilience', () => {
   it.each(['null', '{}', '"x"', '42'])(
@@ -241,6 +252,121 @@ describe('applyStreakBreak', () => {
     expect(next.streak).toBe(5);
     expect(next.freezeTokens).toBe(0);
     expect(next.lastStudyDate).toBe('2026-01-03');
+  });
+});
+
+describe('recordStudyDay freeze-token integration', () => {
+  it('uses freeze tokens to bridge missed days instead of resetting the streak', () => {
+    setSystemToday('2026-01-04');
+    storeProgress(
+      baseProgress({
+        streak: 10,
+        freezeTokens: 2,
+        lastStudyDate: '2026-01-01',
+      }),
+    );
+
+    const { result } = renderHook(() => useProgress());
+
+    act(() => {
+      result.current.recordStudyDay();
+    });
+
+    expect(result.current.progress.streak).toBe(11);
+    expect(result.current.progress.freezeTokens).toBe(0);
+    expect(result.current.progress.lastStudyDate).toBe('2026-01-04');
+  });
+
+  it('starts a new streak when missed days exceed available freeze tokens', () => {
+    setSystemToday('2026-01-04');
+    storeProgress(
+      baseProgress({
+        streak: 10,
+        freezeTokens: 1,
+        lastStudyDate: '2026-01-01',
+      }),
+    );
+
+    const { result } = renderHook(() => useProgress());
+
+    act(() => {
+      result.current.recordStudyDay();
+    });
+
+    expect(result.current.progress.streak).toBe(1);
+    expect(result.current.progress.freezeTokens).toBe(1);
+    expect(result.current.progress.lastStudyDate).toBe('2026-01-04');
+  });
+
+  it('does not consume freeze tokens twice when updateStreak already bridged the gap', () => {
+    setSystemToday('2026-01-03');
+    storeProgress(
+      baseProgress({
+        streak: 10,
+        freezeTokens: 2,
+        lastStudyDate: '2026-01-01',
+      }),
+    );
+
+    const { result } = renderHook(() => useProgress());
+
+    act(() => {
+      result.current.updateStreak();
+    });
+
+    expect(result.current.progress.streak).toBe(10);
+    expect(result.current.progress.freezeTokens).toBe(1);
+    expect(result.current.progress.lastStudyDate).toBe('2026-01-02');
+
+    act(() => {
+      result.current.recordStudyDay();
+    });
+
+    expect(result.current.progress.streak).toBe(11);
+    expect(result.current.progress.freezeTokens).toBe(1);
+    expect(result.current.progress.lastStudyDate).toBe('2026-01-03');
+  });
+
+  it('keeps same-day repeats as no-ops', () => {
+    setSystemToday('2026-01-04');
+    storeProgress(
+      baseProgress({
+        streak: 10,
+        freezeTokens: 2,
+        lastStudyDate: '2026-01-04',
+      }),
+    );
+
+    const { result } = renderHook(() => useProgress());
+
+    act(() => {
+      result.current.recordStudyDay();
+    });
+
+    expect(result.current.progress.streak).toBe(10);
+    expect(result.current.progress.freezeTokens).toBe(2);
+    expect(result.current.progress.lastStudyDate).toBe('2026-01-04');
+  });
+
+  it('keeps consecutive-day increments and earns a token on each 7-day milestone', () => {
+    setSystemToday('2026-01-02');
+    storeProgress(
+      baseProgress({
+        streak: 6,
+        freezeTokens: 0,
+        lastStudyDate: '2026-01-01',
+      }),
+    );
+
+    const { result } = renderHook(() => useProgress());
+
+    act(() => {
+      result.current.recordStudyDay();
+    });
+
+    expect(result.current.progress.streak).toBe(7);
+    expect(result.current.progress.freezeTokens).toBe(1);
+    expect(result.current.progress.lastStudyDate).toBe('2026-01-02');
   });
 });
 

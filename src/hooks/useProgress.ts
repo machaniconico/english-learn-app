@@ -192,7 +192,8 @@ export function useProgress() {
   }, [progress]);
 
   const touchStudyDate = useCallback((prev: ProgressData): ProgressData => {
-    return applyStudyDate(prev, getToday());
+    const today = getToday();
+    return applyStudyDate(applyStreakBreak(prev, today), today);
   }, []);
 
   const recordStudyDay = useCallback(() => {
