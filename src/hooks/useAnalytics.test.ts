@@ -22,6 +22,63 @@ function readStoredEvents(): LearningEvent[] {
 const daysAgo = (n: number): number => Date.now() - n * 24 * 60 * 60 * 1000;
 
 describe('useAnalytics', () => {
+  describe('storage loading resilience', () => {
+    it.each(['null', '{}', '"x"', '42'])(
+      'falls back to empty events when localStorage contains non-array JSON: %s',
+      (raw) => {
+        localStorage.setItem(STORAGE_KEY, raw);
+
+        const { result } = renderHook(() => useAnalytics());
+
+        let events: LearningEvent[] = [];
+        act(() => {
+          events = result.current.getEventsForPeriod(30);
+        });
+
+        expect(events).toEqual([]);
+        expect(result.current.getStats(30)).toEqual({
+          totalSessions: 0,
+          totalTime: 0,
+          avgScore: 0,
+          activeDays: 0,
+          byType: {},
+        });
+      },
+    );
+
+    it('filters malformed stored event entries and keeps valid learning events', () => {
+      const valid: LearningEvent = {
+        type: 'lesson_view',
+        timestamp: daysAgo(1),
+        duration: 120,
+      };
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify([
+          valid,
+          null,
+          'oops',
+          { type: 'quiz_complete' },
+          { timestamp: daysAgo(1) },
+        ]),
+      );
+
+      const { result } = renderHook(() => useAnalytics());
+
+      let events: LearningEvent[] = [];
+      act(() => {
+        events = result.current.getEventsForPeriod(30);
+      });
+
+      expect(events).toEqual([valid]);
+      expect(result.current.getStats(30)).toMatchObject({
+        totalSessions: 1,
+        totalTime: 120,
+        byType: { lesson_view: 1 },
+      });
+    });
+  });
+
   describe('logEvent', () => {
     it('persists an event to localStorage with a timestamp', () => {
       const { result } = renderHook(() => useAnalytics());

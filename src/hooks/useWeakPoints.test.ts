@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { renderHook } from '@testing-library/react';
 import {
   upsertWeakPoint,
   markReviewedIn,
   MAX_ITEMS,
+  useWeakPoints,
   type WeakPoint,
 } from './useWeakPoints';
+
+const STORAGE_KEY = 'english-learn-weak-points';
 
 type NewWp = Omit<WeakPoint, 'timestamp' | 'reviewCount' | 'lastCorrect'>;
 
@@ -35,6 +39,39 @@ function makeExisting(id: string, overrides: Partial<WeakPoint> = {}): WeakPoint
 
 beforeEach(() => {
   localStorage.clear();
+});
+
+describe('useWeakPoints storage loading resilience', () => {
+  it.each(['null', '{}', '"oops"', '42'])(
+    'falls back to empty weak points when localStorage contains non-array JSON: %s',
+    (raw) => {
+      localStorage.setItem(STORAGE_KEY, raw);
+
+      const { result } = renderHook(() => useWeakPoints());
+
+      expect(result.current.weakPoints).toEqual([]);
+      expect(result.current.getWeakPointsByType('fill-in-blank')).toEqual([]);
+    },
+  );
+
+  it('filters malformed stored weak point entries and keeps valid weak points', () => {
+    const valid = makeExisting('valid-wp');
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        valid,
+        null,
+        'oops',
+        { id: 'missing-fields' },
+        { ...valid, reviewCount: 'bad' },
+      ]),
+    );
+
+    const { result } = renderHook(() => useWeakPoints());
+
+    expect(result.current.weakPoints).toEqual([valid]);
+    expect(result.current.getWeakPointsByType('fill-in-blank')).toEqual([valid]);
+  });
 });
 
 describe('upsertWeakPoint', () => {

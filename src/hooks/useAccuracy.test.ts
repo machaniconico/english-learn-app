@@ -86,6 +86,48 @@ describe('computeAccuracyByType', () => {
 });
 
 describe('useAccuracy', () => {
+  it.each(['null', '{}', '"x"', '42'])(
+    'falls back to empty results when localStorage contains non-array JSON: %s',
+    (raw) => {
+      localStorage.setItem(STORAGE_KEY, raw);
+
+      const { result } = renderHook(() => useAccuracy());
+
+      expect(result.current.getResultsByType('reading')).toEqual([]);
+      expect(result.current.getOverallAccuracy()).toBe(0);
+      expect(result.current.getAccuracyByType()).toEqual([]);
+    },
+  );
+
+  it('filters malformed stored result entries and keeps valid quiz results', () => {
+    const valid = makeResult({
+      type: 'reading',
+      setId: 'valid',
+      score: 50,
+      total: 2,
+      correct: 1,
+      timestamp: 2_000,
+    });
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        valid,
+        null,
+        'oops',
+        { type: 'reading', setId: 'missing-numbers' },
+        { ...valid, setId: 123 },
+      ]),
+    );
+
+    const { result } = renderHook(() => useAccuracy());
+
+    expect(result.current.getResultsByType('reading')).toEqual([valid]);
+    expect(result.current.getOverallAccuracy()).toBe(50);
+    expect(result.current.getAccuracyByType()).toEqual([
+      { type: 'reading', accuracy: 50, attempts: 1, total: 2 },
+    ]);
+  });
+
   it('saves at most 500 results after appending a new result', () => {
     const existing = Array.from({ length: 500 }, (_, i) => makeResult({ type: 'reading', score: i }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));

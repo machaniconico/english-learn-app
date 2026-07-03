@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import {
   useCustomDecks,
@@ -52,18 +52,29 @@ describe('loadDecks', () => {
     expect(loadDecks()).toEqual([]);
   });
 
-  it('returns [] on null stored value (key set to null string)', () => {
-    localStorage.setItem(STORAGE_KEY, 'null');
-    // JSON.parse('null') === null, not an array — should be returned as-is cast;
-    // the safe-parse contract says [] on missing/corrupt so we verify graceful handling.
-    // 'null' parses fine to null; the cast treats it as CustomDeck[] which is falsy-ish.
-    // Actual behaviour: returns null cast as CustomDeck[]. Spec says [] on corrupt.
-    // Re-read spec: "safe-parse, [] on missing/corrupt" — null is not an array, treat as corrupt.
-    // We rely on loadDecks returning something array-like; cast means null comes back.
-    // To keep the contract clean we test the common corrupt case (invalid JSON) above.
-    // This test just documents current behaviour without asserting a specific value.
-    const result = loadDecks();
-    expect(Array.isArray(result) || result === null).toBe(true);
+  it.each(['null', '{}', '"x"', '42'])(
+    'returns [] on non-array stored JSON: %s',
+    (raw) => {
+      localStorage.setItem(STORAGE_KEY, raw);
+      expect(loadDecks()).toEqual([]);
+    },
+  );
+
+  it('filters malformed stored deck entries and keeps valid decks', () => {
+    const valid = makeDeck('Valid');
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        valid,
+        null,
+        'oops',
+        { id: 'missing-items', name: 'Missing items' },
+        { id: 123, name: 'Bad id', items: [] },
+        { id: 'bad-items', name: 'Bad items', items: null },
+      ]),
+    );
+
+    expect(loadDecks()).toEqual([valid]);
   });
 });
 
@@ -78,6 +89,17 @@ describe('saveDecks / loadDecks round-trip', () => {
     expect(loaded).toHaveLength(2);
     expect(loaded[0].name).toBe('Alpha');
     expect(loaded[1].description).toBe('a description');
+  });
+
+  it('does not throw when localStorage.setItem throws', () => {
+    const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('quota');
+    });
+    try {
+      expect(() => saveDecks([makeDeck('Offline')])).not.toThrow();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 
@@ -226,6 +248,32 @@ describe('useCustomDecks', () => {
       act(() => { result.current.createDeck('Empty'); });
 
       expect(result.current.decks[0].items).toEqual([]);
+    });
+
+    it('updates in-memory state when localStorage.setItem throws during createDeck and addItem', () => {
+      const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+        throw new Error('quota');
+      });
+      try {
+        const { result } = renderHook(() => useCustomDecks());
+        let deck: CustomDeck | undefined;
+
+        expect(() => {
+          act(() => { deck = result.current.createDeck('Offline Deck'); });
+        }).not.toThrow();
+
+        expect(result.current.decks).toHaveLength(1);
+        expect(result.current.decks[0].name).toBe('Offline Deck');
+
+        expect(() => {
+          act(() => { result.current.addItem(deck!.id, makeFields({ english: 'offline' })); });
+        }).not.toThrow();
+
+        expect(result.current.getDeck(deck!.id)!.items).toHaveLength(1);
+        expect(result.current.getDeck(deck!.id)!.items[0].english).toBe('offline');
+      } finally {
+        spy.mockRestore();
+      }
     });
   });
 

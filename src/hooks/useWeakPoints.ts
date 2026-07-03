@@ -72,11 +72,27 @@ export function markReviewedIn(
   );
 }
 
+function isWeakPoint(value: unknown): value is WeakPoint {
+  if (typeof value !== 'object' || value === null) return false;
+  const wp = value as Record<string, unknown>;
+  return (
+    typeof wp.id === 'string' &&
+    typeof wp.type === 'string' &&
+    typeof wp.wrongAnswer === 'string' &&
+    typeof wp.correctAnswer === 'string' &&
+    typeof wp.timestamp === 'number' &&
+    typeof wp.reviewCount === 'number' &&
+    typeof wp.lastCorrect === 'boolean'
+  );
+}
+
 function loadWeakPoints(): WeakPoint[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as WeakPoint[];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isWeakPoint);
   } catch {
     return [];
   }

@@ -11,18 +11,37 @@ export interface BookmarkedItem {
 
 const STORAGE_KEY = 'english-learn-bookmarks';
 
+function isBookmarkedItem(value: unknown): value is BookmarkedItem {
+  if (typeof value !== 'object' || value === null) return false;
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.id === 'string' &&
+    typeof item.english === 'string' &&
+    typeof item.japanese === 'string' &&
+    typeof item.pronunciation === 'string' &&
+    typeof item.source === 'string' &&
+    typeof item.addedAt === 'number'
+  );
+}
+
 function loadBookmarks(): BookmarkedItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as BookmarkedItem[];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isBookmarkedItem);
   } catch {
     return [];
   }
 }
 
 function saveBookmarks(bookmarks: BookmarkedItem[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
+  } catch {
+    // storage full or unavailable
+  }
 }
 
 export function useBookmarks() {

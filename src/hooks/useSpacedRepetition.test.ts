@@ -9,6 +9,7 @@ import {
 } from './useSpacedRepetition';
 
 const TODAY = '2026-06-19';
+const STORAGE_KEY = 'english-learn-srs';
 
 function makeCard(overrides: Partial<SRSCard> = {}): SRSCard {
   return {
@@ -36,6 +37,47 @@ function addDays(dateStr: string, days: number): string {
   const off = d.getTimezoneOffset() * 60000;
   return new Date(d.getTime() - off).toISOString().slice(0, 10);
 }
+
+describe('useSpacedRepetition storage loading resilience', () => {
+  it.each(['null', '{}', '"oops"', '42'])(
+    'falls back to empty cards when localStorage contains non-array JSON: %s',
+    (raw) => {
+      localStorage.setItem(STORAGE_KEY, raw);
+
+      const { result } = renderHook(() => useSpacedRepetition());
+
+      expect(result.current.cards).toEqual([]);
+      expect(result.current.getDueCards()).toEqual([]);
+      expect(result.current.getStats()).toEqual({
+        total: 0,
+        due: 0,
+        mastered: 0,
+        learning: 0,
+      });
+      expect(result.current.isInSRS('anything')).toBe(false);
+    },
+  );
+
+  it('filters malformed stored card entries and keeps valid SRS cards', () => {
+    const valid = makeCard({ id: 'valid-card' });
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        valid,
+        null,
+        'oops',
+        { id: 'missing-fields' },
+        { ...valid, id: 123 },
+      ]),
+    );
+
+    const { result } = renderHook(() => useSpacedRepetition());
+
+    expect(result.current.cards).toEqual([valid]);
+    expect(result.current.getStats().total).toBe(1);
+    expect(result.current.isInSRS('valid-card')).toBe(true);
+  });
+});
 
 describe('scheduleSRSCard (SM-2)', () => {
   describe('failing reviews (quality < 3)', () => {

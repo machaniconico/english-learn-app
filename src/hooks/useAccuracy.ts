@@ -34,13 +34,26 @@ const WEAKEST_TYPE_EXCLUDED_TYPES = new Set<string>(['drill']);
 
 // --- Helpers ---
 
+function isQuizResult(value: unknown): value is QuizResult {
+  if (typeof value !== 'object' || value === null) return false;
+  const result = value as Record<string, unknown>;
+  return (
+    typeof result.type === 'string' &&
+    typeof result.setId === 'string' &&
+    typeof result.score === 'number' &&
+    typeof result.total === 'number' &&
+    typeof result.correct === 'number' &&
+    typeof result.timestamp === 'number'
+  );
+}
+
 function loadResults(): QuizResult[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed as QuizResult[];
+    return parsed.filter(isQuizResult);
   } catch {
     return [];
   }

@@ -113,20 +113,52 @@ function createDefaultProgress(): ProgressData {
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function sanitizeLessons(value: unknown): Record<string, LessonProgress> {
+  if (!isRecord(value)) return {};
+
+  const lessons: Record<string, LessonProgress> = {};
+  for (const [lessonId, lesson] of Object.entries(value)) {
+    if (!isRecord(lesson)) continue;
+
+    const sanitized: LessonProgress = {
+      lessonId: typeof lesson.lessonId === 'string' ? lesson.lessonId : lessonId,
+      completedItems: Array.isArray(lesson.completedItems)
+        ? lesson.completedItems
+        : [],
+      lastAccessed: typeof lesson.lastAccessed === 'number' ? lesson.lastAccessed : 0,
+    };
+
+    if (typeof lesson.quizScore === 'number') {
+      sanitized.quizScore = lesson.quizScore;
+    }
+    if (typeof lesson.flashcardCompleted === 'boolean') {
+      sanitized.flashcardCompleted = lesson.flashcardCompleted;
+    }
+
+    lessons[lessonId] = sanitized;
+  }
+  return lessons;
+}
+
 function loadProgress(): ProgressData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return createDefaultProgress();
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed)) return createDefaultProgress();
     return {
-      lessons: parsed.lessons && typeof parsed.lessons === 'object' ? parsed.lessons : {},
+      lessons: sanitizeLessons(parsed.lessons),
       fillInBlankScores:
         parsed.fillInBlankScores && typeof parsed.fillInBlankScores === 'object'
-          ? parsed.fillInBlankScores
+          ? (parsed.fillInBlankScores as Record<string, number>)
           : {},
       readingScores:
         parsed.readingScores && typeof parsed.readingScores === 'object'
-          ? parsed.readingScores
+          ? (parsed.readingScores as Record<string, number>)
           : {},
       totalStudyTime:
         typeof parsed.totalStudyTime === 'number' ? parsed.totalStudyTime : 0,
