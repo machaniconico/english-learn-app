@@ -19,9 +19,9 @@ export default function SRSPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [reviewQueue, setReviewQueue] = useState<SRSCard[]>([]);
 
   const stats = getStats();
-  const dueCards = useMemo(() => getDueCards(), [getDueCards]);
 
   // Find the nearest next review date for display
   const nextReviewDate = useMemo(() => {
@@ -49,22 +49,27 @@ export default function SRSPage() {
     ];
   }, [cards]);
 
-  const currentCard: SRSCard | undefined = dueCards[currentIndex];
+  const currentCard: SRSCard | undefined = reviewQueue[currentIndex];
 
   function startReview() {
-    setReviewMode(true);
+    // Snapshot due cards once: reviewing a card pushes its nextReview forward,
+    // so re-deriving from live cards would shrink the session mid-way.
+    const queue = getDueCards();
+    setReviewQueue(queue);
+    setReviewMode(queue.length > 0);
     setCurrentIndex(0);
     setRevealed(false);
-    setSessionComplete(false);
+    setSessionComplete(queue.length === 0);
   }
 
   function handleRate(quality: 0 | 1 | 2 | 3 | 4 | 5) {
     if (!currentCard) return;
     reviewCard(currentCard.id, quality);
 
-    if (currentIndex + 1 >= dueCards.length) {
+    if (currentIndex + 1 >= reviewQueue.length) {
       setSessionComplete(true);
       setReviewMode(false);
+      setReviewQueue([]);
     } else {
       setCurrentIndex((i) => i + 1);
       setRevealed(false);
@@ -75,6 +80,7 @@ export default function SRSPage() {
     setReviewMode(false);
     setCurrentIndex(0);
     setRevealed(false);
+    setReviewQueue([]);
   }
 
   // Review mode UI
@@ -89,7 +95,7 @@ export default function SRSPage() {
             &larr; 戻る
           </button>
           <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-            {currentIndex + 1} / {dueCards.length}
+            {currentIndex + 1} / {reviewQueue.length}
           </span>
         </div>
 
@@ -98,7 +104,7 @@ export default function SRSPage() {
           <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-500"
-              style={{ width: `${((currentIndex) / dueCards.length) * 100}%` }}
+              style={{ width: `${((currentIndex) / reviewQueue.length) * 100}%` }}
             />
           </div>
         </div>
