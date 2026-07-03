@@ -3,8 +3,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, createEvent } from '@testing-library/react';
 import CommandPalette from './CommandPalette';
+import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 
 expect.extend(matchers);
 
@@ -20,15 +21,33 @@ function LocationProbe() {
 }
 
 // CommandPalette を実 router 配下に置いてレンダリングするヘルパ。
-function renderPalette(props: { open: boolean; onClose: () => void }) {
+function renderPalette(
+  props: { open: boolean; onClose: () => void },
+  options: { withOutsideFocusable?: boolean } = {},
+) {
   return render(
-    <MemoryRouter initialEntries={['/']}>
-      <CommandPalette open={props.open} onClose={props.onClose} />
-      <Routes>
-        <Route path="*" element={<LocationProbe />} />
-      </Routes>
-    </MemoryRouter>,
+    <>
+      {options.withOutsideFocusable && (
+        <button type="button" data-testid="outside-focus">
+          背後のボタン
+        </button>
+      )}
+      <MemoryRouter initialEntries={['/']}>
+        <CommandPalette open={props.open} onClose={props.onClose} />
+        <Routes>
+          <Route path="*" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>
+    </>,
   );
+}
+
+function pressTabAndApplyDefaultIfAllowed(target: HTMLElement, outside: HTMLElement, shiftKey = false) {
+  const event = createEvent.keyDown(target, { key: 'Tab', code: 'Tab', shiftKey });
+  fireEvent(target, event);
+  if (!event.defaultPrevented) {
+    outside.focus();
+  }
 }
 
 describe('CommandPalette', () => {
@@ -95,6 +114,19 @@ describe('CommandPalette', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps Tab and Shift+Tab focus trapped on the search input', () => {
+    renderPalette({ open: true, onClose: vi.fn() }, { withOutsideFocusable: true });
+    const dialog = screen.getByRole('dialog');
+    const input = screen.getByLabelText('コマンドを検索');
+    const outside = screen.getByTestId('outside-focus');
+
+    for (const shiftKey of [false, false, true, true]) {
+      pressTabAndApplyDefaultIfAllowed(document.activeElement as HTMLElement, outside, shiftKey);
+      expect(dialog).toContainElement(document.activeElement as HTMLElement);
+      expect(input).toHaveFocus();
+    }
+  });
+
   it('calls onClose when the overlay is clicked', () => {
     const onClose = vi.fn();
     renderPalette({ open: true, onClose });
@@ -105,5 +137,27 @@ describe('CommandPalette', () => {
   it('has no axe accessibility violations when open', async () => {
     const { container } = renderPalette({ open: true, onClose: vi.fn() });
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('KeyboardShortcutsHelp focus trap', () => {
+  it('keeps Tab and Shift+Tab focus trapped on the close button', () => {
+    render(
+      <>
+        <button type="button" data-testid="outside-focus">
+          背後のボタン
+        </button>
+        <KeyboardShortcutsHelp open={true} onClose={vi.fn()} />
+      </>,
+    );
+    const dialog = screen.getByRole('dialog');
+    const closeButton = screen.getByRole('button', { name: '閉じる' });
+    const outside = screen.getByTestId('outside-focus');
+
+    for (const shiftKey of [false, false, true, true]) {
+      pressTabAndApplyDefaultIfAllowed(document.activeElement as HTMLElement, outside, shiftKey);
+      expect(dialog).toContainElement(document.activeElement as HTMLElement);
+      expect(closeButton).toHaveFocus();
+    }
   });
 });
