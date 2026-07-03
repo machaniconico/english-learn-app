@@ -149,6 +149,7 @@ export default function ReadingPracticePage() {
             key={tab.key}
             type="button"
             onClick={() => setFilter(tab.key)}
+            aria-pressed={filter === tab.key}
             className={`
               px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer
               focus:outline-none focus:ring-2 focus:ring-indigo-300

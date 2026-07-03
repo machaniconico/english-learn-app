@@ -114,6 +114,7 @@ export default function CategoryList() {
         <div className="mb-6 flex flex-wrap gap-2">
           <button
             onClick={() => setFilterLevel('all')}
+            aria-pressed={filterLevel === 'all'}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               filterLevel === 'all'
                 ? 'bg-indigo-600 text-white'
@@ -128,6 +129,7 @@ export default function CategoryList() {
               <button
                 key={lvl}
                 onClick={() => setFilterLevel(lvl)}
+                aria-pressed={filterLevel === lvl}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                   filterLevel === lvl
                     ? 'bg-indigo-600 text-white'

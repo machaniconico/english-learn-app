@@ -105,7 +105,9 @@ describe('SearchPage', () => {
     // Toggle that group's filter pill OFF.
     const filterButton = findFilterPill(targetLabel);
     expect(filterButton).toBeTruthy();
+    expect(filterButton).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(filterButton!);
+    expect(filterButton).toHaveAttribute('aria-pressed', 'false');
 
     // The total count must drop (group removed). If it was the only group, the
     // no-results state is shown instead.
@@ -128,6 +130,55 @@ describe('SearchPage', () => {
       .queryAllByRole('heading', { level: 2 })
       .map((h) => labelOf(h));
     expect(remaining).not.toContain(targetLabel);
+  });
+
+  it('reflects active search filters with aria-pressed', () => {
+    renderWithRouter(<SearchPage />);
+
+    const allButton = screen.getByRole('button', { name: 'すべて' });
+    expect(allButton).toHaveAttribute('aria-pressed', 'true');
+
+    for (const label of GROUP_LABELS) {
+      expect(findFilterPill(label)).toHaveAttribute('aria-pressed', 'true');
+    }
+
+    const phrasesButton = findFilterPill('フレーズ');
+    expect(phrasesButton).toBeTruthy();
+
+    fireEvent.click(phrasesButton!);
+    expect(phrasesButton).toHaveAttribute('aria-pressed', 'false');
+    expect(allButton).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(phrasesButton!);
+    expect(phrasesButton).toHaveAttribute('aria-pressed', 'true');
+    expect(allButton).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(allButton);
+    expect(allButton).toHaveAttribute('aria-pressed', 'false');
+    for (const label of GROUP_LABELS) {
+      expect(findFilterPill(label)).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
+
+  it('reflects expanded result groups with aria-expanded', async () => {
+    renderWithRouter(<SearchPage />);
+
+    typeQuery(COMMON_QUERY);
+
+    const moreButtons = await screen.findAllByRole(
+      'button',
+      { name: /もっと見る/ },
+      { timeout: 2000 },
+    );
+    const moreButton = moreButtons[0];
+    expect(moreButton).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(moreButton);
+    expect(moreButton).toHaveAttribute('aria-expanded', 'true');
+    expect(moreButton).toHaveTextContent('折りたたむ');
+
+    fireEvent.click(moreButton);
+    expect(moreButton).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('narrows results to a single group via "すべて" then re-selecting one group', async () => {

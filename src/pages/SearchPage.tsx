@@ -290,6 +290,7 @@ export default function SearchPage() {
           <button
             type="button"
             onClick={toggleAllFilters}
+            aria-pressed={activeFilters.size === allGroups.length}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
               activeFilters.size === allGroups.length
                 ? 'bg-indigo-600 text-white border-indigo-600'
@@ -303,6 +304,7 @@ export default function SearchPage() {
               key={key}
               type="button"
               onClick={() => toggleFilter(key)}
+              aria-pressed={activeFilters.has(key)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
                 activeFilters.has(key)
                   ? `${GROUP_COLORS[key]} border-current`
@@ -436,6 +438,7 @@ export default function SearchPage() {
                       <button
                         type="button"
                         onClick={() => toggleExpand(groupKey)}
+                        aria-expanded={isExpanded}
                         className="w-full text-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors cursor-pointer"
                       >
                         {isExpanded
