@@ -1,10 +1,20 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
-import { screen } from '../test/test-utils';
+import { sections } from '../data/sections';
+import { screen, waitFor } from '../test/test-utils';
 import { renderWithRouter } from '../test/test-utils';
 import ScoreEstimator, { isScoreEstimate, loadHistory } from './ScoreEstimator';
+import { estimateToeicScore } from './scoreEstimate';
+
+vi.mock('./scoreEstimate', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./scoreEstimate')>();
+  return {
+    ...actual,
+    estimateToeicScore: vi.fn(actual.estimateToeicScore),
+  };
+});
 
 expect.extend(matchers);
 
@@ -12,22 +22,42 @@ const HISTORY_KEY = 'english-learn-score-history';
 
 beforeEach(() => {
   localStorage.clear();
+  vi.clearAllMocks();
 });
+
+function countCurriculumItems(): number {
+  return sections.reduce((sum, s) => {
+    return sum + s.categories.reduce((cSum, c) => {
+      return cSum + c.lessons.reduce((lSum, l) => lSum + l.items.length, 0);
+    }, 0);
+  }, 0);
+}
+
+type SeedProgressOptions = {
+  lessons?: Record<string, { lessonId: string; completedItems: string[]; lastAccessed: number }>;
+  fillInBlankScores?: Record<string, number>;
+  readingScores?: Record<string, number>;
+};
 
 // Seed quiz data so the page renders its full (data-present) view rather than
 // the "まだデータがありません" empty state. The page reads progress from the
 // 'english-learn-progress' localStorage key; one fill-in-blank score is enough
 // for `hasData` to be true.
-function seedProgress() {
+function seedProgress({
+  lessons = {},
+  fillInBlankScores = { beginner: 80 },
+  readingScores = {},
+}: SeedProgressOptions = {}) {
   localStorage.setItem(
     'english-learn-progress',
     JSON.stringify({
-      lessons: {},
-      fillInBlankScores: { beginner: 80 },
-      readingScores: {},
+      lessons,
+      fillInBlankScores,
+      readingScores,
       totalStudyTime: 0,
       streak: 0,
       lastStudyDate: '',
+      freezeTokens: 0,
     }),
   );
 }
@@ -85,5 +115,51 @@ describe('ScoreEstimator a11y smoke', () => {
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+});
+
+describe('ScoreEstimator estimate', () => {
+  it('uses the static curriculum total for the rendered and saved estimate', async () => {
+    const curriculumTotal = countCurriculumItems();
+    const completedItems = Math.floor(curriculumTotal / 2);
+    const fillIn = { beginner: 80, intermediate: 60, advanced: 40 };
+    const reading = { beginner: 70, intermediate: 50, advanced: 30 };
+    const estimateToeicScoreMock = vi.mocked(estimateToeicScore);
+
+    seedProgress({
+      lessons: {
+        synthetic: {
+          lessonId: 'synthetic',
+          completedItems: Array.from({ length: completedItems }, (_, i) => `item-${i}`),
+          lastAccessed: 1,
+        },
+      },
+      fillInBlankScores: fillIn,
+      readingScores: {
+        'reading-beginner-email': reading.beginner,
+        'reading-intermediate-ad': reading.intermediate,
+        'reading-advanced-double': reading.advanced,
+      },
+    });
+
+    const expected = estimateToeicScore({
+      fillIn,
+      reading,
+      completedItems,
+      totalItems: curriculumTotal,
+    });
+
+    renderWithRouter(<ScoreEstimator />, { route: '/score' });
+
+    expect(estimateToeicScoreMock).toHaveBeenLastCalledWith({
+      fillIn,
+      reading,
+      completedItems,
+      totalItems: curriculumTotal,
+    });
+    expect(screen.getByText(`推定スコア: ${expected.low} - ${expected.high}`)).toBeTruthy();
+    await waitFor(() => {
+      expect(loadHistory()[0]).toEqual(expect.objectContaining(expected));
+    });
   });
 });
