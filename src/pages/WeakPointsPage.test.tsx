@@ -31,6 +31,7 @@ function seedWeakPoints() {
       correctAnswer: 'It was great.',
       timestamp: 1700000100000,
       reviewCount: 3,
+      correctCount: 2,
       lastCorrect: true,
     },
   ];
@@ -58,8 +59,8 @@ describe('WeakPointsPage a11y', () => {
 function seedThree() {
   // Three weak points with distinct timestamps + reviewCounts.
   // wp-old: oldest, reviewCount 5 (most reviewed), not mastered.
-  // wp-mid: middle, reviewCount 1, mastered (lastCorrect && reviewCount>=3? no — reviewCount 1) -> not mastered.
-  // wp-new: newest, reviewCount 4, mastered (lastCorrect true).
+  // wp-mid: middle, reviewCount 1, not mastered.
+  // wp-new: newest, reviewCount 4, mastered (correctCount 2).
   const items = [
     {
       id: 'wp-old',
@@ -89,6 +90,7 @@ function seedThree() {
       correctAnswer: 'c3',
       timestamp: 3000,
       reviewCount: 4,
+      correctCount: 2,
       lastCorrect: true,
     },
   ];
@@ -155,6 +157,7 @@ describe('WeakPointsPage sort + unmastered filter', () => {
           correctAnswer: 'c',
           timestamp: 5000,
           reviewCount: 3,
+          correctCount: 2,
           lastCorrect: true,
         },
       ]),

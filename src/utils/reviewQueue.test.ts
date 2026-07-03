@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildReviewQueue } from './reviewQueue';
+import { buildReviewQueue, isWeakPointMastered } from './reviewQueue';
 import type { SRSCard } from '../hooks/useSpacedRepetition';
 import type { WeakPoint } from '../hooks/useWeakPoints';
 
@@ -18,8 +18,13 @@ function srs(id: string): SRSCard {
   };
 }
 
-function weak(id: string, lastCorrect: boolean, reviewCount = 0): WeakPoint {
-  return {
+function weak(
+  id: string,
+  lastCorrect: boolean,
+  reviewCount = 0,
+  correctCount: number | undefined = 0,
+): WeakPoint {
+  const item: WeakPoint = {
     id,
     type: 'fill-in-blank',
     question: { x: 1 },
@@ -29,7 +34,23 @@ function weak(id: string, lastCorrect: boolean, reviewCount = 0): WeakPoint {
     reviewCount,
     lastCorrect,
   };
+  if (correctCount !== undefined) {
+    item.correctCount = correctCount;
+  }
+  return item;
 }
+
+describe('isWeakPointMastered', () => {
+  it('uses correctCount >= 2 as the canonical mastered threshold', () => {
+    expect(isWeakPointMastered(weak('one-correct', true, 10, 1))).toBe(false);
+    expect(isWeakPointMastered(weak('two-correct', true, 2, 2))).toBe(true);
+    expect(isWeakPointMastered(weak('three-correct', true, 1, 3))).toBe(true);
+  });
+
+  it('treats legacy weak points without correctCount as not mastered', () => {
+    expect(isWeakPointMastered(weak('legacy', true, 10, undefined))).toBe(false);
+  });
+});
 
 describe('buildReviewQueue', () => {
   it('returns an empty queue when there is nothing due', () => {
@@ -66,15 +87,17 @@ describe('buildReviewQueue', () => {
     expect(q.filter((i) => i.kind === 'weak')).toHaveLength(1);
   });
 
-  it('drops mastered weak points (correct last time AND reviewed >= 2x)', () => {
+  it('drops mastered weak points after two consecutive correct reviews', () => {
     const q = buildReviewQueue([], [
-      weak('mastered', true, 2),
-      weak('learning-correct', true, 1),
-      weak('still-wrong', false, 5),
+      weak('mastered', true, 2, 2),
+      weak('lucky-right-once', true, 2, 1),
+      weak('legacy-review-count-only', true, 5, undefined),
+      weak('still-wrong', false, 5, 0),
     ]);
     const ids = q.map((i) => (i.kind === 'weak' ? i.weak.id : ''));
     expect(ids).not.toContain('mastered');
-    expect(ids).toContain('learning-correct');
+    expect(ids).toContain('lucky-right-once');
+    expect(ids).toContain('legacy-review-count-only');
     expect(ids).toContain('still-wrong');
   });
 

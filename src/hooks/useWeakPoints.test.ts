@@ -7,10 +7,11 @@ import {
   useWeakPoints,
   type WeakPoint,
 } from './useWeakPoints';
+import { isWeakPointMastered } from '../utils/reviewQueue';
 
 const STORAGE_KEY = 'english-learn-weak-points';
 
-type NewWp = Omit<WeakPoint, 'timestamp' | 'reviewCount' | 'lastCorrect'>;
+type NewWp = Omit<WeakPoint, 'timestamp' | 'reviewCount' | 'correctCount' | 'lastCorrect'>;
 
 function makeNew(id: string, overrides: Partial<NewWp> = {}): NewWp {
   return {
@@ -32,6 +33,7 @@ function makeExisting(id: string, overrides: Partial<WeakPoint> = {}): WeakPoint
     correctAnswer: 'right',
     timestamp: 1000,
     reviewCount: 0,
+    correctCount: 0,
     lastCorrect: false,
     ...overrides,
   };
@@ -64,6 +66,7 @@ describe('useWeakPoints storage loading resilience', () => {
         'oops',
         { id: 'missing-fields' },
         { ...valid, reviewCount: 'bad' },
+        { ...valid, correctCount: 'bad' },
       ]),
     );
 
@@ -72,25 +75,44 @@ describe('useWeakPoints storage loading resilience', () => {
     expect(result.current.weakPoints).toEqual([valid]);
     expect(result.current.getWeakPointsByType('fill-in-blank')).toEqual([valid]);
   });
+
+  it('keeps legacy weak points that do not have correctCount', () => {
+    const legacy: Omit<WeakPoint, 'correctCount'> = {
+      id: 'legacy-wp',
+      type: 'fill-in-blank',
+      question: { prompt: 'legacy-wp' },
+      wrongAnswer: 'wrong',
+      correctAnswer: 'right',
+      timestamp: 1000,
+      reviewCount: 2,
+      lastCorrect: true,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([legacy]));
+
+    const { result } = renderHook(() => useWeakPoints());
+
+    expect(result.current.weakPoints).toEqual([legacy]);
+  });
 });
 
 describe('upsertWeakPoint', () => {
-  it('prepends a new id with reviewCount 0, lastCorrect false, and the given timestamp', () => {
+  it('prepends a new id with reviewCount 0, correctCount 0, lastCorrect false, and the given timestamp', () => {
     const prev: WeakPoint[] = [makeExisting('a', { timestamp: 500 })];
     const next = upsertWeakPoint(prev, makeNew('b'), 2000);
 
     expect(next).toHaveLength(2);
     expect(next[0].id).toBe('b');
     expect(next[0].reviewCount).toBe(0);
+    expect(next[0].correctCount).toBe(0);
     expect(next[0].lastCorrect).toBe(false);
     expect(next[0].timestamp).toBe(2000);
     // existing item is preserved after the new one
     expect(next[1].id).toBe('a');
   });
 
-  it('updates an existing id in place without duplicating and resets lastCorrect to false', () => {
+  it('updates an existing id in place without duplicating and resets mastery progress', () => {
     const prev: WeakPoint[] = [
-      makeExisting('a', { timestamp: 500, reviewCount: 3, lastCorrect: true }),
+      makeExisting('a', { timestamp: 500, reviewCount: 3, correctCount: 2, lastCorrect: true }),
       makeExisting('b', { timestamp: 600 }),
     ];
     const next = upsertWeakPoint(
@@ -108,6 +130,7 @@ describe('upsertWeakPoint', () => {
     expect(updated.correctAnswer).toBe('newRight');
     expect(updated.question).toEqual({ v: 9 });
     expect(updated.timestamp).toBe(3000);
+    expect(updated.correctCount).toBe(0);
     expect(updated.lastCorrect).toBe(false);
     // reviewCount is NOT reset on upsert (preserved in place)
     expect(updated.reviewCount).toBe(3);
@@ -134,31 +157,55 @@ describe('upsertWeakPoint', () => {
 });
 
 describe('markReviewedIn', () => {
-  it('increments reviewCount, sets lastCorrect, and bumps timestamp for the matching id only', () => {
+  it('increments reviewCount and correctCount, sets lastCorrect, and bumps timestamp for the matching id only', () => {
     const prev: WeakPoint[] = [
-      makeExisting('a', { timestamp: 500, reviewCount: 2, lastCorrect: false }),
+      makeExisting('a', { timestamp: 500, reviewCount: 2, correctCount: 1, lastCorrect: true }),
       makeExisting('b', { timestamp: 600, reviewCount: 0, lastCorrect: false }),
     ];
     const next = markReviewedIn(prev, 'a', true, 4000);
 
     const a = next.find((w) => w.id === 'a')!;
     expect(a.reviewCount).toBe(3);
+    expect(a.correctCount).toBe(2);
     expect(a.lastCorrect).toBe(true);
     expect(a.timestamp).toBe(4000);
 
     // unrelated item untouched
     const b = next.find((w) => w.id === 'b')!;
     expect(b.reviewCount).toBe(0);
+    expect(b.correctCount).toBe(0);
     expect(b.lastCorrect).toBe(false);
     expect(b.timestamp).toBe(600);
   });
 
-  it('sets lastCorrect to false when reviewed incorrectly', () => {
-    const prev: WeakPoint[] = [makeExisting('a', { reviewCount: 1, lastCorrect: true })];
+  it('resets correctCount and sets lastCorrect to false when reviewed incorrectly', () => {
+    const prev: WeakPoint[] = [makeExisting('a', { reviewCount: 1, correctCount: 1, lastCorrect: true })];
     const next = markReviewedIn(prev, 'a', false, 5000);
 
     expect(next[0].reviewCount).toBe(2);
+    expect(next[0].correctCount).toBe(0);
     expect(next[0].lastCorrect).toBe(false);
     expect(next[0].timestamp).toBe(5000);
+  });
+
+  it('does not master a wrong-then-right item after only one correct review', () => {
+    let next = [makeExisting('a')];
+    next = markReviewedIn(next, 'a', false, 2000);
+    next = markReviewedIn(next, 'a', true, 3000);
+
+    expect(next[0].reviewCount).toBe(2);
+    expect(next[0].correctCount).toBe(1);
+    expect(next[0].lastCorrect).toBe(true);
+    expect(isWeakPointMastered(next[0])).toBe(false);
+  });
+
+  it('masters a weak point after two consecutive correct reviews', () => {
+    let next = [makeExisting('a')];
+    next = markReviewedIn(next, 'a', true, 2000);
+    next = markReviewedIn(next, 'a', true, 3000);
+
+    expect(next[0].reviewCount).toBe(2);
+    expect(next[0].correctCount).toBe(2);
+    expect(isWeakPointMastered(next[0])).toBe(true);
   });
 });
