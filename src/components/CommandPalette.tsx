@@ -107,6 +107,10 @@ function CommandPaletteInner({ onClose }: { onClose: () => void }) {
           <input
             ref={inputRef}
             type="text"
+            role="combobox"
+            aria-expanded={results.length > 0}
+            aria-controls="command-palette-listbox"
+            aria-activedescendant={results.length > 0 ? `cmd-option-${activeIndex}` : undefined}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -125,7 +129,12 @@ function CommandPaletteInner({ onClose }: { onClose: () => void }) {
             結果が見つかりません
           </p>
         ) : (
-          <ul role="listbox" aria-label="コマンド候補" className="max-h-80 overflow-y-auto py-2">
+          <ul
+            id="command-palette-listbox"
+            role="listbox"
+            aria-label="コマンド候補"
+            className="max-h-80 overflow-y-auto py-2"
+          >
             {groups.map((g) => (
               <li key={g.group} role="presentation">
                 <div className="px-4 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
@@ -140,6 +149,7 @@ function CommandPaletteInner({ onClose }: { onClose: () => void }) {
                         ref={(el) => {
                           optionRefs.current[flatIndex] = el;
                         }}
+                        id={`cmd-option-${flatIndex}`}
                         role="option"
                         aria-selected={selected}
                         onClick={() => runCommand(cmd)}

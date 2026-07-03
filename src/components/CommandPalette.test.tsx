@@ -99,6 +99,19 @@ describe('CommandPalette', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('exposes the highlighted option through aria-activedescendant', () => {
+    renderPalette({ open: true, onClose: vi.fn() });
+    const dialog = screen.getByRole('dialog');
+    const input = screen.getByRole('combobox', { name: 'コマンドを検索' });
+
+    fireEvent.keyDown(dialog, { key: 'ArrowDown' });
+
+    const options = screen.getAllByRole('option');
+    expect(options[1]).toHaveAttribute('id', 'cmd-option-1');
+    expect(options[1]).toHaveAttribute('aria-selected', 'true');
+    expect(input).toHaveAttribute('aria-activedescendant', options[1].id);
+  });
+
   it('navigates on item click and calls onClose', () => {
     const onClose = vi.fn();
     renderPalette({ open: true, onClose });
