@@ -124,6 +124,42 @@ describe('DrillMode', () => {
     expect(savedRecent).toHaveLength(1);
   });
 
+  it('数字キーで未回答の問題に回答し、回答済みのEnterで次の問題へ進む', async () => {
+    await renderReady();
+
+    fireEvent.keyDown(window, { key: '1' });
+
+    expect(optionButtons()[0]).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText(/今回 1問中\d問正解 \d+パーセント/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '次の問題 →' })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    expect(await screen.findByText('第 2 問')).toBeInTheDocument();
+  });
+
+  it('select上のキー入力ではショートカット回答を発火しない', async () => {
+    await renderReady();
+
+    const timerSelect = screen.getByLabelText('タイマー');
+    timerSelect.focus();
+    fireEvent.keyDown(timerSelect, { key: '1' });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(optionButtons()[0]).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByLabelText('今回 0問中0問正解 0パーセント')).toBeInTheDocument();
+  });
+
+  it('未回答時のEnterでは次の問題へ進まない', async () => {
+    await renderReady();
+
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    expect(screen.getByText('第 1 問')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('今回 0問中0問正解 0パーセント')).toBeInTheDocument();
+  });
+
   it('回答確定ごとに学習日を記録し、同じ日ならストリークを二重加算しない', async () => {
     await renderReady();
 
@@ -217,6 +253,32 @@ describe('DrillMode', () => {
       localStorage.getItem(DRILL_STATS_KEY) ?? '{}',
     ) as DrillStatsData;
     expect(statsAfterDisabledClick.total).toEqual({ answered: 1, correct: 0 });
+  });
+
+  it('タイマー残り3秒以下で赤系の視覚警告に切り替える', async () => {
+    vi.useFakeTimers();
+    renderReadyWithFakeTimers('vocab', 'beginner', '10');
+
+    expect(screen.getByRole('timer', { name: '残り時間 10秒' }).className).not.toContain(
+      'animate-pulse',
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(6_000);
+    });
+    const fourSecondsTimer = screen.getByRole('timer', { name: '残り時間 4秒' });
+    expect(fourSecondsTimer.className).toContain('bg-amber-50');
+    expect(fourSecondsTimer.className).not.toContain('animate-pulse');
+
+    await act(async () => {
+      vi.advanceTimersByTime(1_000);
+    });
+    const threeSecondsTimer = screen.getByRole('timer', { name: '残り時間 3秒' });
+    expect(threeSecondsTimer.className).toContain('animate-pulse');
+    expect(threeSecondsTimer.className).toContain('bg-red-50');
+    expect(threeSecondsTimer.className).toContain('text-red-700');
+    expect(threeSecondsTimer.className).toContain('dark:bg-red-950/50');
+    expect(threeSecondsTimer.className).toContain('dark:text-red-300');
   });
 
   it('タイマーオフではカウントダウンも時間切れも発生しない', async () => {
