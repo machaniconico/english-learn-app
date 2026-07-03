@@ -21,6 +21,8 @@ interface TimerState {
 
 const STORAGE_KEY = 'english-learn-study-time';
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes in ms
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_SESSION_AGE_DAYS = 365;
 // 活動イベントによる lastInteraction 更新のスロットル間隔。
 // 過剰な再レンダーと localStorage 書き込みを防ぐため最大30秒に1回だけ更新する。
 const ACTIVITY_THROTTLE = 30 * 1000;
@@ -37,6 +39,11 @@ function getDateString(ts: number): string {
 
 function getToday(): string {
   return getDateString(Date.now());
+}
+
+function capSessions(sessions: StudySession[]): StudySession[] {
+  const cutoff = Date.now() - MAX_SESSION_AGE_DAYS * DAY_MS;
+  return sessions.filter((session) => session.startTime >= cutoff);
 }
 
 function loadState(): TimerState {
@@ -57,7 +64,11 @@ function loadState(): TimerState {
 
 function saveState(state: TimerState): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const cappedState = {
+      ...state,
+      sessions: capSessions(state.sessions),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cappedState));
   } catch {
     // storage full or unavailable
   }
@@ -67,7 +78,11 @@ function saveState(state: TimerState): void {
 // was closed while tracking). Performed at store-initialization so the hook
 // renders with the already-finalized state.
 function loadAndReconcileState(): TimerState {
-  const s = loadState();
+  const loaded = loadState();
+  const s = {
+    ...loaded,
+    sessions: capSessions(loaded.sessions),
+  };
   if (s.currentStart && s.lastInteraction) {
     if (Date.now() - s.lastInteraction > INACTIVITY_TIMEOUT) {
       const endTime = s.lastInteraction;
@@ -81,7 +96,7 @@ function loadAndReconcileState(): TimerState {
           activity: s.currentActivity ?? 'unknown',
         };
         return {
-          sessions: [...s.sessions, session],
+          sessions: capSessions([...s.sessions, session]),
           currentActivity: null,
           currentStart: null,
           lastInteraction: null,

@@ -5,6 +5,7 @@ import { useStudyTimer } from './useStudyTimer';
 
 const STORAGE_KEY = 'english-learn-study-time';
 const INACTIVITY_MS = 30 * 60 * 1000; // 30 minutes
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -333,6 +334,94 @@ describe('useStudyTimer', () => {
       expect(stored!.currentActivity).toBeNull();
       expect(stored!.sessions).toHaveLength(1);
       expect(stored!.sessions[0].activity).toBe('speaking');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Session retention cap
+  // -------------------------------------------------------------------------
+
+  describe('session retention cap', () => {
+    it('removes sessions older than the retention window on load and persists the capped state', () => {
+      const now = Date.now();
+      const oldStart = now - 400 * DAY_MS;
+      const recentStart = now - 10 * DAY_MS;
+
+      seedLocalStorage({
+        sessions: [
+          {
+            date: toDateStr(new Date(oldStart)),
+            startTime: oldStart,
+            endTime: oldStart + 300_000,
+            duration: 300,
+            activity: 'too-old',
+          },
+          {
+            date: toDateStr(new Date(recentStart)),
+            startTime: recentStart,
+            endTime: recentStart + 600_000,
+            duration: 600,
+            activity: 'recent',
+          },
+        ],
+        currentActivity: null,
+        currentStart: null,
+        lastInteraction: null,
+      });
+
+      const { result } = renderHook(() => useStudyTimer());
+
+      expect(result.current.getSessions(500).map((session) => session.activity)).toEqual([
+        'recent',
+      ]);
+
+      const stored = getStoredState();
+      expect(stored).not.toBeNull();
+      expect(stored!.sessions.map((session) => session.activity)).toEqual(['recent']);
+    });
+
+    it('keeps sessions from the 90-day and 180-day reporting windows', () => {
+      const now = Date.now();
+      const ninetyDaysAgo = now - 90 * DAY_MS;
+      const oneHundredEightyDaysAgo = now - 180 * DAY_MS;
+
+      seedLocalStorage({
+        sessions: [
+          {
+            date: toDateStr(new Date(ninetyDaysAgo)),
+            startTime: ninetyDaysAgo,
+            endTime: ninetyDaysAgo + 600_000,
+            duration: 600,
+            activity: 'report-90',
+          },
+          {
+            date: toDateStr(new Date(oneHundredEightyDaysAgo)),
+            startTime: oneHundredEightyDaysAgo,
+            endTime: oneHundredEightyDaysAgo + 900_000,
+            duration: 900,
+            activity: 'report-180',
+          },
+        ],
+        currentActivity: null,
+        currentStart: null,
+        lastInteraction: null,
+      });
+
+      const { result } = renderHook(() => useStudyTimer());
+
+      expect(result.current.getSessions(90).map((session) => session.activity)).toEqual([
+        'report-90',
+      ]);
+      expect(result.current.getSessions(180).map((session) => session.activity)).toEqual([
+        'report-90',
+        'report-180',
+      ]);
+
+      const stored = getStoredState();
+      expect(stored!.sessions.map((session) => session.activity)).toEqual([
+        'report-90',
+        'report-180',
+      ]);
     });
   });
 
