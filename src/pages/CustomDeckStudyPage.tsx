@@ -164,7 +164,7 @@ export default function CustomDeckStudyPage() {
       </div>
 
       {/* Flashcard study area */}
-      <Flashcard items={deck.items} />
+      <Flashcard key={deck.id} items={deck.items} />
 
       <div className="mt-8 text-center pb-6">
         <Link
