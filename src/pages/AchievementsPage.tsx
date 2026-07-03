@@ -20,7 +20,7 @@ export default function AchievementsPage() {
   const { getStats: getSrsStats } = useSpacedRepetition();
   const { getOverallAccuracy, getAccuracyByType, getResultsByType } = useAccuracy();
   const { hasDiagnosed } = useUserLevel();
-  const { getTotalTime, getDailyBreakdown } = useStudyTimer();
+  const { getTotalTime, getDailyBreakdown, getWeeklyTotal } = useStudyTimer();
   const { record: typingRecord } = useTypingRecords();
   const { goalMinutes, setGoalMinutes } = useDailyGoal();
   const { weeklyGoalMinutes, setWeeklyGoalMinutes } = useWeeklyGoal();
@@ -48,7 +48,7 @@ export default function AchievementsPage() {
   const achievements = evaluateAchievements(input);
   const unlocked = countUnlocked(achievements);
   const goalPct = goalProgressPct(todayMinutes, goalMinutes);
-  const weeklyMinutes = getDailyBreakdown(7).reduce((sum, d) => sum + d.minutes, 0);
+  const weeklyMinutes = getWeeklyTotal();
   const weeklyPct = goalProgressPct(weeklyMinutes, weeklyGoalMinutes);
   const freezeTokens = progress.freezeTokens;
   const daysToNextToken = daysUntilNextFreezeToken(stats.streak, freezeTokens);
