@@ -8,14 +8,17 @@ import type { NoteRow } from './myNotesFilter';
 export const NOTES_CSV_HEADER = ['英語', '日本語', 'メモ'] as const;
 
 // RFC4180 準拠で 1 フィールドをエスケープする。
+// CSV/数式インジェクション対策として、表計算ソフトで数式扱いされうる先頭文字は
+// シングルクォートで無害化してから既存の引用符ラップを適用する。
 // 値に " , \n, \r のいずれかを含む場合は全体を " で囲み、内部の " は "" に二重化する。
 // いずれも含まない場合はそのまま返す。空文字はそのまま ''。
 export function escapeCsvField(value: string): string {
   if (value === '') return '';
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  const sanitized = /^[=+\-@\t]/.test(value) ? `'${value}` : value;
+  if (/[",\n\r]/.test(sanitized)) {
+    return `"${sanitized.replace(/"/g, '""')}"`;
   }
-  return value;
+  return sanitized;
 }
 
 // メモ行の配列を CSV 文字列に変換する。
