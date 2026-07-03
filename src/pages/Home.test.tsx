@@ -4,6 +4,8 @@ import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { renderWithRouter, screen, fireEvent } from '../test/test-utils';
 import Home from './Home';
+import type { SRSCard } from '../hooks/useSpacedRepetition';
+import type { WeakPoint } from '../hooks/useWeakPoints';
 import { STORAGE_KEY, type LastActivity } from '../hooks/useLastActivity';
 
 expect.extend(matchers);
@@ -22,12 +24,110 @@ describe('Home a11y smoke', () => {
     const { container } = renderWithRouter(<Home />, { route: '/' });
 
     // Light structure assertions so the test isn't axe-only.
-    expect(screen.getByRole('heading', { level: 1, name: '英語を楽しく学ぼう' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'ホーム' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: '英語を楽しく学ぼう' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /レベル診断テスト/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /ドリルモード/ })).toHaveAttribute('href', '/drill');
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it('places the single page h1 before any lower-level heading in DOM order', () => {
+    renderWithRouter(<Home />, { route: '/' });
+
+    const h1s = document.querySelectorAll('h1');
+    expect(h1s).toHaveLength(1);
+    expect(h1s[0]).toHaveTextContent('ホーム');
+
+    const headings = Array.from(document.querySelectorAll('h1,h2,h3'));
+    expect(headings[0]).toBe(h1s[0]);
+    expect(headings[0].tagName).toBe('H1');
+  });
+});
+
+describe('Home 今日の復習 count', () => {
+  it('shows the same review count from due SRS cards plus unmastered weak points', () => {
+    const dueCards: SRSCard[] = [
+      {
+        id: 'due-card-1',
+        english: 'apple',
+        japanese: 'りんご',
+        pronunciation: 'apple',
+        source: 'test',
+        interval: 1,
+        easeFactor: 2.5,
+        repetitions: 0,
+        nextReview: '2000-01-01',
+        lastReview: '1999-12-31',
+      },
+      {
+        id: 'due-card-2',
+        english: 'book',
+        japanese: '本',
+        pronunciation: 'book',
+        source: 'test',
+        interval: 6,
+        easeFactor: 2.3,
+        repetitions: 1,
+        nextReview: todayStr(),
+        lastReview: '2000-01-01',
+      },
+      {
+        id: 'future-card',
+        english: 'future',
+        japanese: '未来',
+        pronunciation: 'future',
+        source: 'test',
+        interval: 10,
+        easeFactor: 2.5,
+        repetitions: 2,
+        nextReview: '2999-01-01',
+        lastReview: todayStr(),
+      },
+    ];
+    const weakPoints: WeakPoint[] = [
+      {
+        id: 'weak-1',
+        type: 'fill-in-blank',
+        question: { prompt: 'test' },
+        wrongAnswer: 'wrong',
+        correctAnswer: 'right',
+        timestamp: 1,
+        reviewCount: 0,
+        correctCount: 0,
+        lastCorrect: false,
+      },
+      {
+        id: 'weak-2',
+        type: 'dictation',
+        question: { prompt: 'test' },
+        wrongAnswer: 'wrong',
+        correctAnswer: 'right',
+        timestamp: 2,
+        reviewCount: 1,
+        correctCount: 1,
+        lastCorrect: true,
+      },
+      {
+        id: 'mastered-weak',
+        type: 'reorder',
+        question: { prompt: 'test' },
+        wrongAnswer: 'wrong',
+        correctAnswer: 'right',
+        timestamp: 3,
+        reviewCount: 2,
+        correctCount: 2,
+        lastCorrect: true,
+      },
+    ];
+    localStorage.setItem('english-learn-srs', JSON.stringify(dueCards));
+    localStorage.setItem('english-learn-weak-points', JSON.stringify(weakPoints));
+
+    renderWithRouter(<Home />, { route: '/' });
+
+    expect(screen.getByText('復習タイミングの単語と弱点 4件')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /今日の復習/ })).toHaveAttribute('href', '/review');
   });
 });
 

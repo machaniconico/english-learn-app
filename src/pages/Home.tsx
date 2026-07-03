@@ -7,7 +7,7 @@ import { buildReviewQueue } from '../utils/reviewQueue';
 import { getRecoverySuggestion } from '../utils/recoverySuggestion';
 import { useUserLevel } from '../hooks/useUserLevel';
 import { useAccuracy } from '../hooks/useAccuracy';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   MessageCircle,
   PenLine,
@@ -101,7 +101,10 @@ export default function Home() {
   const { last, clear } = useLastActivity();
 
   // Match the actual review session exactly (same cap + weak-point mastery filter).
-  const reviewCount = buildReviewQueue(getDueCards(), weakPoints).length;
+  const reviewCount = useMemo(
+    () => buildReviewQueue(getDueCards(), weakPoints).length,
+    [getDueCards, weakPoints],
+  );
 
   useEffect(() => {
     updateStreak();
@@ -149,6 +152,8 @@ export default function Home() {
 
   return (
     <div>
+      <h1 className="sr-only">ホーム</h1>
+
       {/* Level Diagnostic CTA or Level Badge */}
       {!hasDiagnosed ? (
         <Link
@@ -462,9 +467,9 @@ export default function Home() {
 
       {/* Hero Section — M4: text-only hero, no emoji */}
       <section className="animate-fade-in-up text-center py-10 sm:py-16" style={{ '--stagger': '180ms' } as React.CSSProperties}>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
           英語を楽しく学ぼう
-        </h1>
+        </h2>
         <p className="mt-3 text-lg sm:text-xl text-indigo-600 dark:text-indigo-400 font-medium">
           Learn English the Fun Way
         </p>
