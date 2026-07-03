@@ -7,18 +7,34 @@ function genId(): string {
   return crypto.randomUUID?.() ?? `deck-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
+function isCustomDeck(value: unknown): value is CustomDeck {
+  if (typeof value !== 'object' || value === null) return false;
+  const deck = value as Record<string, unknown>;
+  return (
+    typeof deck.id === 'string' &&
+    typeof deck.name === 'string' &&
+    Array.isArray(deck.items)
+  );
+}
+
 export function loadDecks(): CustomDeck[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as CustomDeck[];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isCustomDeck);
   } catch {
     return [];
   }
 }
 
 export function saveDecks(decks: CustomDeck[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+  } catch {
+    // storage full or unavailable
+  }
 }
 
 export function makeDeck(name: string, description?: string): CustomDeck {

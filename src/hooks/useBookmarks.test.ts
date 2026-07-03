@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useBookmarks, type BookmarkedItem } from './useBookmarks';
 
@@ -42,6 +42,34 @@ describe('useBookmarks', () => {
       localStorage.setItem(STORAGE_KEY, 'not-valid-json{{{');
       const { result } = renderHook(() => useBookmarks());
       expect(result.current.bookmarks).toEqual([]);
+    });
+
+    it.each(['null', '{}', '"x"', '42'])(
+      'returns empty array when localStorage contains non-array JSON: %s',
+      (raw) => {
+        localStorage.setItem(STORAGE_KEY, raw);
+        const { result } = renderHook(() => useBookmarks());
+        expect(result.current.bookmarks).toEqual([]);
+      },
+    );
+
+    it('filters malformed stored bookmark entries and keeps valid bookmarks', () => {
+      const valid = makeItem('valid');
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify([
+          valid,
+          null,
+          'oops',
+          { id: 'missing-fields' },
+          { ...valid, addedAt: 'bad' },
+        ]),
+      );
+
+      const { result } = renderHook(() => useBookmarks());
+
+      expect(result.current.bookmarks).toEqual([valid]);
+      expect(result.current.isBookmarked('valid')).toBe(true);
     });
   });
 
@@ -97,6 +125,27 @@ describe('useBookmarks', () => {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as BookmarkedItem[];
       expect(stored).toHaveLength(1);
       expect(stored[0].id).toBe('persist-add');
+    });
+
+    it('updates in-memory state when localStorage.setItem throws', () => {
+      const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+        throw new Error('quota');
+      });
+      try {
+        const { result } = renderHook(() => useBookmarks());
+        const item = makeItem('offline-add');
+
+        expect(() => {
+          act(() => {
+            result.current.addBookmark(item);
+          });
+        }).not.toThrow();
+
+        expect(result.current.bookmarks).toEqual([item]);
+        expect(result.current.isBookmarked('offline-add')).toBe(true);
+      } finally {
+        spy.mockRestore();
+      }
     });
   });
 

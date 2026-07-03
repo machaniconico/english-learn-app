@@ -25,13 +25,19 @@ const MAX_AGE_DAYS = 90;
 
 // --- Helpers ---
 
+function isLearningEvent(value: unknown): value is LearningEvent {
+  if (typeof value !== 'object' || value === null) return false;
+  const event = value as Record<string, unknown>;
+  return typeof event.type === 'string' && typeof event.timestamp === 'number';
+}
+
 function loadEvents(): LearningEvent[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed as LearningEvent[];
+    return parsed.filter(isLearningEvent);
   } catch {
     return [];
   }

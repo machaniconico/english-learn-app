@@ -21,6 +21,8 @@ export interface SRSStats {
   learning: number;
 }
 
+type StoredSRSCard = Omit<SRSCard, 'source'> & { source?: unknown };
+
 const STORAGE_KEY = 'english-learn-srs';
 
 // ローカル暦日 (YYYY-MM-DD) を返すヘルパー。
@@ -46,11 +48,37 @@ function addDays(dateStr: string, days: number): string {
   return toLocalDateStr(d);
 }
 
+function isStoredSRSCard(value: unknown): value is StoredSRSCard {
+  if (typeof value !== 'object' || value === null) return false;
+  const card = value as Record<string, unknown>;
+  return (
+    typeof card.id === 'string' &&
+    typeof card.english === 'string' &&
+    typeof card.japanese === 'string' &&
+    typeof card.pronunciation === 'string' &&
+    (card.source === undefined || typeof card.source === 'string') &&
+    typeof card.interval === 'number' &&
+    typeof card.easeFactor === 'number' &&
+    typeof card.repetitions === 'number' &&
+    typeof card.nextReview === 'string' &&
+    typeof card.lastReview === 'string'
+  );
+}
+
+function normalizeSRSCard(card: StoredSRSCard): SRSCard {
+  return {
+    ...card,
+    source: typeof card.source === 'string' ? card.source : '',
+  };
+}
+
 function loadCards(): SRSCard[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as SRSCard[];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isStoredSRSCard).map(normalizeSRSCard);
   } catch {
     return [];
   }

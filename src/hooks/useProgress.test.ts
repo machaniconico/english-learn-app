@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import {
   applyStudyDate,
   applyStreakBreak,
@@ -7,8 +8,11 @@ import {
   daysUntilNextFreezeToken,
   MAX_FREEZE_TOKENS,
   FREEZE_EARN_INTERVAL,
+  useProgress,
   type ProgressData,
 } from './useProgress';
+
+const STORAGE_KEY = 'english-learn-progress';
 
 function baseProgress(overrides: Partial<ProgressData> = {}): ProgressData {
   return {
@@ -25,6 +29,73 @@ function baseProgress(overrides: Partial<ProgressData> = {}): ProgressData {
 
 beforeEach(() => {
   localStorage.clear();
+});
+
+describe('useProgress storage loading resilience', () => {
+  it.each(['null', '{}', '"x"', '42'])(
+    'falls back to default progress when localStorage contains invalid root data: %s',
+    (raw) => {
+      localStorage.setItem(STORAGE_KEY, raw);
+
+      const { result } = renderHook(() => useProgress());
+
+      expect(result.current.progress).toEqual(baseProgress());
+      expect(result.current.getOverallStats()).toEqual({
+        totalItems: 0,
+        completedItems: 0,
+        averageScore: 0,
+        streak: 0,
+      });
+    },
+  );
+
+  it('sanitizes malformed lesson entries and coerces completedItems to an array', () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        lessons: {
+          u1: { completedItems: null },
+          u2: {
+            lessonId: 'lesson-2',
+            completedItems: ['item-a'],
+            quizScore: 80,
+            flashcardCompleted: true,
+            lastAccessed: 123,
+          },
+          missingShape: null,
+          primitive: 'oops',
+        },
+        fillInBlankScores: { setA: 70 },
+        readingScores: { passageA: 90 },
+        totalStudyTime: 30,
+        streak: 4,
+        lastStudyDate: '2026-01-01',
+        freezeTokens: 9,
+      }),
+    );
+
+    const { result } = renderHook(() => useProgress());
+
+    expect(result.current.getLessonProgress('u1')?.completedItems).toEqual([]);
+    expect(result.current.getLessonProgress('u1')?.lessonId).toBe('u1');
+    expect(result.current.getLessonProgress('u2')).toMatchObject({
+      lessonId: 'lesson-2',
+      completedItems: ['item-a'],
+      quizScore: 80,
+      flashcardCompleted: true,
+      lastAccessed: 123,
+    });
+    expect(result.current.getLessonProgress('missingShape')).toBeNull();
+    expect(result.current.progress.freezeTokens).toBe(MAX_FREEZE_TOKENS);
+    expect(result.current.getOverallStats().completedItems).toBe(1);
+
+    expect(() => {
+      act(() => {
+        result.current.markItemCompleted('u1', 'item-b');
+      });
+    }).not.toThrow();
+    expect(result.current.getLessonProgress('u1')?.completedItems).toEqual(['item-b']);
+  });
 });
 
 describe('daysBetween', () => {
