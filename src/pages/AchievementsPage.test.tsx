@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { renderWithRouter, screen, fireEvent } from '../test/test-utils';
@@ -9,6 +9,10 @@ expect.extend(matchers);
 
 beforeEach(() => {
   localStorage.clear();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('AchievementsPage', () => {
@@ -157,12 +161,16 @@ describe('AchievementsPage', () => {
     expect(localStorage.getItem('english-learn-weekly-goal')).toBe('120');
   });
 
-  it('sums the last 7 days into the weekly progress bar', () => {
+  it('sums the current calendar week into the weekly progress bar', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)); // Wednesday
+
     const now = Date.now();
     const dateStr = (t: number) => {
       const d = new Date(t);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     };
+    const monday = new Date(2026, 5, 22, 10, 0, 0).getTime();
     localStorage.setItem('english-learn-weekly-goal', '60');
     localStorage.setItem(
       'english-learn-study-time',
@@ -170,9 +178,9 @@ describe('AchievementsPage', () => {
         sessions: [
           { date: dateStr(now), startTime: now - 1_800_000, endTime: now, duration: 1800, activity: 'lesson' }, // 30分
           {
-            date: dateStr(now - 2 * 24 * 3600 * 1000),
-            startTime: now - 2 * 24 * 3600 * 1000,
-            endTime: now - 2 * 24 * 3600 * 1000 + 900_000,
+            date: dateStr(monday),
+            startTime: monday,
+            endTime: monday + 900_000,
             duration: 900, // 15分
             activity: 'lesson',
           },
@@ -187,6 +195,43 @@ describe('AchievementsPage', () => {
     expect(screen.getByRole('progressbar', { name: '今週の学習目標の進捗' })).toHaveAttribute(
       'aria-valuenow',
       '75',
+    );
+  });
+
+  it('shows 0 weekly minutes on Monday when only the previous week has sessions', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 5, 22, 12, 0, 0)); // Monday
+
+    const previousSunday = new Date(2026, 5, 21, 12, 0, 0).getTime();
+    const dateStr = (t: number) => {
+      const d = new Date(t);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    localStorage.setItem('english-learn-weekly-goal', '60');
+    localStorage.setItem(
+      'english-learn-study-time',
+      JSON.stringify({
+        sessions: [
+          {
+            date: dateStr(previousSunday),
+            startTime: previousSunday,
+            endTime: previousSunday + 2_700_000,
+            duration: 2700, // 45分。直近7日なら入るが、月曜起点の今週には入らない。
+            activity: 'lesson',
+          },
+        ],
+        currentActivity: null,
+        currentStart: null,
+        lastInteraction: null,
+      }),
+    );
+
+    renderWithRouter(<AchievementsPage />);
+
+    expect(document.body).toHaveTextContent(/今週\s*0分\s*\/\s*目標 60分/);
+    expect(screen.getByRole('progressbar', { name: '今週の学習目標の進捗' })).toHaveAttribute(
+      'aria-valuenow',
+      '0',
     );
   });
 
