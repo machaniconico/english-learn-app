@@ -76,6 +76,18 @@ describe('ErrorCorrection', () => {
     expect(within(status).getByText('has')).toBeTruthy();
   });
 
+  it('adds sr-only correctness labels to segment buttons only after answering', () => {
+    renderWithRouter(<ErrorCorrection questions={questions} />);
+    expect(screen.queryByText('（正解）')).toBeNull();
+    expect(screen.queryByText('（不正解）')).toBeNull();
+
+    // Q1 errorIndex 0 -> "have"; choose "apples" as an incorrect segment.
+    fireEvent.click(getSegmentButton('apples'));
+
+    expect(within(getSegmentButton('have')).getByText('（正解）')).toBeTruthy();
+    expect(within(getSegmentButton('apples')).getByText('（不正解）')).toBeTruthy();
+  });
+
   it('disables segment selection after answering (no double-count)', () => {
     renderWithRouter(<ErrorCorrection questions={questions} />);
     fireEvent.click(getSegmentButton('apples')); // wrong
