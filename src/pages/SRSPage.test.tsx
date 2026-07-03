@@ -82,6 +82,35 @@ describe('SRSPage urgency ordering (Round 38)', () => {
     expect(screen.queryByText('mid-word')).toBeNull();
   });
 
+  it('復習中にdueリストが縮んでも、開始時スナップショットの全カードをurgency順に1回ずつ出題する', () => {
+    const cards: SRSCard[] = [
+      makeStoredCard({ id: 'word-b', english: 'word-b', nextReview: daysFromToday(-5) }),
+      makeStoredCard({ id: 'word-c', english: 'word-c', nextReview: daysFromToday(-1) }),
+      makeStoredCard({ id: 'word-a', english: 'word-a', nextReview: daysFromToday(-9) }),
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+
+    renderWithRouter(<SRSPage />, { route: '/srs' });
+    fireEvent.click(screen.getByRole('button', { name: '復習を開始' }));
+
+    const expectedOrder = ['word-a', 'word-b', 'word-c'];
+    const seen: string[] = [];
+
+    expectedOrder.forEach((word, index) => {
+      expect(screen.getByText(word)).toBeTruthy();
+      expect(screen.getByText(`${index + 1} / ${expectedOrder.length}`)).toBeTruthy();
+      expect(screen.queryByRole('heading', { name: '今日の復習は完了！' })).toBeNull();
+      seen.push(word);
+
+      fireEvent.click(screen.getByRole('button', { name: '答えを見る' }));
+      fireEvent.click(screen.getByRole('button', { name: /完璧/ }));
+    });
+
+    expect(seen).toEqual(expectedOrder);
+    expect(new Set(seen).size).toBe(expectedOrder.length);
+    expect(screen.getByRole('heading', { name: '今日の復習は完了！' })).toBeTruthy();
+  });
+
   it('カード一覧に超過バッジ(今日 / N日超過)が表示される', () => {
     const cards: SRSCard[] = [
       makeStoredCard({ id: 'today', english: 'today-word', nextReview: daysFromToday(0) }),
