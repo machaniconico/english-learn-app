@@ -186,10 +186,10 @@ describe('loadDrillRecent/saveDrillRecent', () => {
 });
 
 describe('loadDrillPrefs/saveDrillPrefs', () => {
-  const defaultPrefs: DrillPrefs = { genre: 'random', difficulty: 'beginner' };
+  const defaultPrefs: DrillPrefs = { genre: 'random', difficulty: 'beginner', timer: 'off' };
 
   it('save→load で設定を復元する', () => {
-    const prefs: DrillPrefs = { genre: 'listening', difficulty: 'expert' };
+    const prefs: DrillPrefs = { genre: 'listening', difficulty: 'expert', timer: '20' };
 
     saveDrillPrefs(prefs);
 
@@ -197,7 +197,7 @@ describe('loadDrillPrefs/saveDrillPrefs', () => {
   });
 
   it('苦手優先ジャンル設定を復元する', () => {
-    const prefs: DrillPrefs = { genre: 'weak', difficulty: 'intermediate' };
+    const prefs: DrillPrefs = { genre: 'weak', difficulty: 'intermediate', timer: '30' };
 
     saveDrillPrefs(prefs);
 
@@ -226,6 +226,20 @@ describe('loadDrillPrefs/saveDrillPrefs', () => {
       JSON.stringify({ genre: 'vocab', difficulty: 'unknown' }),
     );
     expect(loadDrillPrefs()).toEqual(defaultPrefs);
+  });
+
+  it('timer が未保存または不正なら off にフォールバックする', () => {
+    localStorage.setItem(
+      DRILL_PREFS_KEY,
+      JSON.stringify({ genre: 'vocab', difficulty: 'advanced' }),
+    );
+    expect(loadDrillPrefs()).toEqual({ genre: 'vocab', difficulty: 'advanced', timer: 'off' });
+
+    localStorage.setItem(
+      DRILL_PREFS_KEY,
+      JSON.stringify({ genre: 'listening', difficulty: 'expert', timer: '99' }),
+    );
+    expect(loadDrillPrefs()).toEqual({ genre: 'listening', difficulty: 'expert', timer: 'off' });
   });
 
   it('localStorage 例外を握りつぶす', () => {

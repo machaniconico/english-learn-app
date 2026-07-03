@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import {
@@ -21,10 +21,12 @@ import { buildDrillPool } from '../utils/drillQuestionBank';
 import {
   DRILL_DIFFICULTIES,
   DRILL_GENRES,
+  DRILL_TIMERS,
   type DrillDifficulty,
   type DrillGenre,
   type DrillGenreSelection,
   type DrillQuestion,
+  type DrillTimer,
 } from '../utils/drillTypes';
 
 type DrillPhase = 'active' | 'summary';
@@ -56,6 +58,10 @@ const WEAK_GENRE_LABEL = '苦手優先';
 function percent(correct: number, answered: number): number {
   if (answered === 0) return 0;
   return Math.round((correct / answered) * 100);
+}
+
+function timerSeconds(timer: DrillTimer): number {
+  return timer === 'off' ? 0 : Number(timer);
 }
 
 function genreLabel(genre: DrillGenre): string {
@@ -133,6 +139,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
   const [phase, setPhase] = useState<DrillPhase>('active');
   const [difficulty, setDifficulty] = useState<DrillDifficulty>(prefs.difficulty);
   const [genreSelection, setGenreSelection] = useState<DrillGenreSelection>(prefs.genre);
+  const [timer, setTimer] = useState<DrillTimer>(prefs.timer);
   const [stats, setStats] = useState<DrillStatsData>(initialStats);
   const [recent, setRecent] = useState<string[]>(initialRuntime.recent);
   const [session, setSession] = useState<SessionStats>({ answered: 0, correct: 0 });
@@ -140,8 +147,16 @@ export default function DrillMode({ rand }: DrillModeProps) {
     initialRuntime.question,
   );
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(() => {
+    const initialTimerSeconds = timerSeconds(prefs.timer);
+    return initialTimerSeconds > 0 ? initialTimerSeconds : null;
+  });
+  const completedQuestionIdRef = useRef<string | null>(null);
 
-  const answered = selectedIndex !== null;
+  const answered = selectedIndex !== null || timedOut;
+  const timerDuration = timerSeconds(timer);
+  const visibleRemainingSeconds = remainingSeconds ?? timerDuration;
   const sessionRate = percent(session.correct, session.answered);
   const totalRate = percent(stats.total.correct, stats.total.answered);
   const questionNumber = session.answered + (answered ? 0 : 1);
@@ -149,16 +164,20 @@ export default function DrillMode({ rand }: DrillModeProps) {
   // 次に進む時点の設定を使って、直近履歴にない問題を優先して選ぶ。
   const loadNextQuestion = useCallback(() => {
     const result = resolveNextQuestion(genreSelection, difficulty, recent, stats.byGenre, rand);
+    completedQuestionIdRef.current = null;
+    setTimedOut(false);
     if (!result) {
       setCurrentQuestion(null);
       setSelectedIndex(null);
+      setRemainingSeconds(null);
       return;
     }
 
     setCurrentQuestion(result.question);
     setSelectedIndex(null);
+    setRemainingSeconds(timerDuration > 0 ? timerDuration : null);
     setRecent(result.recent);
-  }, [difficulty, genreSelection, rand, recent, stats.byGenre]);
+  }, [difficulty, genreSelection, rand, recent, stats.byGenre, timerDuration]);
 
   useEffect(() => {
     saveDrillRecent(recent);
@@ -174,11 +193,14 @@ export default function DrillMode({ rand }: DrillModeProps) {
       if (phase !== 'active' || currentQuestion !== null) return;
       const result = resolveNextQuestion(nextGenre, nextDifficulty, recent, stats.byGenre, rand);
       if (!result) return;
+      completedQuestionIdRef.current = null;
       setCurrentQuestion(result.question);
       setSelectedIndex(null);
+      setTimedOut(false);
+      setRemainingSeconds(timerDuration > 0 ? timerDuration : null);
       setRecent(result.recent);
     },
-    [currentQuestion, phase, rand, recent, stats.byGenre],
+    [currentQuestion, phase, rand, recent, stats.byGenre, timerDuration],
   );
 
   // リスニング問題は出題された瞬間に読み上げる。回答前は英文を画面に出さない。
@@ -191,28 +213,42 @@ export default function DrillMode({ rand }: DrillModeProps) {
     (event: ChangeEvent<HTMLSelectElement>) => {
       const nextDifficulty = event.target.value as DrillDifficulty;
       setDifficulty(nextDifficulty);
-      saveDrillPrefs({ genre: genreSelection, difficulty: nextDifficulty });
+      saveDrillPrefs({ genre: genreSelection, difficulty: nextDifficulty, timer });
       recoverFromEmptyPool(genreSelection, nextDifficulty);
     },
-    [genreSelection, recoverFromEmptyPool],
+    [genreSelection, recoverFromEmptyPool, timer],
   );
 
   const handleGenreChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
       const nextGenre = event.target.value as DrillGenreSelection;
       setGenreSelection(nextGenre);
-      saveDrillPrefs({ genre: nextGenre, difficulty });
+      saveDrillPrefs({ genre: nextGenre, difficulty, timer });
       recoverFromEmptyPool(nextGenre, difficulty);
     },
-    [difficulty, recoverFromEmptyPool],
+    [difficulty, recoverFromEmptyPool, timer],
   );
 
-  const handleAnswer = useCallback(
-    (optionIndex: number) => {
-      if (!currentQuestion || selectedIndex !== null || phase !== 'active') return;
+  const handleTimerChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      const nextTimer = event.target.value as DrillTimer;
+      const nextDuration = timerSeconds(nextTimer);
+      setTimer(nextTimer);
+      saveDrillPrefs({ genre: genreSelection, difficulty, timer: nextTimer });
+      // タイマーを切り替えたら、回答前の問題だけ新しい残り時間へリセットする。
+      setRemainingSeconds(!answered && nextDuration > 0 ? nextDuration : null);
+    },
+    [answered, difficulty, genreSelection],
+  );
 
-      const correct = optionIndex === currentQuestion.correctIndex;
+  const completeCurrentQuestion = useCallback(
+    (correct: boolean, optionIndex: number | null) => {
+      if (!currentQuestion || phase !== 'active') return;
+      if (completedQuestionIdRef.current === currentQuestion.id) return;
+
+      completedQuestionIdRef.current = currentQuestion.id;
       setSelectedIndex(optionIndex);
+      setTimedOut(optionIndex === null);
       setSession((prev) => ({
         answered: prev.answered + 1,
         correct: prev.correct + (correct ? 1 : 0),
@@ -221,8 +257,35 @@ export default function DrillMode({ rand }: DrillModeProps) {
         recordDrillAnswer(prev, currentQuestion.genre, currentQuestion.difficulty, correct),
       );
     },
-    [currentQuestion, phase, selectedIndex],
+    [currentQuestion, phase],
   );
+
+  const handleAnswer = useCallback(
+    (optionIndex: number) => {
+      if (!currentQuestion || answered || phase !== 'active') return;
+
+      completeCurrentQuestion(optionIndex === currentQuestion.correctIndex, optionIndex);
+    },
+    [answered, completeCurrentQuestion, currentQuestion, phase],
+  );
+
+  // タイマー稼働中は1秒ごとにカウントダウンし、0で時間切れとして確定する。
+  // 残り時間のリセットは出題・タイマー変更の各ハンドラ側で行うため、ここでは減算のみ。
+  useEffect(() => {
+    if (phase !== 'active' || !currentQuestion || answered || timerDuration === 0) return;
+
+    let remaining = timerDuration;
+    const intervalId = window.setInterval(() => {
+      remaining -= 1;
+      setRemainingSeconds(remaining);
+      if (remaining <= 0) {
+        window.clearInterval(intervalId);
+        completeCurrentQuestion(false, null);
+      }
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [answered, currentQuestion, phase, timerDuration, completeCurrentQuestion]);
 
   const handleNext = useCallback(() => {
     if (!answered) return;
@@ -249,16 +312,19 @@ export default function DrillMode({ rand }: DrillModeProps) {
 
   const handleRestart = useCallback(() => {
     const result = resolveNextQuestion(genreSelection, difficulty, recent, stats.byGenre, rand);
+    completedQuestionIdRef.current = null;
     setSession({ answered: 0, correct: 0 });
     setCurrentQuestion(result?.question ?? null);
     setRecent(result?.recent ?? recent);
     setSelectedIndex(null);
+    setTimedOut(false);
+    setRemainingSeconds(result && timerDuration > 0 ? timerDuration : null);
     setPhase('active');
-  }, [difficulty, genreSelection, rand, recent, stats.byGenre]);
+  }, [difficulty, genreSelection, rand, recent, stats.byGenre, timerDuration]);
 
   const renderControls = () => (
     <div className="rounded-2xl border border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-800 p-4 shadow-sm">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
         <div>
           <label
             htmlFor="drill-difficulty"
@@ -296,6 +362,27 @@ export default function DrillMode({ rand }: DrillModeProps) {
             <option value="random">{RANDOM_GENRE_LABEL}</option>
             <option value="weak">{WEAK_GENRE_LABEL}</option>
             {DRILL_GENRES.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="drill-timer"
+            className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300"
+          >
+            タイマー
+          </label>
+          <select
+            id="drill-timer"
+            value={timer}
+            onChange={handleTimerChange}
+            className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 shadow-sm transition-colors focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-sky-500"
+          >
+            {DRILL_TIMERS.map((item) => (
               <option key={item.value} value={item.value}>
                 {item.label}
               </option>
@@ -418,6 +505,17 @@ export default function DrillMode({ rand }: DrillModeProps) {
             <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-gray-900 dark:text-gray-300">
               {genreSelectionLabel(genreSelection)}
             </span>
+            {timerDuration > 0 && currentQuestion && !answered && (
+              <span
+                role="timer"
+                // 毎秒更新されるため読み上げは抑制し、見た目のカウントダウン専用にする。
+                aria-live="off"
+                aria-label={`残り時間 ${visibleRemainingSeconds}秒`}
+                className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+              >
+                残り {visibleRemainingSeconds} 秒
+              </span>
+            )}
           </div>
         </div>
 
@@ -517,12 +615,16 @@ export default function DrillMode({ rand }: DrillModeProps) {
                   role="status"
                   aria-live="assertive"
                   className={`mb-2 text-base font-bold ${
-                    selectedIndex === currentQuestion.correctIndex
+                    !timedOut && selectedIndex === currentQuestion.correctIndex
                       ? 'text-green-600 dark:text-green-300'
                       : 'text-red-600 dark:text-red-300'
                   }`}
                 >
-                  {selectedIndex === currentQuestion.correctIndex ? '正解!' : '不正解'}
+                  {timedOut
+                    ? '時間切れ'
+                    : selectedIndex === currentQuestion.correctIndex
+                      ? '正解!'
+                      : '不正解'}
                 </p>
                 <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-3.5 dark:border-gray-700 dark:bg-gray-900/50">
                   <p className="mb-1 text-xs font-semibold text-gray-400 dark:text-gray-500">

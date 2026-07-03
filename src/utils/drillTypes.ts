@@ -10,6 +10,9 @@ export type DrillGenreSelection = DrillGenre | 'random' | 'weak'
 /** 難易度。初級 → TOEIC 満点レベルまで段階的 */
 export type DrillDifficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert'
 
+/** 1問ごとの制限時間。'off' は時間制限なし */
+export type DrillTimer = 'off' | '10' | '20' | '30'
+
 /** ドリル1問の正規化された形。全ジャンル・全データソースをこの形に変換して扱う */
 export interface DrillQuestion {
   /** プール全体で一意。生成元が分かる形式(例: 'vocab:dict-123', 'exp-ls-001') */
@@ -42,4 +45,12 @@ export const DRILL_DIFFICULTIES: { value: DrillDifficulty; label: string }[] = [
   { value: 'intermediate', label: '中級' },
   { value: 'advanced', label: '上級' },
   { value: 'expert', label: '満点レベル' },
+]
+
+/** タイマー選択肢。ドリル設定 UI と prefs 検証で共有する */
+export const DRILL_TIMERS: { value: DrillTimer; label: string }[] = [
+  { value: 'off', label: 'オフ' },
+  { value: '10', label: '10秒' },
+  { value: '20', label: '20秒' },
+  { value: '30', label: '30秒' },
 ]

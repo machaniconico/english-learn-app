@@ -1,5 +1,5 @@
-import { DRILL_DIFFICULTIES, DRILL_GENRES } from './drillTypes';
-import type { DrillDifficulty, DrillGenre, DrillGenreSelection } from './drillTypes';
+import { DRILL_DIFFICULTIES, DRILL_GENRES, DRILL_TIMERS } from './drillTypes';
+import type { DrillDifficulty, DrillGenre, DrillGenreSelection, DrillTimer } from './drillTypes';
 
 export const DRILL_STATS_KEY = 'english-learn-drill-stats';
 export const DRILL_RECENT_KEY = 'english-learn-drill-recent';
@@ -19,11 +19,13 @@ export interface DrillStatsData {
 export interface DrillPrefs {
   genre: DrillGenreSelection;
   difficulty: DrillDifficulty;
+  timer: DrillTimer;
 }
 
-const DEFAULT_PREFS: DrillPrefs = { genre: 'random', difficulty: 'beginner' };
+const DEFAULT_PREFS: DrillPrefs = { genre: 'random', difficulty: 'beginner', timer: 'off' };
 const DRILL_GENRE_VALUES = DRILL_GENRES.map((genre) => genre.value);
 const DRILL_DIFFICULTY_VALUES = DRILL_DIFFICULTIES.map((difficulty) => difficulty.value);
+const DRILL_TIMER_VALUES = DRILL_TIMERS.map((timer) => timer.value);
 
 function emptyTotals(): DrillTotals {
   return { answered: 0, correct: 0 };
@@ -84,6 +86,10 @@ function isDrillGenreSelection(value: unknown): value is DrillGenreSelection {
 
 function isDrillDifficulty(value: unknown): value is DrillDifficulty {
   return DRILL_DIFFICULTY_VALUES.includes(value as DrillDifficulty);
+}
+
+function isDrillTimer(value: unknown): value is DrillTimer {
+  return DRILL_TIMER_VALUES.includes(value as DrillTimer);
 }
 
 /** 累計統計のゼロ値を毎回新しいオブジェクトで返す。 */
@@ -192,10 +198,10 @@ export function loadDrillPrefs(): DrillPrefs {
     const parsed: unknown = JSON.parse(raw);
     if (!isRecord(parsed)) return { ...DEFAULT_PREFS };
 
-    const { genre, difficulty } = parsed;
+    const { genre, difficulty, timer } = parsed;
     if (!isDrillGenreSelection(genre) || !isDrillDifficulty(difficulty)) return { ...DEFAULT_PREFS };
 
-    return { genre, difficulty };
+    return { genre, difficulty, timer: isDrillTimer(timer) ? timer : DEFAULT_PREFS.timer };
   } catch {
     return { ...DEFAULT_PREFS };
   }
