@@ -16,11 +16,17 @@ type DrillGenreTotals = {
 };
 
 export type DrillGenreStats = Record<DrillGenre, DrillGenreTotals>;
+export type DrillGenreDifficultyStats = Record<
+  DrillGenre,
+  Record<DrillDifficulty, DrillGenreTotals>
+>;
 
 export interface NextQuestionResult {
   question: DrillQuestion;
   recent: string[];
 }
+
+export const WEAK_DIFFICULTY_MIN_SAMPLES = 5;
 
 function randomIndex(length: number, rand: () => number): number {
   const index = Math.floor(rand() * length);
@@ -33,6 +39,38 @@ function weakGenreWeight(totals: DrillGenreTotals): number {
 
 function readGenreTotals(byGenre: DrillGenreStats, genre: DrillGenre): DrillGenreTotals {
   return byGenre[genre] ?? { answered: 0, correct: 0 };
+}
+
+function countAnswered(byGenre: DrillGenreStats): number {
+  return DRILL_GENRES.reduce(
+    (sum, { value }) => sum + readGenreTotals(byGenre, value).answered,
+    0,
+  );
+}
+
+export function projectGenreStatsForDifficulty(
+  byGenreDifficulty: DrillGenreDifficultyStats,
+  difficulty: DrillDifficulty,
+): DrillGenreStats {
+  const result = {} as DrillGenreStats;
+
+  for (const { value } of DRILL_GENRES) {
+    const totals = byGenreDifficulty[value]?.[difficulty] ?? { answered: 0, correct: 0 };
+    result[value] = { answered: totals.answered, correct: totals.correct };
+  }
+
+  return result;
+}
+
+export function weakGenreStatsFor(
+  byGenre: DrillGenreStats,
+  byGenreDifficulty: DrillGenreDifficultyStats,
+  difficulty: DrillDifficulty,
+): DrillGenreStats {
+  const difficultyStats = projectGenreStatsForDifficulty(byGenreDifficulty, difficulty);
+  return countAnswered(difficultyStats) >= WEAK_DIFFICULTY_MIN_SAMPLES
+    ? difficultyStats
+    : byGenre;
 }
 
 /**
@@ -106,10 +144,14 @@ export function orderedWeakGenres(byGenre: DrillGenreStats, rand: () => number):
 
 export function orderedGenres(
   selection: DrillGenreSelection,
+  difficulty: DrillDifficulty,
   byGenre: DrillGenreStats,
+  byGenreDifficulty: DrillGenreDifficultyStats,
   rand: () => number,
 ): DrillGenre[] {
-  if (selection === 'weak') return orderedWeakGenres(byGenre, rand);
+  if (selection === 'weak') {
+    return orderedWeakGenres(weakGenreStatsFor(byGenre, byGenreDifficulty, difficulty), rand);
+  }
   if (selection !== 'random') return [selection];
 
   const first = pickRandomGenre(rand);
@@ -124,11 +166,12 @@ export function resolveNextQuestion(
   difficulty: DrillDifficulty,
   recentIds: string[],
   byGenre: DrillGenreStats,
+  byGenreDifficulty: DrillGenreDifficultyStats,
   randOverride?: () => number,
 ): NextQuestionResult | null {
   const rand = randOverride ?? Math.random;
 
-  for (const genre of orderedGenres(selection, byGenre, rand)) {
+  for (const genre of orderedGenres(selection, difficulty, byGenre, byGenreDifficulty, rand)) {
     const pool = buildDrillPool(genre, difficulty, randOverride);
     const question = pickNextQuestion(pool, recentIds, rand);
     if (question) {

@@ -119,6 +119,8 @@ describe('DrillMode', () => {
 
     expect(savedStats.total.answered).toBe(1);
     expect(savedStats.total.correct).toBeGreaterThanOrEqual(0);
+    expect(savedStats.byGenreDifficulty.vocab.beginner.answered).toBe(1);
+    expect(savedStats.byGenreDifficulty.vocab.beginner.correct).toBeGreaterThanOrEqual(0);
     expect(savedRecent).toHaveLength(1);
   });
 
@@ -208,6 +210,7 @@ describe('DrillMode', () => {
     expect(savedStats.total).toEqual({ answered: 1, correct: 0 });
     expect(savedStats.byGenre.vocab).toEqual({ answered: 1, correct: 0 });
     expect(savedStats.byDifficulty.beginner).toEqual({ answered: 1, correct: 0 });
+    expect(savedStats.byGenreDifficulty.vocab.beginner).toEqual({ answered: 1, correct: 0 });
 
     fireEvent.click(optionButtons()[0]);
     const statsAfterDisabledClick = JSON.parse(

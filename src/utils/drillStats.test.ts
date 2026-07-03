@@ -13,11 +13,42 @@ import {
   saveDrillStats,
 } from './drillStats';
 import type { DrillPrefs, DrillStatsData } from './drillStats';
+import { DRILL_DIFFICULTIES, DRILL_GENRES } from './drillTypes';
+
+type LegacyDrillStatsData = Omit<DrillStatsData, 'byGenreDifficulty'>;
 
 beforeEach(() => {
   localStorage.clear();
   vi.restoreAllMocks();
 });
+
+function expectEmptyGenreDifficulty(
+  byGenreDifficulty: DrillStatsData['byGenreDifficulty'],
+): void {
+  for (const { value: genre } of DRILL_GENRES) {
+    for (const { value: difficulty } of DRILL_DIFFICULTIES) {
+      expect(byGenreDifficulty[genre][difficulty]).toEqual({ answered: 0, correct: 0 });
+    }
+  }
+}
+
+function makeLegacyStats(): LegacyDrillStatsData {
+  const empty = createEmptyDrillStats();
+
+  return {
+    total: { answered: 8, correct: 5 },
+    byGenre: {
+      ...empty.byGenre,
+      vocab: { answered: 5, correct: 4 },
+      listening: { answered: 3, correct: 1 },
+    },
+    byDifficulty: {
+      ...empty.byDifficulty,
+      beginner: { answered: 6, correct: 4 },
+      expert: { answered: 2, correct: 1 },
+    },
+  };
+}
 
 describe('createEmptyDrillStats', () => {
   it('total/byGenre/byDifficulty をすべてゼロで初期化する', () => {
@@ -39,6 +70,12 @@ describe('createEmptyDrillStats', () => {
     });
   });
 
+  it('byGenreDifficulty を全ジャンル×全難易度のゼロセルで初期化する', () => {
+    const stats = createEmptyDrillStats();
+
+    expectEmptyGenreDifficulty(stats.byGenreDifficulty);
+  });
+
   it('呼び出しごとに新しいオブジェクトを返す', () => {
     const a = createEmptyDrillStats();
     const b = createEmptyDrillStats();
@@ -46,6 +83,8 @@ describe('createEmptyDrillStats', () => {
     expect(a).not.toBe(b);
     expect(a.total).not.toBe(b.total);
     expect(a.byGenre.vocab).not.toBe(b.byGenre.vocab);
+    expect(a.byGenreDifficulty).not.toBe(b.byGenreDifficulty);
+    expect(a.byGenreDifficulty.vocab.beginner).not.toBe(b.byGenreDifficulty.vocab.beginner);
   });
 });
 
@@ -58,8 +97,10 @@ describe('recordDrillAnswer', () => {
     expect(next.total).toEqual({ answered: 1, correct: 1 });
     expect(next.byGenre.vocab).toEqual({ answered: 1, correct: 1 });
     expect(next.byDifficulty.beginner).toEqual({ answered: 1, correct: 1 });
+    expect(next.byGenreDifficulty.vocab.beginner).toEqual({ answered: 1, correct: 1 });
     expect(next.byGenre.listening).toEqual({ answered: 0, correct: 0 });
     expect(next.byDifficulty.expert).toEqual({ answered: 0, correct: 0 });
+    expect(next.byGenreDifficulty.vocab.expert).toEqual({ answered: 0, correct: 0 });
   });
 
   it('不正解時は answered だけを加算する', () => {
@@ -70,6 +111,7 @@ describe('recordDrillAnswer', () => {
     expect(next.total).toEqual({ answered: 1, correct: 0 });
     expect(next.byGenre.listening).toEqual({ answered: 1, correct: 0 });
     expect(next.byDifficulty.advanced).toEqual({ answered: 1, correct: 0 });
+    expect(next.byGenreDifficulty.listening.advanced).toEqual({ answered: 1, correct: 0 });
   });
 
   it('入力 stats を破壊しない', () => {
@@ -83,6 +125,8 @@ describe('recordDrillAnswer', () => {
     expect(next.total).not.toBe(stats.total);
     expect(next.byGenre).not.toBe(stats.byGenre);
     expect(next.byDifficulty).not.toBe(stats.byDifficulty);
+    expect(next.byGenreDifficulty).not.toBe(stats.byGenreDifficulty);
+    expect(next.byGenreDifficulty['ja-en']).not.toBe(stats.byGenreDifficulty['ja-en']);
   });
 });
 
@@ -127,6 +171,41 @@ describe('loadDrillStats/saveDrillStats', () => {
     localStorage.setItem(DRILL_STATS_KEY, JSON.stringify(invalid));
 
     expect(loadDrillStats()).toEqual(createEmptyDrillStats());
+  });
+
+  it('旧形式で byGenreDifficulty が欠落していても既存統計を保持して空セルを補完する', () => {
+    const legacy = makeLegacyStats();
+    localStorage.setItem(DRILL_STATS_KEY, JSON.stringify(legacy));
+
+    const loaded = loadDrillStats();
+
+    expect(loaded.total).toEqual(legacy.total);
+    expect(loaded.byGenre).toEqual(legacy.byGenre);
+    expect(loaded.byDifficulty).toEqual(legacy.byDifficulty);
+    expectEmptyGenreDifficulty(loaded.byGenreDifficulty);
+  });
+
+  it('byGenreDifficulty が不正でも既存統計を保持して空セルを補完する', () => {
+    const legacy = makeLegacyStats();
+    localStorage.setItem(
+      DRILL_STATS_KEY,
+      JSON.stringify({
+        ...legacy,
+        byGenreDifficulty: {
+          ...createEmptyDrillStats().byGenreDifficulty,
+          vocab: {
+            beginner: { answered: '5', correct: 3 },
+          },
+        },
+      }),
+    );
+
+    const loaded = loadDrillStats();
+
+    expect(loaded.total).toEqual(legacy.total);
+    expect(loaded.byGenre).toEqual(legacy.byGenre);
+    expect(loaded.byDifficulty).toEqual(legacy.byDifficulty);
+    expectEmptyGenreDifficulty(loaded.byGenreDifficulty);
   });
 
   it('localStorage.getItem が例外を投げても空統計を返す', () => {
