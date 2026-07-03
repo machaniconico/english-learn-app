@@ -254,7 +254,7 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
 
       {/* Card grid */}
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
-        {cards.map((card) => {
+        {cards.map((card, index) => {
           const isSelected = selected.includes(card.id);
           const isRevealed = isSelected || card.matched;
           const isMismatch = isSelected && showMismatch;
@@ -267,6 +267,9 @@ export default function MatchingGame({ items, title }: MatchingGameProps) {
                 if (el) cardRefs.current.set(card.id, el);
               }}
               type="button"
+              onFocus={() => {
+                focusIndex.current = index;
+              }}
               onClick={() => handleCardClick(card.id)}
               disabled={card.matched || showMismatch}
               className={`

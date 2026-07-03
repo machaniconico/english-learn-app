@@ -163,4 +163,25 @@ describe('MatchingGame', () => {
     expect(getAllCardButtons().length).toBe(4);
     expect(screen.queryByText('コンプリート！')).not.toBeInTheDocument();
   });
+
+  it('moves with arrow keys from the currently focused card after a click', () => {
+    const manyItems: Item[] = [
+      { english: 'apple', japanese: 'りんご' },
+      { english: 'dog', japanese: 'いぬ' },
+      { english: 'cat', japanese: 'ねこ' },
+      { english: 'book', japanese: 'ほん' },
+    ];
+    renderWithRouter(<MatchingGame items={manyItems} title="フォーカス" />);
+
+    const cards = getAllCardButtons();
+    expect(cards.length).toBe(8);
+
+    cards[5].focus();
+    expect(document.activeElement).toBe(cards[5]);
+
+    fireEvent.click(cards[5]);
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+
+    expect(document.activeElement).toBe(cards[6]);
+  });
 });
