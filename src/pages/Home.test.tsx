@@ -25,6 +25,7 @@ describe('Home a11y smoke', () => {
     expect(screen.getByRole('heading', { level: 1, name: '英語を楽しく学ぼう' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /レベル診断テスト/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /ドリルモード/ })).toHaveAttribute('href', '/drill');
+    expect(screen.queryByText('苦手分野をトレーニング')).not.toBeInTheDocument();
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();

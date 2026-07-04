@@ -6,7 +6,6 @@ import { useSpacedRepetition } from '../hooks/useSpacedRepetition';
 import { buildReviewQueue } from '../utils/reviewQueue';
 import { getRecoverySuggestion } from '../utils/recoverySuggestion';
 import { useUserLevel } from '../hooks/useUserLevel';
-import { useAccuracy } from '../hooks/useAccuracy';
 import { useEffect, useState } from 'react';
 import {
   MessageCircle,
@@ -77,26 +76,12 @@ function homeTodayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** Map weak point type to a recommended practice path */
-function getWeakPointRecommendation(type: string): { label: string; path: string } | null {
-  switch (type) {
-    case 'fill-in-blank': return { label: '穴埋め問題を練習', path: '/toeic-practice' };
-    case 'error-correction': return { label: '誤り訂正を練習', path: '/error-correction' };
-    case 'part1': return { label: 'Part1リスニングを練習', path: '/part1-listening' };
-    case 'part2': return { label: 'Part2リスニングを練習', path: '/part2-listening' };
-    case 'dictation': return { label: 'ディクテーションを練習', path: '/dictation' };
-    case 'reorder': return { label: '語順クイズを練習', path: '/reorder' };
-    default: return null;
-  }
-}
-
 export default function Home() {
   const { progress, getOverallStats, updateStreak } = useProgress();
   const recovery = getRecoverySuggestion(progress.lastStudyDate, homeTodayStr());
   const { weakPoints } = useWeakPoints();
   const { getDueCards } = useSpacedRepetition();
   const { hasDiagnosed, level: userLevel, levelInfo } = useUserLevel();
-  const { getWeakestTypes } = useAccuracy();
   // 最後に開いた学習ページ(US-002)。last があれば『前回の続き』カードを表示する。
   const { last, clear } = useLastActivity();
 
@@ -217,38 +202,6 @@ export default function Home() {
           確認する &rarr;
         </span>
       </Link>
-
-      {/* Recommended Practice based on weak points */}
-      {(() => {
-        const weakestTypes = getWeakestTypes();
-        const recommendations = weakestTypes
-          .map(getWeakPointRecommendation)
-          .filter((r): r is { label: string; path: string } => r !== null)
-          .slice(0, 2);
-        if (recommendations.length === 0) return null;
-        return (
-          <div
-            className="animate-fade-in-up mb-6 rounded-2xl border border-sky-200 dark:border-sky-800 bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-950/50 dark:to-cyan-950/50 p-4"
-            style={{ '--stagger': '30ms' } as React.CSSProperties}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-              <p className="text-base font-bold text-gray-900 dark:text-gray-100">苦手分野をトレーニング</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {recommendations.map((rec) => (
-                <Link
-                  key={rec.path}
-                  to={rec.path}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-sky-200 dark:border-sky-700 text-sm font-medium text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/30 transition-colors"
-                >
-                  {rec.label} &rarr;
-                </Link>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Today's Review Card — only when something is due */}
       {reviewCount > 0 && (
