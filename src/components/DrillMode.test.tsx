@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '../test/test-utils';
 import DrillMode from './DrillMode';
 import { buildDrillPool } from '../utils/drillQuestionBank';
+import type { DrillMistake } from '../utils/drillMistakes';
 import {
   DRILL_PREFS_KEY,
   DRILL_RECENT_KEY,
@@ -12,6 +13,7 @@ import {
 
 const zeroRand = () => 0;
 const PROGRESS_KEY = 'english-learn-progress';
+const DRILL_MISTAKES_KEY = 'english-learn-drill-mistakes';
 
 interface StoredProgress {
   streak: number;
@@ -61,6 +63,10 @@ function answerCurrent(optionIndex = 0) {
 function answerAndAdvance(optionIndex = 0) {
   answerCurrent(optionIndex);
   fireEvent.click(screen.getByRole('button', { name: '次の問題 →' }));
+}
+
+function readMistakes(): DrillMistake[] {
+  return JSON.parse(localStorage.getItem(DRILL_MISTAKES_KEY) ?? '[]') as DrillMistake[];
 }
 
 describe('DrillMode', () => {
@@ -122,6 +128,30 @@ describe('DrillMode', () => {
     expect(savedStats.byGenreDifficulty.vocab.beginner.answered).toBe(1);
     expect(savedStats.byGenreDifficulty.vocab.beginner.correct).toBeGreaterThanOrEqual(0);
     expect(savedRecent).toHaveLength(1);
+  });
+
+  it('不正解回答後、間違い問題をlocalStorageに記録する', async () => {
+    const [expected] = buildDrillPool('vocab', 'beginner', zeroRand);
+    await renderReady('vocab', 'beginner');
+
+    answerCurrent((expected.correctIndex + 1) % expected.options.length);
+
+    const mistakes = readMistakes();
+    expect(mistakes).toHaveLength(1);
+    expect(mistakes[0]).toMatchObject({
+      question: { id: expected.id },
+      correctStreak: 0,
+      wrongCount: 1,
+    });
+  });
+
+  it('正解回答では間違い問題を記録しない', async () => {
+    const [expected] = buildDrillPool('vocab', 'beginner', zeroRand);
+    await renderReady('vocab', 'beginner');
+
+    answerCurrent(expected.correctIndex);
+
+    expect(readMistakes()).toEqual([]);
   });
 
   it('数字キーで未回答の問題に回答し、回答済みのEnterで次の問題へ進む', async () => {
@@ -218,6 +248,7 @@ describe('DrillMode', () => {
 
   it('タイマーが0になると時間切れとして不正解を記録し、選択肢クリックを無効にする', async () => {
     vi.useFakeTimers();
+    const [expected] = buildDrillPool('vocab', 'beginner', zeroRand);
     renderReadyWithFakeTimers('vocab', 'beginner', '10');
 
     expect(screen.getByRole('timer', { name: '残り時間 10秒' })).toBeInTheDocument();
@@ -247,6 +278,8 @@ describe('DrillMode', () => {
     expect(savedStats.byGenre.vocab).toEqual({ answered: 1, correct: 0 });
     expect(savedStats.byDifficulty.beginner).toEqual({ answered: 1, correct: 0 });
     expect(savedStats.byGenreDifficulty.vocab.beginner).toEqual({ answered: 1, correct: 0 });
+    expect(readMistakes()).toHaveLength(1);
+    expect(readMistakes()[0].question.id).toBe(expected.id);
 
     fireEvent.click(optionButtons()[0]);
     const statsAfterDisabledClick = JSON.parse(

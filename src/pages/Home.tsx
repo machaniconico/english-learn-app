@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { sectionsMeta } from '../data/sectionsMeta';
+import { useDrillMistakes } from '../hooks/useDrillMistakes';
 import { useProgress } from '../hooks/useProgress';
 import { useWeakPoints } from '../hooks/useWeakPoints';
 import { useSpacedRepetition } from '../hooks/useSpacedRepetition';
@@ -81,6 +82,7 @@ export default function Home() {
   const recovery = getRecoverySuggestion(progress.lastStudyDate, homeTodayStr());
   const { weakPoints } = useWeakPoints();
   const { getDueCards } = useSpacedRepetition();
+  const { pendingCount: drillMistakeCount } = useDrillMistakes();
   const { hasDiagnosed, level: userLevel, levelInfo } = useUserLevel();
   // 最後に開いた学習ページ(US-002)。last があれば『前回の続き』カードを表示する。
   const { last, clear } = useLastActivity();
@@ -325,6 +327,34 @@ export default function Home() {
           始める &rarr;
         </span>
       </Link>
+
+      {drillMistakeCount > 0 && (
+        <Link
+          to="/drill/review"
+          className="animate-fade-in-up group mb-6 flex items-center gap-4 rounded-2xl border border-amber-200 dark:border-amber-800 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+          style={{ '--stagger': '0ms' } as React.CSSProperties}
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-sm shrink-0">
+            <RotateCcw className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+              間違い問題の復習
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              間違えた問題を復習して弱点をつぶそう
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-bold">
+              {drillMistakeCount}
+            </span>
+            <span className="text-sm font-medium text-amber-600 group-hover:text-amber-800 dark:text-amber-400 dark:group-hover:text-amber-300 transition-colors hidden sm:block">
+              復習する &rarr;
+            </span>
+          </div>
+        </Link>
+      )}
 
       {/* 練習クイズ: 難易度・出題数(10の倍数)を指定してその場で挑戦 */}
       <HomeQuiz />
