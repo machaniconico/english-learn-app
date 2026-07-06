@@ -127,13 +127,15 @@ function isStringArray(value: unknown): value is string[] {
 
 function isValidQuestion(value: unknown): value is DrillQuestion {
   if (!isRecord(value)) return false;
+  const correctIndex = value.correctIndex;
   if (
     typeof value.id !== 'string' ||
     typeof value.genre !== 'string' ||
     typeof value.difficulty !== 'string' ||
     typeof value.prompt !== 'string' ||
     !isStringArray(value.options) ||
-    !Number.isInteger(value.correctIndex) ||
+    typeof correctIndex !== 'number' ||
+    !Number.isInteger(correctIndex) ||
     typeof value.explanation !== 'string'
   ) {
     return false;
@@ -141,7 +143,7 @@ function isValidQuestion(value: unknown): value is DrillQuestion {
 
   if (value.audioText !== undefined && typeof value.audioText !== 'string') return false;
 
-  return value.correctIndex >= 0 && value.correctIndex < value.options.length;
+  return correctIndex >= 0 && correctIndex < value.options.length;
 }
 
 export function isValidMistake(value: unknown): value is DrillMistake {

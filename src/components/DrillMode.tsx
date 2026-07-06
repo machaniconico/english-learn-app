@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useAccuracy } from '../hooks/useAccuracy';
+import { useDrillMistakes } from '../hooks/useDrillMistakes';
 import { useProgress } from '../hooks/useProgress';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import { resolveNextQuestion } from '../utils/drillEngine';
+import {
+  isSpaceKey,
+  OPTION_LABELS,
+  SHORTCUT_OPTION_KEYS,
+  shouldIgnoreShortcutTarget,
+} from '../utils/drillShortcuts';
 import { percentage, scoreBarColor } from '../utils/quizScoreDisplay';
 import {
   loadDrillPrefs,
@@ -49,36 +56,8 @@ interface DrillModeProps {
   rand?: () => number;
 }
 
-const OPTION_LABELS = ['A', 'B', 'C', 'D'];
-const SHORTCUT_OPTION_KEYS: Record<string, number> = {
-  '1': 0,
-  '2': 1,
-  '3': 2,
-  '4': 3,
-  a: 0,
-  b: 1,
-  c: 2,
-  d: 3,
-};
 const RANDOM_GENRE_LABEL = 'ランダム';
 const WEAK_GENRE_LABEL = '苦手優先';
-
-function shouldIgnoreShortcutTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-
-  const tagName = target.tagName.toLowerCase();
-  return (
-    tagName === 'input' ||
-    tagName === 'textarea' ||
-    tagName === 'select' ||
-    target.isContentEditable ||
-    target.closest('[contenteditable="true"], [contenteditable=""]') !== null
-  );
-}
-
-function isSpaceKey(event: KeyboardEvent): boolean {
-  return event.key === ' ' || event.key === 'Space' || event.key === 'Spacebar' || event.code === 'Space';
-}
 
 function percent(correct: number, answered: number): number {
   return percentage(correct, answered);
@@ -123,6 +102,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
   const { logResult } = useAccuracy();
   const { recordStudyDay } = useProgress();
   const { speak, speaking } = useSpeechSynthesis();
+  const { addMistake: recordMistake } = useDrillMistakes();
 
   const [phase, setPhase] = useState<DrillPhase>('active');
   const [difficulty, setDifficulty] = useState<DrillDifficulty>(prefs.difficulty);
@@ -258,6 +238,9 @@ export default function DrillMode({ rand }: DrillModeProps) {
       if (completedQuestionIdRef.current === currentQuestion.id) return;
 
       completedQuestionIdRef.current = currentQuestion.id;
+      if (!correct) {
+        recordMistake(currentQuestion);
+      }
       setSelectedIndex(optionIndex);
       setTimedOut(optionIndex === null);
       setSession((prev) => ({
@@ -269,7 +252,7 @@ export default function DrillMode({ rand }: DrillModeProps) {
       );
       recordStudyDay();
     },
-    [currentQuestion, phase, recordStudyDay],
+    [currentQuestion, phase, recordMistake, recordStudyDay],
   );
 
   const handleAnswer = useCallback(

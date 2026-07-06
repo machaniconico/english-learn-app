@@ -1,12 +1,20 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
 import { axe } from 'vitest-axe';
 import * as matchers from 'vitest-axe/matchers';
 import { renderWithRouter, screen, fireEvent } from '../test/test-utils';
 import Home from './Home';
 import { STORAGE_KEY, type LastActivity } from '../hooks/useLastActivity';
+import type { DrillMistake } from '../utils/drillMistakes';
+import type { DrillQuestion } from '../utils/drillTypes';
 
 expect.extend(matchers);
+
+const DRILL_MISTAKES_KEY = 'english-learn-drill-mistakes';
+
+beforeEach(() => {
+  localStorage.clear();
+});
 
 // 今日のローカル暦日を 'YYYY-MM-DD' で返す(useStudyTimer の getDateString と同等)。
 function todayStr(): string {
@@ -15,6 +23,29 @@ function todayStr(): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+function makeDrillQuestion(id: string): DrillQuestion {
+  return {
+    id,
+    genre: 'vocab',
+    difficulty: 'beginner',
+    prompt: `Prompt ${id}`,
+    options: ['a', 'b', 'c', 'd'],
+    correctIndex: 1,
+    explanation: `Explanation ${id}`,
+  };
+}
+
+function seedDrillMistakes(count: number): void {
+  const mistakes: DrillMistake[] = Array.from({ length: count }, (_, index) => ({
+    question: makeDrillQuestion(`q${index + 1}`),
+    correctStreak: 0,
+    wrongCount: 1,
+    addedAt: 1000 + index,
+    lastSeenAt: 1000 + index,
+  }));
+  localStorage.setItem(DRILL_MISTAKES_KEY, JSON.stringify(mistakes));
 }
 
 describe('Home a11y smoke', () => {
@@ -60,6 +91,25 @@ describe('Home 前回の続き card (US-002)', () => {
     // クリック後: カードが消え、localStorage も null に書き戻る。
     expect(screen.queryByRole('link', { name: '前回の続き: TOEIC練習 を再開する' })).not.toBeInTheDocument();
     expect(localStorage.getItem(STORAGE_KEY)).toBe('null');
+  });
+});
+
+describe('Home 間違い問題の復習CTA', () => {
+  it('mistakes があると復習カードとバッジを表示する', () => {
+    seedDrillMistakes(2);
+
+    renderWithRouter(<Home />, { route: '/' });
+
+    const card = screen.getByRole('link', { name: /間違い問題の復習/ });
+    expect(card).toHaveAttribute('href', '/drill/review');
+    expect(card).toHaveTextContent('2');
+    expect(card).toHaveTextContent('間違えた問題を復習して弱点をつぶそう');
+  });
+
+  it('mistakes がゼロなら復習カードを表示しない', () => {
+    renderWithRouter(<Home />, { route: '/' });
+
+    expect(screen.queryByRole('link', { name: /間違い問題の復習/ })).not.toBeInTheDocument();
   });
 });
 
