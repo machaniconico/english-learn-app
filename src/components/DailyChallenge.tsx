@@ -148,7 +148,12 @@ const challengeTitlesJa = [
 const challengeIcons = ['📖', '✏️', '🔄', '🎧', '💡'];
 
 // --- Main Component ---
-export default function DailyChallenge() {
+interface DailyChallengeProps {
+  /** 完了数(0〜5)が変わるたびに通知する。未指定なら何もしない(既定挙動は不変)。 */
+  onProgressChange?: (completedCount: number) => void;
+}
+
+export default function DailyChallenge({ onProgressChange }: DailyChallengeProps = {}) {
   const today = getTodayString();
   const [state, setState] = useState<DailyChallengeState>(() => loadState(today));
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
@@ -237,6 +242,11 @@ export default function DailyChallenge() {
   useEffect(() => {
     saveState(today, state);
   }, [today, state]);
+
+  // 完了数が変わるたび(初回マウント含む)に親へ通知する。ドリル導線の昇格表示に使う。
+  useEffect(() => {
+    onProgressChange?.(completedCount);
+  }, [completedCount, onProgressChange]);
 
   // Auto-dismiss the celebration 3s after it is shown.
   // (setState here runs in a timeout callback, not synchronously during the
