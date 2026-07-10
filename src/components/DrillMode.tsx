@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { Flame } from 'lucide-react';
+import DrillQuickSummary, { type DrillAnswerRecord } from './DrillQuickSummary';
 import { useAccuracy } from '../hooks/useAccuracy';
 import { useDrillMistakes } from '../hooks/useDrillMistakes';
 import { useProgress } from '../hooks/useProgress';
@@ -12,13 +14,14 @@ import {
 } from '../utils/drillShortcuts';
 import { percentage, scoreBarColor } from '../utils/quizScoreDisplay';
 import {
+  DRILL_PREFS_KEY,
   loadDrillPrefs,
   loadDrillRecent,
   loadDrillStats,
   recordDrillAnswer,
-  saveDrillPrefs,
   saveDrillRecent,
   saveDrillStats,
+  type DrillPrefs,
   type DrillStatsData,
 } from '../utils/drillStats';
 import {
@@ -32,7 +35,50 @@ import {
   type DrillTimer,
 } from '../utils/drillTypes';
 
-type DrillPhase = 'active' | 'summary';
+type DrillPhase = 'active' | 'summary' | 'quick-summary';
+
+/** クイックセッションの問題数。'endless' は従来どおり止めるまで連続出題する。 */
+type DrillSessionLength = 'endless' | '5' | '10' | '20';
+
+const DRILL_SESSION_LENGTHS: { value: DrillSessionLength; label: string }[] = [
+  { value: 'endless', label: 'エンドレス' },
+  { value: '5', label: '5問' },
+  { value: '10', label: '10問' },
+  { value: '20', label: '20問' },
+];
+
+const DRILL_SESSION_LENGTH_VALUES = DRILL_SESSION_LENGTHS.map((item) => item.value);
+
+function isDrillSessionLength(value: unknown): value is DrillSessionLength {
+  return DRILL_SESSION_LENGTH_VALUES.includes(value as DrillSessionLength);
+}
+
+// セッション長は専用キーを作らず、既存の drill-prefs 内の追加フィールドとして読み書きする。
+function loadDrillSessionLength(): DrillSessionLength {
+  try {
+    if (typeof localStorage === 'undefined') return 'endless';
+    const raw = localStorage.getItem(DRILL_PREFS_KEY);
+    if (!raw) return 'endless';
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'sessionLength' in parsed) {
+      const value = (parsed as { sessionLength?: unknown }).sessionLength;
+      if (isDrillSessionLength(value)) return value;
+    }
+    return 'endless';
+  } catch {
+    return 'endless';
+  }
+}
+
+// genre/difficulty/timer に sessionLength を足した形で drill-prefs をまとめて保存する。
+function persistDrillPrefs(prefs: DrillPrefs, sessionLength: DrillSessionLength): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(DRILL_PREFS_KEY, JSON.stringify({ ...prefs, sessionLength }));
+  } catch {
+    // 設定保存に失敗しても回答フローは止めない。
+  }
+}
 
 interface SessionStats {
   answered: number;
@@ -83,6 +129,7 @@ function genreSelectionLabel(selection: DrillGenreSelection): string {
 
 export default function DrillMode({ rand }: DrillModeProps) {
   const prefs = useMemo(() => loadDrillPrefs(), []);
+  const initialSessionLength = useMemo(() => loadDrillSessionLength(), []);
   const initialStats = useMemo<DrillStatsData>(() => loadDrillStats(), []);
   const initialRuntime = useMemo<DrillRuntime>(() => {
     const loadedRecent = loadDrillRecent();
@@ -111,6 +158,9 @@ export default function DrillMode({ rand }: DrillModeProps) {
   const [stats, setStats] = useState<DrillStatsData>(initialStats);
   const [recent, setRecent] = useState<string[]>(initialRuntime.recent);
   const [session, setSession] = useState<SessionStats>({ answered: 0, correct: 0 });
+  const [sessionLength, setSessionLength] = useState<DrillSessionLength>(initialSessionLength);
+  const [combo, setCombo] = useState(0);
+  const [sessionRecords, setSessionRecords] = useState<DrillAnswerRecord[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<DrillQuestion | null>(
     initialRuntime.question,
   );
@@ -121,6 +171,13 @@ export default function DrillMode({ rand }: DrillModeProps) {
     return initialTimerSeconds > 0 ? initialTimerSeconds : null;
   });
   const completedQuestionIdRef = useRef<string | null>(null);
+  // 回答直後に「次へ」相当へフォーカスを移し、設問切り替え時に設問カードへフォーカスを移す。
+  const nextButtonRef = useRef<HTMLButtonElement>(null);
+  const questionCardRef = useRef<HTMLDivElement>(null);
+  // 初回マウントでは勝手にフォーカスを奪わない(以降の設問切り替え時のみ移す)。
+  const isFirstQuestionRef = useRef(true);
+  // Enter は window リスナーとボタン既定動作の双方から発火しうるため、二重前進を防ぐ。
+  const advancingRef = useRef(false);
 
   const answered = selectedIndex !== null || timedOut;
   const timerDuration = timerSeconds(timer);
@@ -129,6 +186,11 @@ export default function DrillMode({ rand }: DrillModeProps) {
   const sessionRate = percent(session.correct, session.answered);
   const totalRate = percent(stats.total.correct, stats.total.answered);
   const questionNumber = session.answered + (answered ? 0 : 1);
+  const isQuick = sessionLength !== 'endless';
+  const quickTarget = isQuick ? Number(sessionLength) : 0;
+  const quickComplete = isQuick && session.answered >= quickTarget;
+  const quickProgressPct =
+    quickTarget > 0 ? Math.min(100, Math.round((session.answered / quickTarget) * 100)) : 0;
 
   // 次に進む時点の設定を使って、直近履歴にない問題を優先して選ぶ。
   const loadNextQuestion = useCallback(() => {
@@ -204,20 +266,20 @@ export default function DrillMode({ rand }: DrillModeProps) {
     (event: ChangeEvent<HTMLSelectElement>) => {
       const nextDifficulty = event.target.value as DrillDifficulty;
       setDifficulty(nextDifficulty);
-      saveDrillPrefs({ genre: genreSelection, difficulty: nextDifficulty, timer });
+      persistDrillPrefs({ genre: genreSelection, difficulty: nextDifficulty, timer }, sessionLength);
       recoverFromEmptyPool(genreSelection, nextDifficulty);
     },
-    [genreSelection, recoverFromEmptyPool, timer],
+    [genreSelection, recoverFromEmptyPool, sessionLength, timer],
   );
 
   const handleGenreChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
       const nextGenre = event.target.value as DrillGenreSelection;
       setGenreSelection(nextGenre);
-      saveDrillPrefs({ genre: nextGenre, difficulty, timer });
+      persistDrillPrefs({ genre: nextGenre, difficulty, timer }, sessionLength);
       recoverFromEmptyPool(nextGenre, difficulty);
     },
-    [difficulty, recoverFromEmptyPool, timer],
+    [difficulty, recoverFromEmptyPool, sessionLength, timer],
   );
 
   const handleTimerChange = useCallback(
@@ -225,11 +287,11 @@ export default function DrillMode({ rand }: DrillModeProps) {
       const nextTimer = event.target.value as DrillTimer;
       const nextDuration = timerSeconds(nextTimer);
       setTimer(nextTimer);
-      saveDrillPrefs({ genre: genreSelection, difficulty, timer: nextTimer });
+      persistDrillPrefs({ genre: genreSelection, difficulty, timer: nextTimer }, sessionLength);
       // タイマーを切り替えたら、回答前の問題だけ新しい残り時間へリセットする。
       setRemainingSeconds(!answered && nextDuration > 0 ? nextDuration : null);
     },
-    [answered, difficulty, genreSelection],
+    [answered, difficulty, genreSelection, sessionLength],
   );
 
   const completeCurrentQuestion = useCallback(
@@ -247,12 +309,20 @@ export default function DrillMode({ rand }: DrillModeProps) {
         answered: prev.answered + 1,
         correct: prev.correct + (correct ? 1 : 0),
       }));
+      setCombo((prev) => (correct ? prev + 1 : 0));
+      // クイックセッションの結果画面(内訳・間違い一覧)用に回答を控える。エンドレスでは保持しない。
+      if (isQuick) {
+        setSessionRecords((prev) => [
+          ...prev,
+          { question: currentQuestion, selectedIndex: optionIndex, correct },
+        ]);
+      }
       setStats((prev) =>
         recordDrillAnswer(prev, currentQuestion.genre, currentQuestion.difficulty, correct),
       );
       recordStudyDay();
     },
-    [currentQuestion, phase, recordMistake, recordStudyDay],
+    [currentQuestion, phase, recordMistake, recordStudyDay, isQuick],
   );
 
   const handleAnswer = useCallback(
@@ -282,10 +352,30 @@ export default function DrillMode({ rand }: DrillModeProps) {
     return () => window.clearInterval(intervalId);
   }, [answered, currentQuestion, phase, timerDuration, completeCurrentQuestion]);
 
+  const finishQuickSession = useCallback(() => {
+    if (session.answered > 0) {
+      logResult({
+        type: 'drill',
+        setId: 'drill',
+        score: sessionRate,
+        total: session.answered,
+        correct: session.correct,
+      });
+    }
+    setPhase('quick-summary');
+  }, [logResult, session, sessionRate]);
+
   const handleNext = useCallback(() => {
     if (!answered) return;
+    // Enter は window リスナーとボタンの既定動作の両方から届きうるので、一度だけ前進させる。
+    if (advancingRef.current) return;
+    advancingRef.current = true;
+    if (quickComplete) {
+      finishQuickSession();
+      return;
+    }
     loadNextQuestion();
-  }, [answered, loadNextQuestion]);
+  }, [answered, finishQuickSession, loadNextQuestion, quickComplete]);
 
   useEffect(() => {
     if (phase !== 'active') return;
@@ -317,6 +407,27 @@ export default function DrillMode({ rand }: DrillModeProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [answered, currentQuestion, handleAnswer, handleNext, phase]);
 
+  // 新しい設問が表示されたら前進ガードを解除する。
+  useEffect(() => {
+    if (!answered) advancingRef.current = false;
+  }, [answered]);
+
+  // 回答すると選択肢が aria-disabled になりフォーカスが宙に浮くため、「次へ」ボタンへ移す。
+  useEffect(() => {
+    if (phase === 'active' && answered) nextButtonRef.current?.focus();
+  }, [answered, phase]);
+
+  // 設問が切り替わったら設問カードへフォーカスを移し、キーボード操作を先頭から始めない。
+  // ただし初回マウントでは不意にフォーカスを奪わない。
+  useEffect(() => {
+    if (phase !== 'active' || !currentQuestion) return;
+    if (isFirstQuestionRef.current) {
+      isFirstQuestionRef.current = false;
+      return;
+    }
+    questionCardRef.current?.focus();
+  }, [currentQuestion, phase]);
+
   const handleReplay = useCallback(() => {
     if (currentQuestion?.genre !== 'listening') return;
     speak(currentQuestion.audioText ?? currentQuestion.prompt);
@@ -335,36 +446,50 @@ export default function DrillMode({ rand }: DrillModeProps) {
     setPhase('summary');
   }, [logResult, session, sessionRate]);
 
+  // セッションのカウンタ・コンボ・記録をリセットし、新しい問題から出題フェーズを開始する。
+  const beginSession = useCallback(
+    (nextGenre: DrillGenreSelection, nextDifficulty: DrillDifficulty) => {
+      const result = resolveNextQuestion(
+        nextGenre,
+        nextDifficulty,
+        recent,
+        stats.byGenre,
+        stats.byGenreDifficulty,
+        rand,
+      );
+      completedQuestionIdRef.current = null;
+      advancingRef.current = false;
+      setSession({ answered: 0, correct: 0 });
+      setSessionRecords([]);
+      setCombo(0);
+      setCurrentQuestion(result?.question ?? null);
+      setRecent(result?.recent ?? recent);
+      setSelectedIndex(null);
+      setTimedOut(false);
+      setRemainingSeconds(result && timerDuration > 0 ? timerDuration : null);
+      setPhase('active');
+    },
+    [rand, recent, stats.byGenre, stats.byGenreDifficulty, timerDuration],
+  );
+
   const handleRestart = useCallback(() => {
-    const result = resolveNextQuestion(
-      genreSelection,
-      difficulty,
-      recent,
-      stats.byGenre,
-      stats.byGenreDifficulty,
-      rand,
-    );
-    completedQuestionIdRef.current = null;
-    setSession({ answered: 0, correct: 0 });
-    setCurrentQuestion(result?.question ?? null);
-    setRecent(result?.recent ?? recent);
-    setSelectedIndex(null);
-    setTimedOut(false);
-    setRemainingSeconds(result && timerDuration > 0 ? timerDuration : null);
-    setPhase('active');
-  }, [
-    difficulty,
-    genreSelection,
-    rand,
-    recent,
-    stats.byGenre,
-    stats.byGenreDifficulty,
-    timerDuration,
-  ]);
+    beginSession(genreSelection, difficulty);
+  }, [beginSession, difficulty, genreSelection]);
+
+  const handleSessionLengthChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      const nextLength = event.target.value as DrillSessionLength;
+      setSessionLength(nextLength);
+      persistDrillPrefs({ genre: genreSelection, difficulty, timer }, nextLength);
+      // セッション長を変えたら進捗を仕切り直し、新しい問題から数え始める。
+      beginSession(genreSelection, difficulty);
+    },
+    [beginSession, difficulty, genreSelection, timer],
+  );
 
   const renderControls = () => (
     <div className="rounded-2xl border border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-800 p-4 shadow-sm">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
         <div>
           <label
             htmlFor="drill-difficulty"
@@ -430,7 +555,30 @@ export default function DrillMode({ rand }: DrillModeProps) {
           </select>
         </div>
 
-        {phase === 'active' && (
+        <div>
+          <label
+            htmlFor="drill-session-length"
+            className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300"
+          >
+            セッション長
+          </label>
+          <select
+            id="drill-session-length"
+            value={sessionLength}
+            onChange={handleSessionLengthChange}
+            className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 shadow-sm transition-colors focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-sky-500"
+          >
+            {DRILL_SESSION_LENGTHS.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {phase === 'active' && !isQuick && (
+        <div className="mt-3 flex justify-end">
           <button
             type="button"
             onClick={handleFinish}
@@ -438,8 +586,8 @@ export default function DrillMode({ rand }: DrillModeProps) {
           >
             終了
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div
@@ -552,6 +700,16 @@ export default function DrillMode({ rand }: DrillModeProps) {
     );
   };
 
+  if (phase === 'quick-summary') {
+    return (
+      <DrillQuickSummary
+        records={sessionRecords}
+        onRestart={handleRestart}
+        onBackToSettings={handleRestart}
+      />
+    );
+  }
+
   if (phase === 'summary') {
     return (
       <section
@@ -607,15 +765,21 @@ export default function DrillMode({ rand }: DrillModeProps) {
     >
       {renderControls()}
 
-      <div className="rounded-2xl border border-sky-200 bg-white p-5 shadow-sm dark:border-sky-800 dark:bg-gray-800">
+      <div
+        ref={questionCardRef}
+        tabIndex={-1}
+        className="rounded-2xl border border-sky-200 bg-white p-5 shadow-sm focus:outline-none dark:border-sky-800 dark:bg-gray-800"
+      >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm">
           <h2 id="drill-mode-heading" className="text-lg font-bold text-gray-900 dark:text-gray-100">
             ドリルモード
           </h2>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">
-              第 {questionNumber} 問
-            </span>
+            {!isQuick && (
+              <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300">
+                第 {questionNumber} 問
+              </span>
+            )}
             <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600 dark:bg-gray-900 dark:text-gray-300">
               {difficultyLabel(difficulty)}
             </span>
@@ -639,6 +803,35 @@ export default function DrillMode({ rand }: DrillModeProps) {
             )}
           </div>
         </div>
+
+        {isQuick && currentQuestion && (
+          <div className="mb-4">
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                {questionNumber} / {quickTarget}
+              </span>
+              {combo >= 2 && (
+                <span className="animate-fade-in-up inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-600 dark:bg-orange-900/50 dark:text-orange-300">
+                  <Flame className="h-3.5 w-3.5" aria-hidden="true" />
+                  {combo}連続正解！
+                </span>
+              )}
+            </div>
+            <div
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={quickTarget}
+              aria-valuenow={session.answered}
+              aria-label={`進捗 ${session.answered} / ${quickTarget} 問完了`}
+              className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+            >
+              <div
+                className="h-full rounded-full bg-sky-500 transition-all duration-300 dark:bg-sky-400"
+                style={{ width: `${quickProgressPct}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {!currentQuestion ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
@@ -705,8 +898,8 @@ export default function DrillMode({ rand }: DrillModeProps) {
                     key={`${currentQuestion.id}-${option}`}
                     type="button"
                     aria-pressed={index === selectedIndex}
+                    aria-disabled={answered}
                     onClick={() => handleAnswer(index)}
-                    disabled={answered}
                     className={`w-full rounded-xl border-2 px-4 py-3 text-left font-medium transition-all duration-200 ${
                       answered ? 'cursor-default' : 'cursor-pointer active:scale-[0.98]'
                     } focus:outline-none focus:ring-2 focus:ring-sky-300 ${style}`}
@@ -757,11 +950,12 @@ export default function DrillMode({ rand }: DrillModeProps) {
                 </div>
                 <div className="text-center">
                   <button
+                    ref={nextButtonRef}
                     type="button"
                     onClick={handleNext}
                     className="rounded-xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2"
                   >
-                    次の問題 →
+                    {quickComplete ? '結果を見る' : '次の問題 →'}
                   </button>
                 </div>
               </div>

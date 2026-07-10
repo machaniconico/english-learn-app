@@ -34,8 +34,11 @@ function readProgress(): StoredProgress {
   return JSON.parse(raw) as StoredProgress;
 }
 
-function setPrefs(genre: string, difficulty = 'beginner', timer = 'off') {
-  localStorage.setItem(DRILL_PREFS_KEY, JSON.stringify({ genre, difficulty, timer }));
+function setPrefs(genre: string, difficulty = 'beginner', timer = 'off', sessionLength = 'endless') {
+  localStorage.setItem(
+    DRILL_PREFS_KEY,
+    JSON.stringify({ genre, difficulty, timer, sessionLength }),
+  );
 }
 
 function optionButtons(): HTMLButtonElement[] {
@@ -48,6 +51,17 @@ async function renderReady(genre = 'vocab', difficulty = 'beginner', timer = 'of
   setPrefs(genre, difficulty, timer);
   render(<DrillMode rand={zeroRand} />);
   await screen.findByText('第 1 問');
+}
+
+async function renderReadyQuick(
+  sessionLength: string,
+  genre = 'vocab',
+  difficulty = 'beginner',
+  timer = 'off',
+) {
+  setPrefs(genre, difficulty, timer, sessionLength);
+  render(<DrillMode rand={zeroRand} />);
+  await screen.findByRole('progressbar');
 }
 
 function renderReadyWithFakeTimers(genre = 'vocab', difficulty = 'beginner', timer = 'off') {
@@ -106,8 +120,14 @@ describe('DrillMode', () => {
       genre?: string;
       difficulty?: string;
       timer?: string;
+      sessionLength?: string;
     };
-    expect(savedPrefs).toEqual({ genre: 'listening', difficulty: 'expert', timer: '20' });
+    expect(savedPrefs).toEqual({
+      genre: 'listening',
+      difficulty: 'expert',
+      timer: '20',
+      sessionLength: 'endless',
+    });
   });
 
   it('回答ごとにセッションと累計を更新し、累計とrecentをlocalStorageに保存する', async () => {
@@ -267,8 +287,9 @@ describe('DrillMode', () => {
     expect(screen.getByText(/解説 \(/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '次の問題 →' })).toBeInTheDocument();
     expect(screen.getByLabelText('今回 1問中0問正解 0パーセント')).toBeInTheDocument();
+    // 回答後の選択肢は disabled ではなく aria-disabled で無効化する(フォーカス保持・読み上げ維持のため)。
     optionButtons().forEach((button) => {
-      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute('aria-disabled', 'true');
     });
 
     const savedStats = JSON.parse(
@@ -434,5 +455,64 @@ describe('DrillMode', () => {
     expect(screen.getByLabelText('リスニング データなし')).toHaveTextContent('データなし');
     expect(screen.getByLabelText('初級 2問中1問正解 50パーセント')).toBeInTheDocument();
     expect(screen.getByLabelText('中級 データなし')).toHaveTextContent('データなし');
+  });
+
+  it('クイックセッションは指定問数を回答すると結果画面へ切り替わる', async () => {
+    const pool = buildDrillPool('vocab', 'beginner', zeroRand);
+    await renderReadyQuick('5', 'vocab', 'beginner');
+
+    // クイックでは「第N問」バッジではなく進捗 n/N を表示する。
+    expect(screen.queryByText('第 1 問')).not.toBeInTheDocument();
+    expect(screen.getByText('1 / 5')).toBeInTheDocument();
+
+    for (let i = 0; i < 4; i += 1) {
+      answerCurrent(pool[i].correctIndex);
+      fireEvent.click(screen.getByRole('button', { name: '次の問題 →' }));
+    }
+    // 5問目は不正解にして間違い一覧の表示も確認する。
+    answerCurrent((pool[4].correctIndex + 1) % pool[4].options.length);
+    fireEvent.click(screen.getByRole('button', { name: '結果を見る' }));
+
+    expect(screen.getByRole('heading', { name: 'クイックセッション結果' })).toBeInTheDocument();
+    expect(screen.getByLabelText('5問中4問正解 80パーセント')).toBeInTheDocument();
+    expect(screen.getByText('間違えた問題 (1)')).toBeInTheDocument();
+    expect(screen.getByText(pool[4].prompt)).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+
+  it('クイックセッションのコンボは誤答でリセットされる', async () => {
+    const pool = buildDrillPool('vocab', 'beginner', zeroRand);
+    await renderReadyQuick('10', 'vocab', 'beginner');
+
+    // 1問目正解: コンボ1(2未満なのでバッジ非表示)。
+    answerCurrent(pool[0].correctIndex);
+    expect(screen.queryByText(/連続正解/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '次の問題 →' }));
+
+    // 2問目正解: コンボ2でバッジ表示。
+    answerCurrent(pool[1].correctIndex);
+    expect(screen.getByText('2連続正解！')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '次の問題 →' }));
+
+    // 3問目誤答: コンボがリセットされバッジが消える。
+    answerCurrent((pool[2].correctIndex + 1) % pool[2].options.length);
+    expect(screen.queryByText(/連続正解/)).not.toBeInTheDocument();
+  });
+
+  it('セッション長エンドレスでは進捗バーも結果画面も出さず連続出題する(非退行)', async () => {
+    await renderReady('vocab', 'beginner');
+
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+
+    answerAndAdvance();
+    await screen.findByText('第 2 問');
+    answerAndAdvance();
+    await screen.findByText('第 3 問');
+
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'クイックセッション結果' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('第 3 問')).toBeInTheDocument();
   });
 });
