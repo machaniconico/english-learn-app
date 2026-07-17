@@ -3,7 +3,7 @@ import { drillExpertQuestions } from './drillExpert'
 import { DRILL_GENRES, type DrillGenre } from '../utils/drillTypes'
 
 // 満点レベル手書き問題バンクの機械検証。
-// 受け入れ基準: 各ジャンル12問以上(計60問以上)・id 一意・options 4件重複なし・
+// 受け入れ基準: 各ジャンル30問以上(計150問以上)・id 一意・options 4件重複なし・
 // correctIndex 範囲内・explanation 20文字以上・全問 expert・listening は audioText 非空。
 
 // id 規約: exp-<ジャンル略称>-NNN(fill-blank→fb / vocab→vc / ja-en→je / en-ja→ej / listening→ls)
@@ -16,14 +16,14 @@ const GENRE_ID_PREFIX: Record<DrillGenre, string> = {
 }
 
 describe('drillExpertQuestions', () => {
-  it('合計 60 問以上ある', () => {
-    expect(drillExpertQuestions.length).toBeGreaterThanOrEqual(60)
+  it('合計 150 問以上ある', () => {
+    expect(drillExpertQuestions.length).toBeGreaterThanOrEqual(150)
   })
 
-  it('各ジャンル 12 問以上ある', () => {
+  it('各ジャンル 30 問以上ある', () => {
     for (const { value } of DRILL_GENRES) {
       const count = drillExpertQuestions.filter((q) => q.genre === value).length
-      expect(count, `ジャンル ${value} は 12 問以上必要`).toBeGreaterThanOrEqual(12)
+      expect(count, `ジャンル ${value} は 30 問以上必要`).toBeGreaterThanOrEqual(30)
     }
   })
 
@@ -71,7 +71,7 @@ describe('drillExpertQuestions', () => {
 
   it('listening は全問 audioText が非空', () => {
     const listening = drillExpertQuestions.filter((q) => q.genre === 'listening')
-    expect(listening.length).toBeGreaterThanOrEqual(12)
+    expect(listening.length).toBeGreaterThanOrEqual(30)
     for (const q of listening) {
       expect((q.audioText ?? '').trim().length, `${q.id} は audioText 必須`).toBeGreaterThan(0)
     }
